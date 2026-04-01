@@ -160,7 +160,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
     <div class="header" style="padding-bottom:16px">
       <div class="header-top">
         <div><div class="header-greeting">Planning</div><div class="header-name">Vos vacations</div></div>
-        <button onclick="openAddVacation()" style="background:rgba(255,255,255,0.2);border:none;border-radius:10px;color:white;font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer;font-family:inherit">+ Ajouter</button>
+        <div style="display:flex;gap:8px"><button onclick="openImportMail()" style="background:rgba(255,255,255,0.2);border:none;border-radius:10px;color:white;font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer;font-family:inherit">📧 Mail</button><button onclick="openAddVacation()" style="background:rgba(255,255,255,0.2);border:none;border-radius:10px;color:white;font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer;font-family:inherit">+ Ajouter</button></div>
       </div>
     </div>
     <div class="content">
@@ -518,3 +518,68 @@ init();
 </script>
 </body>
 </html>
+
+<div class="modal-overlay" id="modal-import-mail" onclick="closeIfOverlay(event,'modal-import-mail')">
+  <div class="modal-sheet" style="max-height:90dvh">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📧 Importer depuis un email</div>
+    <div style="font-size:13px;color:var(--gray-500);margin-bottom:14px;line-height:1.5">Copiez le texte de votre email de planning et collez-le ici — l'IA détecte automatiquement vos vacations.</div>
+    <div id="import-step-1">
+      <div style="font-size:12px;font-weight:600;color:var(--gray-500);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Texte du planning</div>
+      <textarea id="planning-text" style="width:100%;height:160px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--gray-800);outline:none;resize:none;line-height:1.5" placeholder="Collez ici le texte de votre email de planning...&#10;&#10;Exemple :&#10;Lundi 07/04 - Site Bellecour - 06h00/14h00&#10;Mercredi 09/04 - Gare Part-Dieu - 14h00/22h00"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;align-items:center"><div style="font-size:11px;color:var(--gray-400);flex:1">💡 Fonctionne avec n'importe quel format</div><button onclick="document.getElementById('planning-text').value=''" style="background:none;border:none;color:var(--gray-400);font-size:12px;cursor:pointer;font-family:inherit">Effacer</button></div>
+      <button class="btn-primary" id="btn-analyser" style="margin-top:12px" onclick="analyserPlanning()">🤖 Analyser avec l'IA</button>
+    </div>
+    <div id="import-step-2" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div><div style="font-size:14px;font-weight:600" id="detected-count">0 vacations détectées</div></div>
+      <div id="detected-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+      <button class="btn-primary" id="btn-confirmer" onclick="confirmerVacations()">✅ Confirmer et ajouter au planning</button>
+      <button style="width:100%;background:none;border:none;color:var(--blue);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;margin-top:4px" onclick="retourStep1()">← Modifier le texte</button>
+    </div>
+    <button style="width:100%;background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;margin-top:4px" onclick="closeModal('modal-import-mail')">Annuler</button>
+  </div>
+</div>
+
+<script>
+let detectedVacations=[];
+function openImportMail(){document.getElementById('modal-import-mail').classList.add('open');document.getElementById('import-step-1').style.display='block';document.getElementById('import-step-2').style.display='none';document.getElementById('planning-text').value='';}
+function retourStep1(){document.getElementById('import-step-1').style.display='block';document.getElementById('import-step-2').style.display='none';}
+async function analyserPlanning(){
+  const texte=document.getElementById('planning-text').value.trim();
+  if(!texte){showToast('⚠️ Collez d\'abord le texte du planning');return;}
+  const btn=document.getElementById('btn-analyser');
+  btn.textContent='⏳ Analyse en cours...';btn.disabled=true;
+  try{
+    const today=new Date().toISOString().split('T')[0];
+    const prompt=`Tu es un assistant qui extrait les vacations d'un planning de sécurité.\n\nTexte du planning:\n"""\n${texte}\n"""\n\nDate d'aujourd'hui: ${today}\n\nExtrait TOUTES les vacations. Retourne UNIQUEMENT un JSON valide sans markdown:\n{"vacations":[{"date":"YYYY-MM-DD","site":"nom site","heure_debut":"HH:MM","heure_fin":"HH:MM","employeur":""}]}\n\nSi l'année manque, utilise l'année courante ou suivante selon logique. Si heure manque, mets "".`;
+    const response=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const data=await response.json();
+    const clean=data.content[0].text.trim().replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(clean);
+    detectedVacations=parsed.vacations||[];
+    if(!detectedVacations.length){showToast('⚠️ Aucune vacation détectée');btn.textContent='🤖 Analyser avec l\'IA';btn.disabled=false;return;}
+    afficherResultats();
+  }catch(e){showToast('❌ Erreur — réessayez');btn.textContent='🤖 Analyser avec l\'IA';btn.disabled=false;}
+}
+function afficherResultats(){
+  document.getElementById('import-step-1').style.display='none';
+  document.getElementById('import-step-2').style.display='block';
+  document.getElementById('detected-count').textContent=`${detectedVacations.length} vacation${detectedVacations.length>1?'s':''} détectée${detectedVacations.length>1?'s':''}`;
+  const mo=['JAN','FÉV','MAR','AVR','MAI','JUN','JUL','AOÛ','SEP','OCT','NOV','DÉC'];
+  document.getElementById('detected-list').innerHTML=detectedVacations.map((v,i)=>{
+    const d=new Date(v.date+'T00:00:00');
+    return `<div style="background:var(--gray-50);border-radius:10px;padding:12px;display:flex;align-items:center;gap:12px;border:0.5px solid var(--gray-200)"><div style="background:var(--blue-light);border-radius:8px;width:40px;height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0"><div style="font-size:16px;font-weight:700;color:var(--blue);line-height:1">${d.getDate()}</div><div style="font-size:8px;font-weight:600;color:var(--blue);text-transform:uppercase">${mo[d.getMonth()]}</div></div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.site||'Site'}</div><div style="font-size:11px;color:var(--gray-500);margin-top:2px">${v.heure_debut||'--'} → ${v.heure_fin||'--'}${v.employeur?' · '+v.employeur:''}</div></div><button onclick="detectedVacations.splice(${i},1);if(!detectedVacations.length)retourStep1();else afficherResultats();" style="background:none;border:none;color:var(--gray-300);font-size:18px;cursor:pointer;padding:0 4px">×</button></div>`;
+  }).join('');
+}
+async function confirmerVacations(){
+  if(!detectedVacations.length||!currentUser)return;
+  const btn=document.getElementById('btn-confirmer');
+  btn.textContent='⏳ Ajout en cours...';btn.disabled=true;
+  const rows=detectedVacations.map(v=>({user_id:currentUser.id,site:v.site||'',date:v.date,heure_debut:v.heure_debut||null,heure_fin:v.heure_fin||null,employeur:v.employeur||'',statut:'confirmed'}));
+  const{error}=await sb.from('vacations').insert(rows);
+  if(error){showToast('❌ Erreur');btn.textContent='✅ Confirmer et ajouter';btn.disabled=false;return;}
+  closeModal('modal-import-mail');
+  showToast(`✅ ${rows.length} vacation${rows.length>1?'s':''} ajouté${rows.length>1?'s':''} !`);
+  await loadVacations();
+}
+</script>
