@@ -1,24 +1,744 @@
-export const config = {
-  api: { bodyParser: { sizeLimit: '10mb' } }
-};
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1d4ed8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SecuPRO">
+<link rel="manifest" href="manifest.json">
+<title>SecuPRO — Agent de Sécurité</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--blue:#2563EB;--blue-dark:#1d4ed8;--blue-light:#eff6ff;--green:#16a34a;--green-light:#dcfce7;--orange:#ea580c;--orange-light:#ffedd5;--red:#dc2626;--red-light:#fee2e2;--gray-50:#f8fafc;--gray-100:#f1f5f9;--gray-200:#e2e8f0;--gray-400:#94a3b8;--gray-500:#64748b;--gray-600:#475569;--gray-700:#334155;--gray-800:#1e293b;--gray-900:#0f172a;--radius:12px;--radius-lg:18px;--radius-xl:24px;--shadow:0 2px 12px rgba(37,99,235,0.08);}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray-800);max-width:430px;margin:0 auto;min-height:100dvh;overflow-x:hidden;}
+.auth-wrap{min-height:100dvh;display:flex;flex-direction:column;}
+.auth-hero{background:linear-gradient(135deg,#1d4ed8,#2563EB);padding:60px 28px 40px;color:white;text-align:center;}
+.auth-logo{width:64px;height:64px;border-radius:18px;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;}
+.auth-title{font-size:26px;font-weight:600;margin-bottom:6px;}
+.auth-sub{font-size:13px;opacity:0.75;}
+.auth-form{background:white;border-radius:24px 24px 0 0;flex:1;padding:28px 24px;margin-top:-16px;}
+.auth-tab{display:flex;margin-bottom:24px;background:var(--gray-100);border-radius:10px;padding:3px;}
+.auth-tab-btn{flex:1;padding:8px;border:none;background:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--gray-500);transition:all 0.15s;}
+.auth-tab-btn.active{background:white;color:var(--gray-800);box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:12px;font-weight:500;color:var(--gray-500);margin-bottom:5px;display:block;}
+.form-input{width:100%;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:12px 14px;font-size:14px;font-family:inherit;color:var(--gray-800);outline:none;transition:border 0.15s;}
+.form-input:focus{border-color:var(--blue);background:white;}
+.btn-auth{width:100%;background:var(--blue);color:white;border:none;border-radius:var(--radius);padding:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:6px;transition:all 0.15s;}
+.btn-auth:active{background:var(--blue-dark);transform:scale(0.98);}
+.auth-error{background:var(--red-light);color:var(--red);border-radius:8px;padding:10px 12px;font-size:12px;margin-bottom:12px;display:none;}
+.auth-success{background:var(--green-light);color:var(--green);border-radius:8px;padding:10px 12px;font-size:12px;margin-bottom:12px;display:none;}
+.app-wrap{display:none;}
+.screen{display:none;flex-direction:column;min-height:100dvh;padding-bottom:80px;}
+.screen.active{display:flex;animation:fadeIn 0.2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.header{background:linear-gradient(135deg,#1d4ed8,#2563EB);padding:52px 20px 24px;color:white;position:relative;overflow:hidden;}
+.header::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,0.07);}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1;}
+.header-greeting{font-size:13px;opacity:0.75;margin-bottom:3px;}
+.header-name{font-size:22px;font-weight:600;}
+.header-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:white;border:2px solid rgba(255,255,255,0.3);flex-shrink:0;}
+.header-sub{font-size:12px;opacity:0.65;margin-top:4px;position:relative;z-index:1;}
+.content{padding:16px;flex:1;}
+.card{background:white;border-radius:var(--radius-lg);padding:16px;box-shadow:var(--shadow);margin-bottom:12px;}
+.section-label{font-size:13px;font-weight:600;color:var(--gray-600);margin:16px 0 8px;}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:500;gap:4px;}
+.badge-green{background:var(--green-light);color:var(--green);}
+.badge-orange{background:var(--orange-light);color:var(--orange);}
+.badge-red{background:var(--red-light);color:var(--red);}
+.badge-blue{background:var(--blue-light);color:var(--blue);}
+.shift-card{background:linear-gradient(135deg,#1e3a8a,#1d4ed8);border-radius:var(--radius-xl);padding:20px;color:white;margin-bottom:12px;position:relative;overflow:hidden;}
+.shift-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.06);}
+.shift-pill{background:rgba(255,255,255,0.15);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:500;}
+.progress-bar-bg{background:var(--gray-100);border-radius:99px;height:8px;overflow:hidden;margin:8px 0 4px;}
+.progress-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#2563EB,#3b82f6);transition:width 0.8s ease;}
+.vacation-item{background:white;border-radius:var(--radius);padding:14px;margin-bottom:8px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;}
+.vacation-date-box{background:var(--blue-light);border-radius:10px;width:44px;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
+.vd-day{font-size:18px;font-weight:700;color:var(--blue);line-height:1;}
+.vd-month{font-size:9px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:0.05em;}
+.filter-tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px;}
+.filter-tabs::-webkit-scrollbar{display:none;}
+.filter-tab{padding:6px 14px;border-radius:99px;font-size:12px;font-weight:500;border:1px solid var(--gray-200);background:white;color:var(--gray-500);white-space:nowrap;cursor:pointer;transition:all 0.15s;}
+.filter-tab.active{background:var(--blue);color:white;border-color:var(--blue);}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:white;border-top:1px solid var(--gray-100);display:flex;padding:8px 0 20px;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,0.06);}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;color:var(--gray-400);transition:color 0.2s;border:none;background:none;font-family:inherit;}
+.nav-item.active{color:var(--blue);}
+.nav-icon{font-size:20px;line-height:1;}
+.nav-label{font-size:10px;font-weight:500;}
+.paie-hero{background:linear-gradient(135deg,#1d4ed8,#2563EB);border-radius:var(--radius-xl);padding:24px;color:white;margin-bottom:12px;}
+.fiche-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid var(--gray-100);}
+.fiche-item:last-child{border-bottom:none;}
+.fiche-icon{width:36px;height:36px;border-radius:9px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.doc-card{background:white;border-radius:var(--radius-lg);padding:16px;margin-bottom:10px;box-shadow:var(--shadow);display:flex;align-items:center;gap:14px;}
+.alert-banner{background:var(--orange-light);border-left:3px solid var(--orange);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--orange);margin-bottom:12px;font-weight:500;}
+.profil-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#1d4ed8,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;color:white;margin:0 auto 10px;}
+.profil-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:0.5px solid var(--gray-100);}
+.profil-row:last-child{border-bottom:none;}
+.btn-primary{background:var(--blue);color:white;border:none;border-radius:var(--radius);padding:13px 16px;font-size:14px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;}
+.btn-primary:active{background:var(--blue-dark);transform:scale(0.98);}
+.btn-danger{background:var(--red-light);color:var(--red);border:none;border-radius:var(--radius);padding:13px 16px;font-size:14px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;margin-top:4px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal-sheet{background:white;border-radius:24px 24px 0 0;padding:20px;width:100%;max-width:430px;max-height:80dvh;overflow-y:auto;transform:translateY(100%);transition:transform 0.3s ease;}
+.modal-overlay.open .modal-sheet{transform:translateY(0);}
+.modal-handle{width:36px;height:4px;border-radius:99px;background:var(--gray-200);margin:0 auto 16px;}
+.modal-title{font-size:17px;font-weight:600;margin-bottom:16px;}
+.loading-screen{position:fixed;inset:0;background:linear-gradient(135deg,#1d4ed8,#2563EB);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;color:white;}
+.spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;margin-top:24px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--gray-900);color:white;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:500;z-index:300;white-space:nowrap;opacity:0;transition:all 0.3s;font-family:'DM Sans',sans-serif;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.empty-state{text-align:center;padding:40px 20px;color:var(--gray-400);}
+.empty-state-icon{font-size:40px;margin-bottom:12px;}
+.empty-state-text{font-size:14px;}
+</style>
+</head>
+<body>
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'pdfs-2024-09-25'
-      },
-      body: JSON.stringify(req.body)
-    });
-    const data = await r.json();
-    res.status(200).json(data);
-  } catch(e) {
-    res.status(500).json({ error: { message: e.message } });
+<div class="loading-screen" id="loading">
+  <div style="width:64px;height:64px;border-radius:18px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px">🛡️</div>
+  <div style="font-size:24px;font-weight:600;margin-bottom:8px">SecuPRO</div>
+  <div style="font-size:13px;opacity:0.7">Chargement...</div>
+  <div class="spinner"></div>
+</div>
+
+<div class="auth-wrap" id="auth-wrap" style="display:none">
+  <div class="auth-hero">
+    <div class="auth-logo">🛡️</div>
+    <div class="auth-title">SecuPRO</div>
+    <div class="auth-sub">L'appli des agents de sécurité</div>
+  </div>
+  <div class="auth-form">
+    <div class="auth-tab">
+      <button class="auth-tab-btn active" onclick="switchTab('login')">Connexion</button>
+      <button class="auth-tab-btn" onclick="switchTab('register')">Inscription</button>
+    </div>
+    <div id="auth-error" class="auth-error"></div>
+    <div id="auth-success" class="auth-success"></div>
+    <div id="tab-login">
+      <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="login-email" placeholder="agent@email.fr"></div>
+      <div class="form-group"><label class="form-label">Mot de passe</label><input type="password" class="form-input" id="login-password" placeholder="••••••••"></div>
+      <button class="btn-auth" onclick="login()">Se connecter</button>
+    </div>
+    <div id="tab-register" style="display:none">
+      <div class="form-group"><label class="form-label">Prénom</label><input type="text" class="form-input" id="reg-prenom" placeholder="Mustapha"></div>
+      <div class="form-group"><label class="form-label">Nom</label><input type="text" class="form-input" id="reg-nom" placeholder="Benali"></div>
+      <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="reg-email" placeholder="agent@email.fr"></div>
+      <div class="form-group"><label class="form-label">Mot de passe</label><input type="password" class="form-input" id="reg-password" placeholder="8 caractères minimum"></div>
+      <button class="btn-auth" onclick="register()">Créer mon compte</button>
+    </div>
+  </div>
+</div>
+
+<div class="app-wrap" id="app-wrap">
+  <div class="screen active" id="screen-home">
+    <div class="header">
+      <div class="header-top">
+        <div><div class="header-greeting">Bonjour 👋</div><div class="header-name" id="home-name">Agent</div><div class="header-sub" id="home-date"></div></div>
+        <div class="header-avatar" id="home-avatar">?</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="section-label">Prochain vacation</div>
+      <div id="next-vacation-card"><div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Aucun vacation à venir</div></div></div>
+      <div class="section-label">Ce mois-ci</div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div><div style="font-size:13px;color:var(--gray-500)">Salaire net</div><div style="font-size:22px;font-weight:600" id="paie-amount">—</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px" id="heures-label">Heures — 0 / 151h</div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="heures-bar" style="width:0%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray-400)"><span id="h-done">0h travaillées</span><span>151h contractuelles</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-planning">
+    <div class="header" style="padding-bottom:16px">
+      <div class="header-top">
+        <div><div class="header-greeting">Planning</div><div class="header-name">Vos vacations</div></div>
+        <div style="display:flex;gap:8px"><button onclick="openImportPDF()" style="background:rgba(255,255,255,0.2);border:none;border-radius:10px;color:white;font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer;font-family:inherit">📄 Import PDF</button><button onclick="openAddVacation()" style="background:rgba(255,255,255,0.2);border:none;border-radius:10px;color:white;font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer;font-family:inherit">+ Ajouter</button></div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="filter-tabs">
+        <div class="filter-tab active" onclick="setFilter(this,'all')">Tous</div>
+        <div class="filter-tab" onclick="setFilter(this,'today')">Aujourd'hui</div>
+        <div class="filter-tab" onclick="setFilter(this,'week')">Cette semaine</div>
+        <div class="filter-tab" onclick="setFilter(this,'month')">Ce mois</div>
+      </div>
+      <div id="vacations-list"><div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Aucun vacation</div></div></div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-paie">
+    <div class="header" style="padding-bottom:16px">
+      <div class="header-top"><div><div class="header-greeting">Paie & Budget</div><div class="header-name" id="paie-mois">Ce mois</div></div></div>
+    </div>
+    <div class="content">
+      <div class="paie-hero">
+        <div style="font-size:12px;opacity:0.7;margin-bottom:4px">Salaire net</div>
+        <div style="font-size:36px;font-weight:600" id="paie-net-big">—</div>
+        <div style="font-size:12px;opacity:0.65" id="paie-brut-display">Brut : —</div>
+        <div class="progress-bar-bg" style="margin-top:14px"><div class="progress-bar-fill" id="paie-bar" style="width:0%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;opacity:0.75;margin-top:4px"><span id="paie-h-done">0h</span><span>151h contractuelles</span></div>
+      </div>
+      <div class="section-label">Historique des fiches de paie</div>
+      <div class="card" id="fiches-list"><div class="empty-state"><div class="empty-state-icon">💶</div><div class="empty-state-text">Aucune fiche de paie</div></div></div>
+      <button class="btn-primary" onclick="openAddFiche()">📤 Ajouter une fiche de paie</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-docs">
+    <div class="header" style="padding-bottom:16px">
+      <div class="header-top"><div><div class="header-greeting">Mes documents</div><div class="header-name">Certifications & Cartes</div></div></div>
+    </div>
+    <div class="content">
+      <div id="docs-alert"></div>
+      <div id="docs-list"><div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-text">Aucun document</div></div></div>
+      <button class="btn-primary" onclick="openAddDoc()">📎 Ajouter un document</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-profil">
+    <div class="header" style="padding-bottom:20px">
+      <div class="header-top"><div><div class="header-greeting">Profil</div><div class="header-name">Mon compte</div></div></div>
+    </div>
+    <div class="content">
+      <div class="card" style="text-align:center;padding-top:20px;padding-bottom:20px">
+        <div class="profil-avatar" id="profil-avatar">?</div>
+        <div style="font-size:20px;font-weight:600" id="profil-name">...</div>
+        <div style="display:flex;justify-content:center;margin-top:6px"><span class="badge badge-blue">Agent de sécurité</span></div>
+      </div>
+      <div class="section-label">Informations</div>
+      <div class="card">
+        <div class="profil-row"><div style="font-size:18px;width:28px;text-align:center">✉️</div><div><div style="font-size:12px;color:var(--gray-400)">Email</div><div style="font-size:14px;font-weight:500" id="profil-email">—</div></div></div>
+        <div class="profil-row" style="border-bottom:none"><div style="font-size:18px;width:28px;text-align:center">🏙️</div><div><div style="font-size:12px;color:var(--gray-400)">Ville</div><div style="font-size:14px;font-weight:500" id="profil-ville">Non renseignée</div></div></div>
+      </div>
+      <div class="section-label">Abonnement</div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><div style="font-size:14px;font-weight:600">SecuPRO Pro</div><div style="font-size:12px;color:var(--gray-400);margin-top:2px">9,99€/mois · Essai 7 jours</div></div>
+          <span class="badge badge-blue">⭐ Pro</span>
+        </div>
+      </div>
+      <button class="btn-danger" onclick="logout()">Se déconnecter</button>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="goTo('home',this)"><span class="nav-icon">🏠</span><span class="nav-label">Accueil</span></button>
+    <button class="nav-item" onclick="goTo('planning',this)"><span class="nav-icon">📅</span><span class="nav-label">Planning</span></button>
+    <button class="nav-item" onclick="goTo('paie',this)"><span class="nav-icon">💶</span><span class="nav-label">Paie</span></button>
+    <button class="nav-item" onclick="goTo('docs',this)"><span class="nav-icon">📂</span><span class="nav-label">Documents</span></button>
+    <button class="nav-item" onclick="goTo('profil',this)"><span class="nav-icon">👤</span><span class="nav-label">Profil</span></button>
+  </nav>
+</div>
+
+<div class="modal-overlay" id="modal-vacation" onclick="closeIfOverlay(event,'modal-vacation')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Ajouter un vacation</div>
+    <div class="form-group"><label class="form-label">Site</label><input type="text" class="form-input" id="v-site" placeholder="Centre Commercial Bellecour"></div>
+    <div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="v-date"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group"><label class="form-label">Début</label><input type="time" class="form-input" id="v-debut" value="06:00"></div>
+      <div class="form-group"><label class="form-label">Fin</label><input type="time" class="form-input" id="v-fin" value="14:00"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Employeur</label><input type="text" class="form-input" id="v-employeur" placeholder="SecuGuard SARL"></div>
+    <button class="btn-primary" onclick="addVacation()">✅ Ajouter</button>
+    <button style="width:100%;background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;padding:8px;font-family:inherit" onclick="closeModal('modal-vacation')">Annuler</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-fiche" onclick="closeIfOverlay(event,'modal-fiche')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Ajouter une fiche de paie</div>
+    <div class="form-group"><label class="form-label">Mois (ex: Mars 2025)</label><input type="text" class="form-input" id="f-mois" placeholder="Mars 2025"></div>
+    <div class="form-group"><label class="form-label">Salaire brut (€)</label><input type="number" class="form-input" id="f-brut" placeholder="2246"></div>
+    <div class="form-group"><label class="form-label">Salaire net (€)</label><input type="number" class="form-input" id="f-net" placeholder="1847"></div>
+    <div class="form-group"><label class="form-label">Heures effectuées</label><input type="number" class="form-input" id="f-heures" placeholder="151"></div>
+    <button class="btn-primary" onclick="addFiche()">✅ Ajouter</button>
+    <button style="width:100%;background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;padding:8px;font-family:inherit" onclick="closeModal('modal-fiche')">Annuler</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-doc" onclick="closeIfOverlay(event,'modal-doc')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Ajouter un document</div>
+    <div class="form-group"><label class="form-label">Nom du document</label><input type="text" class="form-input" id="d-nom" placeholder="Carte professionnelle"></div>
+    <div class="form-group"><label class="form-label">Type</label>
+      <select class="form-input" id="d-type">
+        <option value="carte_pro">Carte professionnelle CNAPS</option>
+        <option value="sst">Certificat SST</option>
+        <option value="cqp">CQP Agent de Sécurité</option>
+        <option value="autre">Autre</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Numéro (optionnel)</label><input type="text" class="form-input" id="d-numero" placeholder="APS-69-2021-04847"></div>
+    <div class="form-group"><label class="form-label">Date d'expiration</label><input type="date" class="form-input" id="d-expiration"></div>
+    <button class="btn-primary" onclick="addDoc()">✅ Ajouter</button>
+    <button style="width:100%;background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;padding:8px;font-family:inherit" onclick="closeModal('modal-doc')">Annuler</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL='https://ladvecmpjpictubnnnsq.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZHZlY21wanBpY3R1Ym5ubnNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5ODMzMzAsImV4cCI6MjA5MDU1OTMzMH0.U3gaNZB7d3-P0pq5F-B5C1JzACWZIcDw_Pfl8Xd89es';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let currentUser=null,currentProfile=null,allVacations=[];
+
+async function init(){
+  const{data:{session}}=await sb.auth.getSession();
+  if(session){currentUser=session.user;await loadProfile();showApp();}
+  else showAuth();
+}
+
+function showAuth(){document.getElementById('loading').style.display='none';document.getElementById('auth-wrap').style.display='flex';document.getElementById('app-wrap').style.display='none';}
+function showApp(){document.getElementById('loading').style.display='none';document.getElementById('auth-wrap').style.display='none';document.getElementById('app-wrap').style.display='block';updateHomeHeader();loadAllData();}
+
+function switchTab(t){
+  document.querySelectorAll('.auth-tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-login').style.display=t==='login'?'block':'none';
+  document.getElementById('tab-register').style.display=t==='register'?'block':'none';
+  document.querySelectorAll('.auth-tab-btn')[t==='login'?0:1].classList.add('active');
+  document.getElementById('auth-error').style.display='none';
+  document.getElementById('auth-success').style.display='none';
+}
+
+async function login(){
+  const email=document.getElementById('login-email').value.trim();
+  const pwd=document.getElementById('login-password').value;
+  if(!email||!pwd){showErr('Remplissez tous les champs');return;}
+  const{data,error}=await sb.auth.signInWithPassword({email,password:pwd});
+  if(error){showErr('Email ou mot de passe incorrect');return;}
+  currentUser=data.user;await loadProfile();showApp();
+}
+
+async function register(){
+  const prenom=document.getElementById('reg-prenom').value.trim();
+  const nom=document.getElementById('reg-nom').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const pwd=document.getElementById('reg-password').value;
+  if(!prenom||!nom||!email||!pwd){showErr('Remplissez tous les champs');return;}
+  if(pwd.length<8){showErr('Mot de passe : 8 caractères minimum');return;}
+  const{data,error}=await sb.auth.signUp({email,password:pwd});
+  if(error){showErr(error.message);return;}
+  if(data.user){
+    await sb.from('profiles').insert({id:data.user.id,prenom,nom,email});
+    const s=document.getElementById('auth-success');
+    s.textContent='Compte créé ! Vérifiez votre email puis connectez-vous.';
+    s.style.display='block';
+    document.getElementById('auth-error').style.display='none';
+    switchTab('login');
   }
 }
+
+function showErr(msg){const e=document.getElementById('auth-error');e.textContent=msg;e.style.display='block';document.getElementById('auth-success').style.display='none';}
+
+async function logout(){await sb.auth.signOut();currentUser=null;currentProfile=null;allVacations=[];showAuth();}
+
+async function loadProfile(){
+  if(!currentUser)return;
+  const{data}=await sb.from('profiles').select('*').eq('id',currentUser.id).single();
+  currentProfile=data;
+}
+
+function updateHomeHeader(){
+  const now=new Date();
+  const j=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const m=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  document.getElementById('home-date').textContent=`${j[now.getDay()]} ${now.getDate()} ${m[now.getMonth()]} ${now.getFullYear()}`;
+  if(currentProfile){
+    const p=currentProfile.prenom||'Agent';
+    const n=currentProfile.nom||'';
+    document.getElementById('home-name').textContent=`${p} ${n}`;
+    document.getElementById('home-avatar').textContent=p[0].toUpperCase();
+    document.getElementById('profil-avatar').textContent=p[0].toUpperCase();
+    document.getElementById('profil-name').textContent=`${p} ${n}`;
+    document.getElementById('profil-email').textContent=currentProfile.email||currentUser.email;
+    if(currentProfile.ville)document.getElementById('profil-ville').textContent=currentProfile.ville;
+  }
+}
+
+async function loadAllData(){await Promise.all([loadVacations(),loadFiches(),loadDocuments()]);}
+
+async function loadVacations(){
+  if(!currentUser)return;
+  const{data}=await sb.from('vacations').select('*').eq('user_id',currentUser.id).order('date',{ascending:true});
+  allVacations=data||[];
+  renderVacations(allVacations);renderNextVacation();updateHeures();
+}
+
+function renderVacations(list){
+  const el=document.getElementById('vacations-list');
+  if(!list.length){el.innerHTML='<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Aucun vacation</div></div>';return;}
+  const mo=['JAN','FÉV','MAR','AVR','MAI','JUN','JUL','AOÛ','SEP','OCT','NOV','DÉC'];
+  const sm={confirmed:{l:'Confirmé',c:'badge-green'},pending:{l:'En attente',c:'badge-orange'},modified:{l:'Modifié',c:'badge-blue'}};
+  el.innerHTML=list.map(v=>{
+    const d=new Date(v.date+'T00:00:00');
+    const s=sm[v.statut]||sm.confirmed;
+    const db=v.heure_debut?v.heure_debut.slice(0,5):'--';
+    const fi=v.heure_fin?v.heure_fin.slice(0,5):'--';
+    return `<div class="vacation-item"><div class="vacation-date-box"><div class="vd-day">${d.getDate()}</div><div class="vd-month">${mo[d.getMonth()]}</div></div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.site||'Site'}</div><div style="font-size:12px;color:var(--gray-500);margin-top:2px">${db} → ${fi} · ${v.employeur||''}</div></div><span class="badge ${s.c}">${s.l}</span></div>`;
+  }).join('');
+}
+
+function renderNextVacation(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const next=allVacations.find(v=>new Date(v.date+'T00:00:00')>=today);
+  const el=document.getElementById('next-vacation-card');
+  if(!next){el.innerHTML='<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Aucun vacation à venir</div></div>';return;}
+  const d=new Date(next.date+'T00:00:00');
+  const j=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const m=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  const db=next.heure_debut?next.heure_debut.slice(0,5):'--';
+  const fi=next.heure_fin?next.heure_fin.slice(0,5):'--';
+  el.innerHTML=`<div class="shift-card"><div style="font-size:12px;opacity:0.7;margin-bottom:4px">${j[d.getDay()]} ${d.getDate()} ${m[d.getMonth()]}</div><div style="font-size:18px;font-weight:600;margin-bottom:2px">${next.site||'Site'}</div><div style="font-size:13px;opacity:0.8;margin-bottom:12px">${db} → ${fi}</div><div style="display:flex;gap:8px;flex-wrap:wrap"><div class="shift-pill">${next.employeur||'Employeur'}</div></div></div>`;
+}
+
+function updateHeures(){
+  const now=new Date();
+  const mv=allVacations.filter(v=>{const d=new Date(v.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();});
+  let h=0;
+  mv.forEach(v=>{if(v.heure_debut&&v.heure_fin){const[dh,dm]=v.heure_debut.split(':').map(Number);const[fh,fm]=v.heure_fin.split(':').map(Number);let diff=(fh*60+fm)-(dh*60+dm);if(diff<0)diff+=1440;h+=diff/60;}});
+  const p=Math.min(Math.round((h/151)*100),100);
+  document.getElementById('heures-bar').style.width=p+'%';
+  document.getElementById('h-done').textContent=Math.round(h)+'h travaillées';
+  document.getElementById('heures-label').textContent=`Heures — ${Math.round(h)} / 151h`;
+  document.getElementById('paie-h-done').textContent=Math.round(h)+'h';
+  document.getElementById('paie-bar').style.width=p+'%';
+}
+
+function setFilter(el,type){
+  document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const now=new Date();
+  const ts=now.toISOString().split('T')[0];
+  const we=new Date(now);we.setDate(now.getDate()+7);
+  if(type==='all')renderVacations(allVacations);
+  else if(type==='today')renderVacations(allVacations.filter(v=>v.date===ts));
+  else if(type==='week')renderVacations(allVacations.filter(v=>v.date>=ts&&v.date<=we.toISOString().split('T')[0]));
+  else if(type==='month')renderVacations(allVacations.filter(v=>v.date&&v.date.startsWith(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'))));
+}
+
+async function addVacation(){
+  const site=document.getElementById('v-site').value.trim();
+  const date=document.getElementById('v-date').value;
+  if(!site||!date){showToast('⚠️ Site et date obligatoires');return;}
+  const{error}=await sb.from('vacations').insert({user_id:currentUser.id,site,date,heure_debut:document.getElementById('v-debut').value,heure_fin:document.getElementById('v-fin').value,employeur:document.getElementById('v-employeur').value.trim(),statut:'confirmed'});
+  if(error){showToast('❌ Erreur');return;}
+  closeModal('modal-vacation');showToast('✅ Vacation ajouté !');await loadVacations();
+}
+
+async function loadFiches(){
+  if(!currentUser)return;
+  const{data}=await sb.from('fiches_paie').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+  const f=data||[];
+  const el=document.getElementById('fiches-list');
+  if(!f.length){el.innerHTML='<div class="empty-state"><div class="empty-state-icon">💶</div><div class="empty-state-text">Aucune fiche de paie</div></div>';return;}
+  el.innerHTML=f.map(x=>`<div class="fiche-item"><div class="fiche-icon">📄</div><div style="flex:1"><div style="font-size:14px;font-weight:500">${x.mois}</div><div style="font-size:11px;color:var(--gray-400)">${x.heures_effectuees||0}h</div></div><div style="font-size:14px;font-weight:600">${x.salaire_net?x.salaire_net.toLocaleString('fr-FR')+' €':'—'}</div></div>`).join('');
+  if(f[0]){
+    document.getElementById('paie-net-big').textContent=f[0].salaire_net?f[0].salaire_net.toLocaleString('fr-FR')+' €':'—';
+    document.getElementById('paie-brut-display').textContent='Brut : '+(f[0].salaire_brut?f[0].salaire_brut.toLocaleString('fr-FR')+' €':'—');
+    document.getElementById('paie-amount').textContent=f[0].salaire_net?f[0].salaire_net.toLocaleString('fr-FR')+' €':'—';
+    document.getElementById('paie-mois').textContent=f[0].mois||'Ce mois';
+  }
+}
+
+async function addFiche(){
+  const mois=document.getElementById('f-mois').value.trim();
+  if(!mois){showToast('⚠️ Le mois est obligatoire');return;}
+  const{error}=await sb.from('fiches_paie').insert({user_id:currentUser.id,mois,salaire_brut:parseFloat(document.getElementById('f-brut').value)||null,salaire_net:parseFloat(document.getElementById('f-net').value)||null,heures_effectuees:parseFloat(document.getElementById('f-heures').value)||null});
+  if(error){showToast('❌ Erreur');return;}
+  closeModal('modal-fiche');showToast('✅ Fiche ajoutée !');await loadFiches();
+}
+
+async function loadDocuments(){
+  if(!currentUser)return;
+  const{data}=await sb.from('documents').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+  const docs=data||[];
+  const el=document.getElementById('docs-list');
+  const al=document.getElementById('docs-alert');
+  if(!docs.length){el.innerHTML='<div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-text">Aucun document</div></div>';al.innerHTML='';return;}
+  const today=new Date();today.setHours(0,0,0,0);
+  let alertMsg='';
+  const icons={carte_pro:'🪪',sst:'🩺',cqp:'🎓',autre:'📋'};
+  el.innerHTML=docs.map(d=>{
+    let ec='badge-green',el2='Valide',et='';
+    if(d.date_expiration){
+      const exp=new Date(d.date_expiration);exp.setHours(0,0,0,0);
+      const diff=Math.round((exp-today)/86400000);
+      et=`Expire le ${exp.toLocaleDateString('fr-FR')}`;
+      if(diff<0){ec='badge-red';el2='Expirée';}
+      else if(diff<=90){ec='badge-orange';el2='Bientôt';if(d.type==='carte_pro')alertMsg=`⚠️ Carte pro expire dans <strong>${diff} jours</strong> — Renouvelez sur cnaps.fr`;}
+    }
+    const col=ec==='badge-green'?'var(--green)':ec==='badge-orange'?'var(--orange)':'var(--red)';
+    return `<div class="doc-card"><div style="width:48px;height:48px;border-radius:12px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${icons[d.type]||'📋'}</div><div style="flex:1"><div style="font-size:15px;font-weight:600">${d.nom}</div><div style="font-size:12px;color:var(--gray-500);margin-top:2px">${d.numero||''}</div>${et?`<div style="font-size:11px;margin-top:4px;font-weight:500;color:${col}">${et}</div>`:''}</div><span class="badge ${ec}">${el2}</span></div>`;
+  }).join('');
+  al.innerHTML=alertMsg?`<div class="alert-banner">${alertMsg}</div>`:'';
+}
+
+async function addDoc(){
+  const nom=document.getElementById('d-nom').value.trim();
+  if(!nom){showToast('⚠️ Le nom est obligatoire');return;}
+  const{error}=await sb.from('documents').insert({user_id:currentUser.id,nom,type:document.getElementById('d-type').value,numero:document.getElementById('d-numero').value.trim()||null,date_expiration:document.getElementById('d-expiration').value||null});
+  if(error){showToast('❌ Erreur');return;}
+  closeModal('modal-doc');showToast('✅ Document ajouté !');await loadDocuments();
+}
+
+function goTo(screen,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('screen-'+screen).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function openAddVacation(){document.getElementById('modal-vacation').classList.add('open');}
+function openAddFiche(){document.getElementById('modal-fiche').classList.add('open');}
+function openAddDoc(){document.getElementById('modal-doc').classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeIfOverlay(e,id){if(e.target===document.getElementById(id))closeModal(id);}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+init();
+</script>
+</body>
+</html>
+
+<div class="modal-overlay" id="modal-import-mail" onclick="closeIfOverlay(event,'modal-import-mail')">
+  <div class="modal-sheet" style="max-height:90dvh">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📧 Importer depuis un email</div>
+    <div style="font-size:13px;color:var(--gray-500);margin-bottom:14px;line-height:1.5">Copiez le texte de votre email de planning et collez-le ici — l'IA détecte automatiquement vos vacations.</div>
+    <div id="import-step-1">
+      <div style="font-size:12px;font-weight:600;color:var(--gray-500);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Texte du planning</div>
+      <textarea id="planning-text" style="width:100%;height:160px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--gray-800);outline:none;resize:none;line-height:1.5" placeholder="Collez ici le texte de votre email de planning...&#10;&#10;Exemple :&#10;Lundi 07/04 - Site Bellecour - 06h00/14h00&#10;Mercredi 09/04 - Gare Part-Dieu - 14h00/22h00"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;align-items:center"><div style="font-size:11px;color:var(--gray-400);flex:1">💡 Fonctionne avec n'importe quel format</div><button onclick="document.getElementById('planning-text').value=''" style="background:none;border:none;color:var(--gray-400);font-size:12px;cursor:pointer;font-family:inherit">Effacer</button></div>
+      <button class="btn-primary" id="btn-analyser" style="margin-top:12px" onclick="analyserPlanning()">🤖 Analyser avec l'IA</button>
+    </div>
+    <div id="import-step-2" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div><div style="font-size:14px;font-weight:600" id="detected-count">0 vacations détectées</div></div>
+      <div id="detected-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+      <button class="btn-primary" id="btn-confirmer" onclick="confirmerVacations()">✅ Confirmer et ajouter au planning</button>
+      <button style="width:100%;background:none;border:none;color:var(--blue);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;margin-top:4px" onclick="retourStep1()">← Modifier le texte</button>
+    </div>
+    <button style="width:100%;background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;margin-top:4px" onclick="closeModal('modal-import-mail')">Annuler</button>
+  </div>
+</div>
+
+<script>
+let detectedVacations=[];
+function openImportMail(){document.getElementById('modal-import-mail').classList.add('open');document.getElementById('import-step-1').style.display='block';document.getElementById('import-step-2').style.display='none';document.getElementById('planning-text').value='';}
+function retourStep1(){document.getElementById('import-step-1').style.display='block';document.getElementById('import-step-2').style.display='none';}
+async function analyserPlanning(){
+  const texte=document.getElementById('planning-text').value.trim();
+  if(!texte){showToast('⚠️ Collez d\'abord le texte du planning');return;}
+  const btn=document.getElementById('btn-analyser');
+  btn.textContent='⏳ Analyse en cours...';btn.disabled=true;
+  try{
+    const today=new Date().toISOString().split('T')[0];
+    const prompt=`Tu es un assistant qui extrait les vacations d'un planning de sécurité.\n\nTexte du planning:\n"""\n${texte}\n"""\n\nDate d'aujourd'hui: ${today}\n\nExtrait TOUTES les vacations. Retourne UNIQUEMENT un JSON valide sans markdown:\n{"vacations":[{"date":"YYYY-MM-DD","site":"nom site","heure_debut":"HH:MM","heure_fin":"HH:MM","employeur":""}]}\n\nSi l'année manque, utilise l'année courante ou suivante selon logique. Si heure manque, mets "".`;
+    const response=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const data=await response.json();
+    const clean=data.content[0].text.trim().replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(clean);
+    detectedVacations=parsed.vacations||[];
+    if(!detectedVacations.length){showToast('⚠️ Aucune vacation détectée');btn.textContent='🤖 Analyser avec l\'IA';btn.disabled=false;return;}
+    afficherResultats();
+  }catch(e){showToast('❌ Erreur — réessayez');btn.textContent='🤖 Analyser avec l\'IA';btn.disabled=false;}
+}
+function afficherResultats(){
+  document.getElementById('import-step-1').style.display='none';
+  document.getElementById('import-step-2').style.display='block';
+  document.getElementById('detected-count').textContent=`${detectedVacations.length} vacation${detectedVacations.length>1?'s':''} détectée${detectedVacations.length>1?'s':''}`;
+  const mo=['JAN','FÉV','MAR','AVR','MAI','JUN','JUL','AOÛ','SEP','OCT','NOV','DÉC'];
+  document.getElementById('detected-list').innerHTML=detectedVacations.map((v,i)=>{
+    const d=new Date(v.date+'T00:00:00');
+    return `<div style="background:var(--gray-50);border-radius:10px;padding:12px;display:flex;align-items:center;gap:12px;border:0.5px solid var(--gray-200)"><div style="background:var(--blue-light);border-radius:8px;width:40px;height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0"><div style="font-size:16px;font-weight:700;color:var(--blue);line-height:1">${d.getDate()}</div><div style="font-size:8px;font-weight:600;color:var(--blue);text-transform:uppercase">${mo[d.getMonth()]}</div></div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.site||'Site'}</div><div style="font-size:11px;color:var(--gray-500);margin-top:2px">${v.heure_debut||'--'} → ${v.heure_fin||'--'}${v.employeur?' · '+v.employeur:''}</div></div><button onclick="detectedVacations.splice(${i},1);if(!detectedVacations.length)retourStep1();else afficherResultats();" style="background:none;border:none;color:var(--gray-300);font-size:18px;cursor:pointer;padding:0 4px">×</button></div>`;
+  }).join('');
+}
+async function confirmerVacations(){
+  if(!detectedVacations.length||!currentUser)return;
+  const btn=document.getElementById('btn-confirmer');
+  btn.textContent='⏳ Ajout en cours...';btn.disabled=true;
+  const rows=detectedVacations.map(v=>({user_id:currentUser.id,site:v.site||'',date:v.date,heure_debut:v.heure_debut||null,heure_fin:v.heure_fin||null,employeur:v.employeur||'',statut:'confirmed'}));
+  const{error}=await sb.from('vacations').insert(rows);
+  if(error){showToast('❌ Erreur');btn.textContent='✅ Confirmer et ajouter';btn.disabled=false;return;}
+  closeModal('modal-import-mail');
+  showToast(`✅ ${rows.length} vacation${rows.length>1?'s':''} ajouté${rows.length>1?'s':''} !`);
+  await loadVacations();
+}
+</script>
+
+<input type="file" id="pdf-file-input" accept=".pdf" style="display:none" onchange="handlePDFFile(this)">
+
+<div class="modal-overlay" id="modal-import-pdf" onclick="closeIfOverlay(event,'modal-import-pdf')">
+  <div class="modal-sheet" style="max-height:90dvh">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📄 Importer un planning PDF</div>
+
+    <div id="pdf-step-1">
+      <div style="font-size:13px;color:var(--gray-500);margin-bottom:16px;line-height:1.5">Sélectionnez votre planning PDF — l'IA extrait automatiquement toutes vos vacations.</div>
+      <div onclick="document.getElementById('pdf-file-input').click()" style="border:2px dashed var(--gray-200);border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;transition:all 0.15s" id="pdf-dropzone">
+        <div style="font-size:36px;margin-bottom:10px">📄</div>
+        <div style="font-size:14px;font-weight:600;color:var(--gray-700)">Appuyez pour sélectionner</div>
+        <div style="font-size:12px;color:var(--gray-400);margin-top:4px">Planning PDF, Comète, tout format accepté</div>
+      </div>
+      <div style="background:var(--blue-light);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:12px;color:var(--blue)">
+        💡 Fonctionne avec tous les formats de planning PDF — Comète SQL, Word converti, scan...
+      </div>
+    </div>
+
+    <div id="pdf-step-loading" style="display:none;text-align:center;padding:32px 0">
+      <div style="font-size:36px;margin-bottom:12px">🤖</div>
+      <div style="font-size:15px;font-weight:600;color:var(--gray-800);margin-bottom:6px">Analyse en cours...</div>
+      <div style="font-size:13px;color:var(--gray-400)" id="pdf-loading-text">Lecture du PDF...</div>
+      <div style="width:48px;height:48px;border:3px solid var(--gray-200);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;margin:16px auto 0"></div>
+    </div>
+
+    <div id="pdf-step-2" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>
+        <div style="font-size:14px;font-weight:600;color:var(--gray-800)" id="pdf-detected-count">0 vacations détectées</div>
+      </div>
+      <div id="pdf-detected-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:300px;overflow-y:auto"></div>
+      <button class="btn-primary" id="btn-pdf-confirmer" onclick="confirmerPDFVacations()">✅ Confirmer et ajouter au planning</button>
+      <button style="width:100%;background:none;border:none;color:var(--blue);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;margin-top:4px" onclick="retourPDFStep1()">← Choisir un autre fichier</button>
+    </div>
+
+    <div id="pdf-step-error" style="display:none">
+      <div style="background:var(--red-light);border-radius:10px;padding:14px;text-align:center;margin-bottom:12px">
+        <div style="font-size:24px;margin-bottom:6px">😕</div>
+        <div style="font-size:13px;color:var(--red);font-weight:500" id="pdf-error-text">Impossible de lire ce PDF</div>
+      </div>
+      <button class="btn-primary" onclick="retourPDFStep1()">Réessayer avec un autre fichier</button>
+    </div>
+
+    <button style="width:100%;background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;margin-top:4px" onclick="closeModal('modal-import-pdf')">Annuler</button>
+  </div>
+</div>
+
+<script>
+let pdfDetectedVacations=[];
+
+function openImportPDF(){
+  document.getElementById('modal-import-pdf').classList.add('open');
+  retourPDFStep1();
+}
+
+function retourPDFStep1(){
+  document.getElementById('pdf-step-1').style.display='block';
+  document.getElementById('pdf-step-loading').style.display='none';
+  document.getElementById('pdf-step-2').style.display='none';
+  document.getElementById('pdf-step-error').style.display='none';
+  document.getElementById('pdf-file-input').value='';
+}
+
+async function handlePDFFile(input){
+  if(!input.files||!input.files[0])return;
+  const file=input.files[0];
+  if(file.type!=='application/pdf'){showToast('⚠️ Sélectionnez un fichier PDF');return;}
+
+  document.getElementById('pdf-step-1').style.display='none';
+  document.getElementById('pdf-step-loading').style.display='block';
+  document.getElementById('pdf-loading-text').textContent='Lecture du PDF...';
+
+  try{
+    const base64=await new Promise((res,rej)=>{
+      const r=new FileReader();
+      r.onload=()=>res(r.result.split(',')[1]);
+      r.onerror=()=>rej(new Error('Lecture échouée'));
+      r.readAsDataURL(file);
+    });
+
+    document.getElementById('pdf-loading-text').textContent='Analyse par l\'IA...';
+
+    const today=new Date().toISOString().split('T')[0];
+    const prompt=`Tu es un assistant qui extrait les vacations d'un planning de sécurité en France.\n\nDate d'aujourd'hui: ${today}\n\nExtrait TOUTES les vacations/gardes/shifts de ce planning PDF.\nRetourne UNIQUEMENT un JSON valide sans markdown ni explication:\n{"vacations":[{"date":"YYYY-MM-DD","site":"nom du site ou lieu","heure_debut":"HH:MM","heure_fin":"HH:MM","employeur":"nom société si mentionné sinon vide"}]}\n\nRègles importantes:\n- Si l'année manque, utilise l'année courante ou suivante selon la logique\n- Si une heure manque, mets chaîne vide ""\n- Inclus TOUTES les vacations même si le format varie\n- Le site peut être une adresse, un nom de magasin, un bâtiment`;
+
+    const response=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:2000,
+        messages:[{
+          role:'user',
+          content:[
+            {type:'document',source:{type:'base64',media_type:'application/pdf',data:base64}},
+            {type:'text',text:prompt}
+          ]
+        }]
+      })
+    });
+
+    const data=await response.json();
+    if(data.error){throw new Error(data.error.message);}
+
+    const clean=data.content[0].text.trim().replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(clean);
+    pdfDetectedVacations=parsed.vacations||[];
+
+    if(!pdfDetectedVacations.length){
+      document.getElementById('pdf-step-loading').style.display='none';
+      document.getElementById('pdf-step-error').style.display='block';
+      document.getElementById('pdf-error-text').textContent='Aucune vacation détectée dans ce PDF';
+      return;
+    }
+
+    afficherPDFResultats();
+
+  }catch(e){
+    document.getElementById('pdf-step-loading').style.display='none';
+    document.getElementById('pdf-step-error').style.display='block';
+    document.getElementById('pdf-error-text').textContent='Erreur : '+e.message;
+  }
+}
+
+function afficherPDFResultats(){
+  document.getElementById('pdf-step-loading').style.display='none';
+  document.getElementById('pdf-step-2').style.display='block';
+  document.getElementById('pdf-detected-count').textContent=`${pdfDetectedVacations.length} vacation${pdfDetectedVacations.length>1?'s':''} détectée${pdfDetectedVacations.length>1?'s':''}`;
+  const mo=['JAN','FÉV','MAR','AVR','MAI','JUN','JUL','AOÛ','SEP','OCT','NOV','DÉC'];
+  document.getElementById('pdf-detected-list').innerHTML=pdfDetectedVacations.map((v,i)=>{
+    const d=new Date(v.date+'T00:00:00');
+    return `<div style="background:var(--gray-50);border-radius:10px;padding:12px;display:flex;align-items:center;gap:12px;border:0.5px solid var(--gray-200)">
+      <div style="background:var(--blue-light);border-radius:8px;width:40px;height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">
+        <div style="font-size:16px;font-weight:700;color:var(--blue);line-height:1">${d.getDate()}</div>
+        <div style="font-size:8px;font-weight:600;color:var(--blue);text-transform:uppercase">${mo[d.getMonth()]}</div>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.site||'Site non précisé'}</div>
+        <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${v.heure_debut||'--'} → ${v.heure_fin||'--'}${v.employeur?' · '+v.employeur:''}</div>
+      </div>
+      <button onclick="pdfDetectedVacations.splice(${i},1);if(!pdfDetectedVacations.length)retourPDFStep1();else afficherPDFResultats();" style="background:none;border:none;color:var(--gray-300);font-size:18px;cursor:pointer;padding:0 4px">×</button>
+    </div>`;
+  }).join('');
+}
+
+async function confirmerPDFVacations(){
+  if(!pdfDetectedVacations.length||!currentUser)return;
+  const btn=document.getElementById('btn-pdf-confirmer');
+  btn.textContent='⏳ Ajout en cours...';btn.disabled=true;
+  const rows=pdfDetectedVacations.map(v=>({user_id:currentUser.id,site:v.site||'',date:v.date,heure_debut:v.heure_debut||null,heure_fin:v.heure_fin||null,employeur:v.employeur||'',statut:'confirmed'}));
+  const{error}=await sb.from('vacations').insert(rows);
+  if(error){showToast('❌ Erreur lors de l\'ajout');btn.textContent='✅ Confirmer et ajouter';btn.disabled=false;return;}
+  closeModal('modal-import-pdf');
+  showToast(`✅ ${rows.length} vacation${rows.length>1?'s':''} ajouté${rows.length>1?'s':''} !`);
+  await loadVacations();
+}
+</script>
