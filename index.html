@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1d4ed8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SecuPRO">
+<link rel="manifest" href="manifest.json">
+<title>SecuPRO — Agent de Sécurité</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue: #2563EB;
+  --blue-dark: #1d4ed8;
+  --blue-light: #eff6ff;
+  --blue-mid: #dbeafe;
+  --green: #16a34a;
+  --green-light: #dcfce7;
+  --orange: #ea580c;
+  --orange-light: #ffedd5;
+  --red: #dc2626;
+  --red-light: #fee2e2;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  --radius: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --shadow: 0 2px 12px rgba(37,99,235,0.08);
+  --shadow-lg: 0 8px 32px rgba(37,99,235,0.15);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-800);
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* === SCREENS === */
+.screen { display: none; flex-direction: column; min-height: 100dvh; padding-bottom: 80px; }
+.screen.active { display: flex; }
+
+/* === HEADER === */
+.header {
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563EB 60%, #3b82f6 100%);
+  padding: 52px 20px 24px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; left: -20px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+}
+.header-top { display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 1; }
+.header-greeting { font-size: 13px; opacity: 0.75; font-weight: 400; margin-bottom: 3px; }
+.header-name { font-size: 22px; font-weight: 600; }
+.header-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 600; color: white;
+  border: 2px solid rgba(255,255,255,0.3);
+  flex-shrink: 0;
+}
+.header-sub { font-size: 12px; opacity: 0.65; margin-top: 4px; position: relative; z-index: 1; }
+
+/* === CONTENT === */
+.content { padding: 16px; flex: 1; }
+
+/* === CARDS === */
+.card {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+}
+.card-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gray-400);
+  margin-bottom: 12px;
+}
+
+/* === SECTION LABELS === */
+.section-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-600);
+  margin: 16px 0 8px;
+}
+
+/* === BADGES === */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  gap: 4px;
+}
+.badge-green { background: var(--green-light); color: var(--green); }
+.badge-orange { background: var(--orange-light); color: var(--orange); }
+.badge-red { background: var(--red-light); color: var(--red); }
+.badge-blue { background: var(--blue-light); color: var(--blue); }
+.badge-gray { background: var(--gray-100); color: var(--gray-500); }
+
+/* === NEXT SHIFT CARD === */
+.shift-card {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  color: white;
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.shift-card::before {
+  content: '';
+  position: absolute; top: -30px; right: -30px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+}
+.shift-date { font-size: 12px; opacity: 0.7; margin-bottom: 4px; }
+.shift-site { font-size: 18px; font-weight: 600; margin-bottom: 2px; }
+.shift-hours { font-size: 13px; opacity: 0.8; margin-bottom: 12px; }
+.shift-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+.shift-pill {
+  background: rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.shift-timer {
+  position: absolute; top: 20px; right: 20px;
+  font-size: 11px; opacity: 0.65;
+  text-align: right;
+}
+.shift-countdown { font-size: 20px; font-weight: 600; opacity: 1; display: block; }
+
+/* === SALARY CARD === */
+.salary-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.salary-label { font-size: 13px; color: var(--gray-500); }
+.salary-amount { font-size: 22px; font-weight: 600; color: var(--gray-900); }
+.salary-net { font-size: 14px; color: var(--green); font-weight: 500; }
+.progress-bar-bg {
+  background: var(--gray-100);
+  border-radius: 99px;
+  height: 8px;
+  overflow: hidden;
+  margin: 8px 0 4px;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #2563EB, #3b82f6);
+  transition: width 0.8s ease;
+}
+.progress-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--gray-400); }
+
+/* === NOTIFICATIONS === */
+.notif-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 0;
+  border-bottom: 0.5px solid var(--gray-100);
+}
+.notif-item:last-child { border-bottom: none; padding-bottom: 0; }
+.notif-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  margin-top: 5px; flex-shrink: 0;
+}
+.notif-text { font-size: 13px; color: var(--gray-700); line-height: 1.4; }
+.notif-time { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+
+/* === BOTTOM NAV === */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  background: white;
+  border-top: 1px solid var(--gray-100);
+  display: flex;
+  padding: 8px 0 20px;
+  z-index: 100;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 3px; cursor: pointer; padding: 4px 0;
+  color: var(--gray-400); transition: color 0.2s;
+  border: none; background: none; font-family: inherit;
+}
+.nav-item.active { color: var(--blue); }
+.nav-icon { font-size: 20px; line-height: 1; }
+.nav-label { font-size: 10px; font-weight: 500; }
+
+/* === FILTER TABS === */
+.filter-tabs {
+  display: flex; gap: 6px; margin-bottom: 12px;
+  overflow-x: auto; padding-bottom: 2px;
+}
+.filter-tabs::-webkit-scrollbar { display: none; }
+.filter-tab {
+  padding: 6px 14px; border-radius: 99px;
+  font-size: 12px; font-weight: 500;
+  border: 1px solid var(--gray-200);
+  background: white; color: var(--gray-500);
+  white-space: nowrap; cursor: pointer; transition: all 0.15s;
+}
+.filter-tab.active {
+  background: var(--blue); color: white; border-color: var(--blue);
+}
+
+/* === VACATION ITEM === */
+.vacation-item {
+  background: white;
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow);
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer;
+}
+.vacation-date-box {
+  background: var(--blue-light);
+  border-radius: 10px;
+  width: 44px; height: 48px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.vd-day { font-size: 18px; font-weight: 700; color: var(--blue); line-height: 1; }
+.vd-month { font-size: 9px; font-weight: 600; color: var(--blue); text-transform: uppercase; letter-spacing: 0.05em; }
+.vacation-info { flex: 1; min-width: 0; }
+.vacation-site { font-size: 14px; font-weight: 600; color: var(--gray-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vacation-hours { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+.vacation-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+
+/* === FAB === */
+.fab {
+  position: fixed; bottom: 84px; right: 16px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--blue); color: white;
+  font-size: 24px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(37,99,235,0.35);
+  cursor: pointer; border: none; z-index: 99;
+  transition: transform 0.15s;
+}
+.fab:active { transform: scale(0.94); }
+
+/* === PAIE === */
+.paie-hero {
+  background: linear-gradient(135deg, #1d4ed8, #2563EB);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  color: white;
+  margin-bottom: 12px;
+}
+.paie-month { font-size: 12px; opacity: 0.7; margin-bottom: 4px; }
+.paie-net-label { font-size: 13px; opacity: 0.8; }
+.paie-net-amount { font-size: 36px; font-weight: 600; margin-bottom: 2px; }
+.paie-brut { font-size: 12px; opacity: 0.65; }
+.paie-hours-row { display: flex; justify-content: space-between; font-size: 12px; opacity: 0.75; margin-top: 12px; }
+.fiche-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 0.5px solid var(--gray-100);
+}
+.fiche-item:last-child { border-bottom: none; }
+.fiche-icon {
+  width: 36px; height: 36px; border-radius: 9px;
+  background: var(--blue-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.fiche-name { font-size: 14px; font-weight: 500; color: var(--gray-800); }
+.fiche-date { font-size: 11px; color: var(--gray-400); margin-top: 1px; }
+.fiche-amount { font-size: 14px; font-weight: 600; color: var(--gray-800); margin-left: auto; }
+
+/* === DOCUMENTS === */
+.doc-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow);
+  display: flex; align-items: center; gap: 14px;
+}
+.doc-icon {
+  width: 48px; height: 48px; border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.doc-title { font-size: 15px; font-weight: 600; color: var(--gray-800); }
+.doc-sub { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+.doc-expiry { font-size: 11px; margin-top: 4px; font-weight: 500; }
+.alert-banner {
+  background: var(--orange-light);
+  border-left: 3px solid var(--orange);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--orange);
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+/* === PROFIL === */
+.profil-avatar {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 600; color: white;
+  margin: 0 auto 10px;
+}
+.profil-name { font-size: 20px; font-weight: 600; text-align: center; }
+.profil-badge { display: flex; justify-content: center; margin-top: 4px; }
+.profil-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 0; border-bottom: 0.5px solid var(--gray-100);
+}
+.profil-row:last-child { border-bottom: none; }
+.profil-row-icon { font-size: 18px; width: 28px; text-align: center; }
+.profil-row-label { font-size: 12px; color: var(--gray-400); }
+.profil-row-value { font-size: 14px; font-weight: 500; color: var(--gray-800); }
+.profil-row-value.link { color: var(--blue); }
+.employer-card {
+  background: var(--gray-50);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 8px;
+}
+.employer-name { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+.employer-contact { font-size: 12px; color: var(--blue); margin-top: 3px; }
+
+/* === EMAIL IMPORT === */
+.import-section { margin-top: 8px; }
+.email-box {
+  background: var(--blue-light);
+  border: 1.5px dashed var(--blue);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 8px;
+}
+.email-address {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px; color: var(--blue);
+  flex: 1; word-break: break-all;
+}
+.btn-copy {
+  background: var(--blue); color: white;
+  border: none; border-radius: 8px;
+  padding: 6px 12px; font-size: 12px; font-weight: 500;
+  cursor: pointer; white-space: nowrap; font-family: inherit;
+  transition: background 0.15s;
+}
+.btn-copy:active { background: var(--blue-dark); }
+.btn-primary {
+  background: var(--blue); color: white;
+  border: none; border-radius: var(--radius);
+  padding: 13px 16px; font-size: 14px; font-weight: 600;
+  cursor: pointer; width: 100%; font-family: inherit;
+  transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-primary:active { background: var(--blue-dark); transform: scale(0.98); }
+.btn-secondary {
+  background: var(--gray-100); color: var(--gray-700);
+  border: none; border-radius: var(--radius);
+  padding: 12px 16px; font-size: 14px; font-weight: 500;
+  cursor: pointer; width: 100%; font-family: inherit;
+  transition: all 0.15s; margin-top: 8px;
+}
+.btn-danger {
+  background: var(--red-light); color: var(--red);
+  border: none; border-radius: var(--radius);
+  padding: 13px 16px; font-size: 14px; font-weight: 600;
+  cursor: pointer; width: 100%; font-family: inherit;
+}
+
+/* === MODAL === */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  z-index: 200; display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-sheet {
+  background: white; border-radius: 24px 24px 0 0;
+  padding: 20px; width: 100%; max-width: 430px;
+  max-height: 80dvh; overflow-y: auto;
+  transform: translateY(100%); transition: transform 0.3s ease;
+}
+.modal-overlay.open .modal-sheet { transform: translateY(0); }
+.modal-handle {
+  width: 36px; height: 4px; border-radius: 99px;
+  background: var(--gray-200); margin: 0 auto 16px;
+}
+.modal-title { font-size: 17px; font-weight: 600; margin-bottom: 16px; }
+.detected-item {
+  background: var(--gray-50); border-radius: 10px;
+  padding: 12px; margin-bottom: 8px;
+}
+.detected-date { font-size: 13px; font-weight: 600; color: var(--gray-800); }
+.detected-detail { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+
+/* === HOW IT WORKS === */
+.how-step {
+  display: flex; gap: 12px; padding: 10px 0;
+  border-bottom: 0.5px solid var(--gray-100);
+}
+.how-step:last-child { border-bottom: none; }
+.how-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--blue); color: white;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.how-text { font-size: 13px; color: var(--gray-600); line-height: 1.5; }
+.how-text strong { color: var(--gray-800); }
+
+/* === ANIMATIONS === */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.screen.active { animation: fadeIn 0.2s ease; }
+</style>
+</head>
+<body>
+
+<!-- ===== SCREEN 1: ACCUEIL ===== -->
+<div class="screen active" id="screen-home">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-greeting">Bonjour 👋</div>
+        <div class="header-name">Mustapha Benali</div>
+        <div class="header-sub">Mardi 1 avril 2025 · Agent de sécurité</div>
+      </div>
+      <div class="header-avatar">MB</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="section-label">Prochain vacation</div>
+    <div class="shift-card">
+      <div class="shift-timer">
+        Dans<span class="shift-countdown">14h 30</span>
+      </div>
+      <div class="shift-date">Demain — Mercredi 2 avril</div>
+      <div class="shift-site">Centre Commercial Bellecour</div>
+      <div class="shift-hours">06:00 → 14:00 · 8 heures</div>
+      <div class="shift-meta">
+        <div class="shift-pill">🌅 Matin</div>
+        <div class="shift-pill">Lyon 2e</div>
+        <div class="shift-pill">SecuGuard SARL</div>
+      </div>
+    </div>
+
+    <div class="section-label">Salaire du mois</div>
+    <div class="card">
+      <div class="salary-row">
+        <div>
+          <div class="salary-label">Salaire net — Mars 2025</div>
+          <div class="salary-amount">1 847 <span style="font-size:15px;color:var(--gray-400)">€</span></div>
+        </div>
+        <div class="salary-net">+2,4%</div>
+      </div>
+      <div class="salary-label" style="font-size:11px;margin-bottom:4px">Heures effectuées — 127 / 151h</div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width: 84%"></div>
+      </div>
+      <div class="progress-labels">
+        <span>127h travaillées</span>
+        <span>151h contractuelles</span>
+      </div>
+    </div>
+
+    <div class="section-label">Notifications</div>
+    <div class="card">
+      <div class="notif-item">
+        <div class="notif-dot" style="background:var(--orange)"></div>
+        <div>
+          <div class="notif-text">Votre carte professionnelle expire dans <strong>42 jours</strong>. Pensez à la renouveler auprès du CNAPS.</div>
+          <div class="notif-time">Il y a 2 heures</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-dot" style="background:var(--blue)"></div>
+        <div>
+          <div class="notif-text">Nouveau planning importé — <strong>6 vacations</strong> ajoutées pour avril.</div>
+          <div class="notif-time">Hier, 18:42</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 2: PLANNING ===== -->
+<div class="screen" id="screen-planning">
+  <div class="header" style="padding-bottom: 16px;">
+    <div class="header-top">
+      <div>
+        <div class="header-greeting">Planning</div>
+        <div class="header-name">Vos vacations</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="openImportModal()" style="background:rgba(255,255,255,0.2);border:none;border-radius:10px;color:white;font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer;font-family:inherit">📄 Import PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="filter-tabs">
+      <div class="filter-tab active" onclick="setFilter(this,'all')">Tous</div>
+      <div class="filter-tab" onclick="setFilter(this,'today')">Aujourd'hui</div>
+      <div class="filter-tab" onclick="setFilter(this,'week')">Cette semaine</div>
+      <div class="filter-tab" onclick="setFilter(this,'month')">Ce mois</div>
+    </div>
+
+    <div id="vacations-list">
+      <!-- injected by JS -->
+    </div>
+  </div>
+
+  <button class="fab" onclick="openAddVacation()">+</button>
+</div>
+
+<!-- ===== SCREEN 3: PAIE ===== -->
+<div class="screen" id="screen-paie">
+  <div class="header" style="padding-bottom: 16px;">
+    <div class="header-top">
+      <div>
+        <div class="header-greeting">Paie & Budget</div>
+        <div class="header-name">Mars 2025</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="paie-hero">
+      <div class="paie-month">Salaire net — Mars 2025</div>
+      <div class="paie-net-amount">1 847,00 €</div>
+      <div class="paie-brut">Brut : 2 246,00 € · Cotisations : 399,00 €</div>
+      <div class="progress-bar-bg" style="margin-top:14px">
+        <div class="progress-bar-fill" style="width:84%"></div>
+      </div>
+      <div class="paie-hours-row">
+        <span>127h effectuées</span>
+        <span>151h contractuelles</span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:13px;color:var(--gray-500)">Heures supplémentaires</span>
+        <span style="font-size:14px;font-weight:600;color:var(--green)">+ 12h → +156 €</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="font-size:13px;color:var(--gray-500)">Primes</span>
+        <span style="font-size:14px;font-weight:600">85,00 €</span>
+      </div>
+    </div>
+
+    <div class="section-label">Historique des fiches de paie</div>
+    <div class="card">
+      <div class="fiche-item">
+        <div class="fiche-icon">📄</div>
+        <div>
+          <div class="fiche-name">Mars 2025</div>
+          <div class="fiche-date">Importé le 01/04/2025</div>
+        </div>
+        <div class="fiche-amount">1 847 €</div>
+      </div>
+      <div class="fiche-item">
+        <div class="fiche-icon">📄</div>
+        <div>
+          <div class="fiche-name">Février 2025</div>
+          <div class="fiche-date">Importé le 01/03/2025</div>
+        </div>
+        <div class="fiche-amount">1 802 €</div>
+      </div>
+      <div class="fiche-item">
+        <div class="fiche-icon">📄</div>
+        <div>
+          <div class="fiche-name">Janvier 2025</div>
+          <div class="fiche-date">Importé le 01/02/2025</div>
+        </div>
+        <div class="fiche-amount">1 819 €</div>
+      </div>
+    </div>
+
+    <button class="btn-primary">📤 Ajouter une fiche de paie</button>
+  </div>
+</div>
+
+<!-- ===== SCREEN 4: DOCUMENTS ===== -->
+<div class="screen" id="screen-docs">
+  <div class="header" style="padding-bottom:16px">
+    <div class="header-top">
+      <div>
+        <div class="header-greeting">Mes documents</div>
+        <div class="header-name">Certifications & Cartes</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="alert-banner">
+      ⚠️ Votre carte professionnelle expire dans <strong>42 jours</strong> — Renouvelez-la sur cnaps.fr
+    </div>
+
+    <div class="doc-card">
+      <div class="doc-icon" style="background:#eff6ff">🪪</div>
+      <div style="flex:1">
+        <div class="doc-title">Carte professionnelle</div>
+        <div class="doc-sub">N° : APS-69-2021-04847</div>
+        <div class="doc-expiry" style="color:var(--orange)">⏰ Expire le 12/05/2025 (42 jours)</div>
+      </div>
+      <span class="badge badge-orange">Bientôt</span>
+    </div>
+
+    <div class="doc-card">
+      <div class="doc-icon" style="background:#dcfce7">🩺</div>
+      <div style="flex:1">
+        <div class="doc-title">Certificat SST</div>
+        <div class="doc-sub">Sauveteur Secouriste du Travail</div>
+        <div class="doc-expiry" style="color:var(--green)">✅ Valide jusqu'au 14/09/2026</div>
+      </div>
+      <span class="badge badge-green">Valide</span>
+    </div>
+
+    <div class="doc-card">
+      <div class="doc-icon" style="background:#dcfce7">🎓</div>
+      <div style="flex:1">
+        <div class="doc-title">CQP Agent de Sécurité</div>
+        <div class="doc-sub">Certificat de Qualification Pro.</div>
+        <div class="doc-expiry" style="color:var(--green)">✅ Valide — pas d'expiration</div>
+      </div>
+      <span class="badge badge-green">Valide</span>
+    </div>
+
+    <div class="doc-card">
+      <div class="doc-icon" style="background:#fee2e2">📋</div>
+      <div style="flex:1">
+        <div class="doc-title">Habilitation électrique</div>
+        <div class="doc-sub">H0V B0</div>
+        <div class="doc-expiry" style="color:var(--red)">❌ Expirée le 03/01/2025</div>
+      </div>
+      <span class="badge badge-red">Expirée</span>
+    </div>
+
+    <button class="btn-primary" style="margin-top:8px">📎 Ajouter un document</button>
+  </div>
+</div>
+
+<!-- ===== SCREEN 5: PROFIL ===== -->
+<div class="screen" id="screen-profil">
+  <div class="header" style="padding-bottom:20px">
+    <div class="header-top">
+      <div><div class="header-greeting">Profil</div><div class="header-name">Mon compte</div></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="card" style="text-align:center;padding-top:20px;padding-bottom:20px">
+      <div class="profil-avatar">MB</div>
+      <div class="profil-name">Mustapha Benali</div>
+      <div class="profil-badge"><span class="badge badge-blue" style="margin-top:6px">Agent de sécurité · Coeff. 140</span></div>
+    </div>
+
+    <div class="section-label">Informations personnelles</div>
+    <div class="card">
+      <div class="profil-row">
+        <div class="profil-row-icon">📱</div>
+        <div style="flex:1">
+          <div class="profil-row-label">Téléphone</div>
+          <div class="profil-row-value link">06 12 34 56 78</div>
+        </div>
+      </div>
+      <div class="profil-row">
+        <div class="profil-row-icon">✉️</div>
+        <div style="flex:1">
+          <div class="profil-row-label">Email personnel</div>
+          <div class="profil-row-value">m.benali@gmail.com</div>
+        </div>
+      </div>
+      <div class="profil-row" style="border-bottom:none">
+        <div class="profil-row-icon">📍</div>
+        <div style="flex:1">
+          <div class="profil-row-label">Ville</div>
+          <div class="profil-row-value">Lyon, 69001</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Mes employeurs</div>
+    <div class="employer-card">
+      <div class="employer-name">SecuGuard SARL</div>
+      <div style="font-size:12px;color:var(--gray-500);margin-top:2px">Chef de site : M. Rousseau</div>
+      <div class="employer-contact">📞 04 72 11 22 33 · planning@secuguard.fr</div>
+    </div>
+    <div class="employer-card">
+      <div class="employer-name">Prévention & Sécurité Lyon</div>
+      <div style="font-size:12px;color:var(--gray-500);margin-top:2px">RH : Mme. Fontaine</div>
+      <div class="employer-contact">📞 04 78 55 44 11</div>
+    </div>
+
+    <div class="section-label">Import planning par email</div>
+    <div class="card import-section">
+      <div style="font-size:13px;color:var(--gray-600);margin-bottom:10px">
+        Envoyez votre planning PDF à cette adresse — SecuPRO le détecte automatiquement.
+      </div>
+      <div class="email-box">
+        <div class="email-address">marc.dupont.planning@secuguard.app</div>
+        <button class="btn-copy" onclick="copyEmail()">Copier</button>
+      </div>
+      <div class="section-label" style="margin-top:12px;margin-bottom:8px">Comment ça marche</div>
+      <div class="how-step">
+        <div class="how-num">1</div>
+        <div class="how-text"><strong>Copiez l'adresse</strong> ci-dessus et communiquez-la à votre employeur ou chef de site.</div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">2</div>
+        <div class="how-text"><strong>L'employeur envoie</strong> votre planning PDF par email à cette adresse.</div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">3</div>
+        <div class="how-text"><strong>SecuPRO détecte</strong> automatiquement les dates, horaires et lieux.</div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">4</div>
+        <div class="how-text"><strong>Vous validez</strong> les vacations détectées avant qu'elles soient ajoutées.</div>
+      </div>
+    </div>
+
+    <button class="btn-danger" style="margin-top:4px">Se déconnecter</button>
+  </div>
+</div>
+
+<!-- ===== BOTTOM NAV ===== -->
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="goTo('home',this)">
+    <span class="nav-icon">🏠</span>
+    <span class="nav-label">Accueil</span>
+  </button>
+  <button class="nav-item" onclick="goTo('planning',this)">
+    <span class="nav-icon">📅</span>
+    <span class="nav-label">Planning</span>
+  </button>
+  <button class="nav-item" onclick="goTo('paie',this)">
+    <span class="nav-icon">💶</span>
+    <span class="nav-label">Paie</span>
+  </button>
+  <button class="nav-item" onclick="goTo('docs',this)">
+    <span class="nav-icon">📂</span>
+    <span class="nav-label">Documents</span>
+  </button>
+  <button class="nav-item" onclick="goTo('profil',this)">
+    <span class="nav-icon">👤</span>
+    <span class="nav-label">Profil</span>
+  </button>
+</nav>
+
+<!-- ===== MODAL: IMPORT PDF ===== -->
+<div class="modal-overlay" id="modal-import" onclick="closeIfOverlay(event,'modal-import')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Importer un planning PDF</div>
+    <div style="font-size:13px;color:var(--gray-500);margin-bottom:16px">
+      Choisissez votre méthode d'import. Les vacations détectées vous seront présentées pour validation.
+    </div>
+    <label style="display:block;cursor:pointer">
+      <div style="border:2px dashed var(--gray-200);border-radius:var(--radius-lg);padding:24px;text-align:center;margin-bottom:10px">
+        <div style="font-size:32px;margin-bottom:8px">📄</div>
+        <div style="font-size:14px;font-weight:600;color:var(--gray-700)">Sélectionner un fichier PDF</div>
+        <div style="font-size:12px;color:var(--gray-400);margin-top:4px">Comète SQL, planning papier scanné...</div>
+      </div>
+      <input type="file" accept=".pdf" style="display:none" onchange="simulatePdfParse()">
+    </label>
+    <button class="btn-secondary" onclick="simulateEmailReception()">📧 Simuler réception email</button>
+    <button class="btn-secondary" style="margin-top:8px" onclick="closeModal('modal-import')">Annuler</button>
+  </div>
+</div>
+
+<!-- ===== MODAL: VACATIONS DÉTECTÉES ===== -->
+<div class="modal-overlay" id="modal-detected" onclick="closeIfOverlay(event,'modal-detected')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Vacations détectées ✅</div>
+    <div style="font-size:13px;color:var(--gray-500);margin-bottom:14px">
+      6 vacations trouvées dans le planning. Confirmez pour les ajouter.
+    </div>
+
+    <div class="detected-item">
+      <div class="detected-date">Mercredi 2 avril 2025</div>
+      <div class="detected-detail">Centre Commercial Bellecour · 06:00 → 14:00 · SecuGuard</div>
+    </div>
+    <div class="detected-item">
+      <div class="detected-date">Vendredi 4 avril 2025</div>
+      <div class="detected-detail">Gare Part-Dieu · 14:00 → 22:00 · SecuGuard</div>
+    </div>
+    <div class="detected-item">
+      <div class="detected-date">Samedi 5 avril 2025</div>
+      <div class="detected-detail">Musée des Confluences · 22:00 → 06:00 · SecuGuard</div>
+    </div>
+    <div class="detected-item">
+      <div class="detected-date">Lundi 7 avril 2025</div>
+      <div class="detected-detail">Centre Commercial Bellecour · 06:00 → 14:00 · SecuGuard</div>
+    </div>
+    <div class="detected-item">
+      <div class="detected-date">Mercredi 9 avril 2025</div>
+      <div class="detected-detail">Stade de Gerland · 14:00 → 22:00 · SecuGuard</div>
+    </div>
+    <div class="detected-item">
+      <div class="detected-date">Samedi 12 avril 2025</div>
+      <div class="detected-detail">Gare Part-Dieu · 22:00 → 06:00 · SecuGuard</div>
+    </div>
+
+    <button class="btn-primary" style="margin-top:12px" onclick="confirmVacations()">✅ Confirmer et ajouter au planning</button>
+    <button class="btn-secondary" onclick="closeModal('modal-detected')">Annuler</button>
+  </div>
+</div>
+
+<script>
+// === DATA ===
+const vacations = [
+  { day:'02', month:'AVR', site:'Centre Commercial Bellecour', hours:'06:00 → 14:00 (8h)', type:'Matin', status:'confirmed', date:'2025-04-02' },
+  { day:'04', month:'AVR', site:'Gare Part-Dieu', hours:'14:00 → 22:00 (8h)', type:'Après-midi', status:'confirmed', date:'2025-04-04' },
+  { day:'05', month:'AVR', site:'Musée des Confluences', hours:'22:00 → 06:00 (8h)', type:'Nuit', status:'pending', date:'2025-04-05' },
+  { day:'07', month:'AVR', site:'Centre Commercial Bellecour', hours:'06:00 → 14:00 (8h)', type:'Matin', status:'confirmed', date:'2025-04-07' },
+  { day:'09', month:'AVR', site:'Stade de Gerland', hours:'14:00 → 22:00 (8h)', type:'Après-midi', status:'modified', date:'2025-04-09' },
+  { day:'12', month:'AVR', site:'Gare Part-Dieu', hours:'22:00 → 06:00 (8h)', type:'Nuit', status:'confirmed', date:'2025-04-12' },
+];
+
+const statusMap = {
+  confirmed: { label:'Confirmé', cls:'badge-green' },
+  pending: { label:'En attente', cls:'badge-orange' },
+  modified: { label:'Modifié', cls:'badge-blue' },
+};
+
+function renderVacations(list) {
+  const el = document.getElementById('vacations-list');
+  if (!list.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--gray-400);padding:32px 0;font-size:14px">Aucun vacation pour ce filtre</div>';
+    return;
+  }
+  el.innerHTML = list.map(v => {
+    const s = statusMap[v.status];
+    return `<div class="vacation-item">
+      <div class="vacation-date-box">
+        <div class="vd-day">${v.day}</div>
+        <div class="vd-month">${v.month}</div>
+      </div>
+      <div class="vacation-info">
+        <div class="vacation-site">${v.site}</div>
+        <div class="vacation-hours">${v.hours}</div>
+      </div>
+      <div class="vacation-right">
+        <span class="badge ${s.cls}">${s.label}</span>
+        <span style="font-size:11px;color:var(--gray-400)">${v.type}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+renderVacations(vacations);
+
+// === NAVIGATION ===
+function goTo(screen, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + screen).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// === FILTERS ===
+function setFilter(el, type) {
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const today = '2025-04-01';
+  if (type === 'all') renderVacations(vacations);
+  else if (type === 'today') renderVacations(vacations.filter(v => v.date === today));
+  else if (type === 'week') renderVacations(vacations.filter(v => v.date >= '2025-03-31' && v.date <= '2025-04-06'));
+  else if (type === 'month') renderVacations(vacations.filter(v => v.date.startsWith('2025-04')));
+}
+
+// === MODALS ===
+function openImportModal() {
+  document.getElementById('modal-import').classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+function closeIfOverlay(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
+}
+function simulatePdfParse() {
+  closeModal('modal-import');
+  setTimeout(() => document.getElementById('modal-detected').classList.add('open'), 300);
+}
+function simulateEmailReception() {
+  closeModal('modal-import');
+  setTimeout(() => document.getElementById('modal-detected').classList.add('open'), 300);
+}
+function confirmVacations() {
+  closeModal('modal-detected');
+  // Show toast
+  const toast = document.createElement('div');
+  toast.textContent = '✅ 6 vacations ajoutées au planning !';
+  Object.assign(toast.style, {
+    position:'fixed', bottom:'90px', left:'50%', transform:'translateX(-50%)',
+    background:'var(--green)', color:'white', padding:'10px 20px',
+    borderRadius:'99px', fontSize:'13px', fontWeight:'600',
+    zIndex:'300', whiteSpace:'nowrap', fontFamily:'DM Sans,sans-serif',
+    boxShadow:'0 4px 16px rgba(22,163,74,0.35)'
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+function openAddVacation() {
+  alert('Fonctionnalité : Ajouter un vacation manuellement');
+}
+function copyEmail() {
+  navigator.clipboard.writeText('marc.dupont.planning@secuguard.app').then(() => {
+    const btn = document.querySelector('.btn-copy');
+    btn.textContent = '✓ Copié';
+    btn.style.background = 'var(--green)';
+    setTimeout(() => { btn.textContent = 'Copier'; btn.style.background = 'var(--blue)'; }, 2000);
+  });
+}
+
+// === COUNTDOWN ===
+function updateCountdown() {
+  const next = new Date('2025-04-02T06:00:00');
+  const now = new Date('2025-04-01T15:30:00');
+  const diff = next - now;
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const el = document.querySelector('.shift-countdown');
+  if (el) el.textContent = h + 'h ' + String(m).padStart(2,'0');
+}
+updateCountdown();
+</script>
+</body>
+</html>

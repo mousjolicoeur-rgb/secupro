@@ -1,0 +1,186 @@
+
+<style>
+.rmap { padding: 1rem 0; font-family: var(--font-sans); }
+.phase { margin-bottom: 1.5rem; }
+.phase-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.phase-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; }
+.phase-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+.phase-sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 1px; }
+.tasks { display: flex; flex-direction: column; gap: 6px; padding-left: 38px; }
+.task { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 10px; border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-primary); }
+.task-icon { font-size: 14px; width: 20px; text-align: center; flex-shrink: 0; margin-top: 1px; }
+.task-body { flex: 1; min-width: 0; }
+.task-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.task-detail { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+.tag { display: inline-block; padding: 2px 7px; border-radius: 5px; font-size: 10px; font-weight: 500; margin-top: 4px; }
+.tag-free { background: #dcfce7; color: #15803d; }
+.tag-paid { background: #fee2e2; color: #b91c1c; }
+.tag-low { background: #dbeafe; color: #1d4ed8; }
+.connector { width: 1px; height: 14px; background: var(--color-border-tertiary); margin-left: 13px; }
+.revenue-box { background: var(--color-background-secondary); border-radius: 12px; padding: 14px 16px; margin-top: 8px; }
+.rev-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.rev-row:last-child { border-bottom: none; }
+.rev-label { font-size: 12px; color: var(--color-text-secondary); }
+.rev-value { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.rev-value.green { color: #16a34a; }
+</style>
+
+<div class="rmap">
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num" style="background:#dbeafe;color:#1d4ed8">1</div>
+      <div>
+        <div class="phase-title">Mise en ligne — Semaine 1</div>
+        <div class="phase-sub">Héberger la PWA gratuitement et la rendre accessible</div>
+      </div>
+    </div>
+    <div class="tasks">
+      <div class="task">
+        <div class="task-icon">🌐</div>
+        <div class="task-body">
+          <div class="task-name">Hébergement sur Vercel ou Netlify</div>
+          <div class="task-detail">Glisser-déposer le dossier HTML — en ligne en 2 minutes. URL type secupro.vercel.app</div>
+          <span class="tag tag-free">100% gratuit</span>
+        </div>
+      </div>
+      <div class="task">
+        <div class="task-icon">🔗</div>
+        <div class="task-body">
+          <div class="task-name">Nom de domaine secupro.app</div>
+          <div class="task-detail">Achat sur OVH ou Namecheap + connexion à Vercel</div>
+          <span class="tag tag-paid">~10€/an</span>
+        </div>
+      </div>
+      <div class="task">
+        <div class="task-icon">🔐</div>
+        <div class="task-body">
+          <div class="task-name">Authentification avec Supabase</div>
+          <div class="task-detail">Email/mot de passe — données sécurisées par agent</div>
+          <span class="tag tag-free">Gratuit jusqu'à 50 000 users</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num" style="background:#fef9c3;color:#a16207">2</div>
+      <div>
+        <div class="phase-title">Paiement — Semaine 2-3</div>
+        <div class="phase-sub">Encaisser l'abonnement automatiquement</div>
+      </div>
+    </div>
+    <div class="tasks">
+      <div class="task">
+        <div class="task-icon">💳</div>
+        <div class="task-body">
+          <div class="task-name">Stripe pour les abonnements</div>
+          <div class="task-detail">Abonnement mensuel 4,99€ ou 9,99€ — Stripe gère tout : CB, prélèvement, factures</div>
+          <span class="tag tag-low">2,9% + 0,30€ par transaction</span>
+        </div>
+      </div>
+      <div class="task">
+        <div class="task-icon">🔓</div>
+        <div class="task-body">
+          <div class="task-name">Freemium — débloquage après paiement</div>
+          <div class="task-detail">Version gratuite : 1 employeur, 5 vacations. Version Pro : illimité + import PDF</div>
+          <span class="tag tag-free">Logique simple à coder</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num" style="background:#dcfce7;color:#15803d">3</div>
+      <div>
+        <div class="phase-title">Acquisition — Mois 1-3</div>
+        <div class="phase-sub">Trouver tes premiers 50 abonnés payants</div>
+      </div>
+    </div>
+    <div class="tasks">
+      <div class="task">
+        <div class="task-icon">👥</div>
+        <div class="task-body">
+          <div class="task-name">Groupes Facebook / WhatsApp agents sécu</div>
+          <div class="task-detail">Il existe des dizaines de groupes actifs. Partager une démo vidéo de 60 secondes</div>
+          <span class="tag tag-free">Gratuit</span>
+        </div>
+      </div>
+      <div class="task">
+        <div class="task-icon">🎥</div>
+        <div class="task-body">
+          <div class="task-name">TikTok / Reels ciblés agents sécu</div>
+          <div class="task-detail">"J'ai créé une appli pour les agents comme moi" — contenu authentique qui convertit</div>
+          <span class="tag tag-free">Gratuit</span>
+        </div>
+      </div>
+      <div class="task">
+        <div class="task-icon">🤝</div>
+        <div class="task-body">
+          <div class="task-name">Partenariat avec syndicats / forums SSIAP</div>
+          <div class="task-detail">USP Sécurité, CFTC, forums professionnels — audience captive</div>
+          <span class="tag tag-free">Gratuit</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num" style="background:#f3e8ff;color:#7e22ce">4</div>
+      <div>
+        <div class="phase-title">Croissance — Mois 3+</div>
+        <div class="phase-sub">Scaler vers 500 puis 1 000 abonnés</div>
+      </div>
+    </div>
+    <div class="tasks">
+      <div class="task">
+        <div class="task-icon">📱</div>
+        <div class="task-body">
+          <div class="task-name">Publier sur Google Play</div>
+          <div class="task-detail">La PWA devient une app Android via PWABuilder — 25$ de frais uniques</div>
+          <span class="tag tag-paid">25$ une fois</span>
+        </div>
+      </div>
+      <div class="task">
+        <div class="task-icon">📧</div>
+        <div class="task-body">
+          <div class="task-name">Email marketing avec Brevo (ex-Sendinblue)</div>
+          <div class="task-detail">Newsletter mensuelle, upsell, rétention — 300 emails/jour gratuits</div>
+          <span class="tag tag-free">Gratuit</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 1.5rem;">
+    <div style="font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 8px;">Projection revenus mensuels</div>
+    <div class="revenue-box">
+      <div class="rev-row">
+        <span class="rev-label">50 abonnés × 4,99€</span>
+        <span class="rev-value">~230€/mois</span>
+      </div>
+      <div class="rev-row">
+        <span class="rev-label">200 abonnés × 4,99€</span>
+        <span class="rev-value">~920€/mois</span>
+      </div>
+      <div class="rev-row">
+        <span class="rev-label">500 abonnés × 4,99€</span>
+        <span class="rev-value green">~2 300€/mois</span>
+      </div>
+      <div class="rev-row">
+        <span class="rev-label">Coûts fixes (Supabase + domaine)</span>
+        <span class="rev-value" style="color:#dc2626">~15€/mois</span>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,154 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+.ob-wrap{min-height:620px;background:rgba(0,0,0,0.55);display:flex;align-items:flex-end;justify-content:center;font-family:'DM Sans',sans-serif;}
+.ob-sheet{background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:420px;padding:0 0 20px;overflow:hidden;}
+.ob-hero{background:linear-gradient(135deg,#1d4ed8 0%,#2563EB 60%,#60a5fa 100%);padding:22px 24px 18px;position:relative;overflow:hidden;}
+.ob-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.08);}
+.ob-logo{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:10px;position:relative;z-index:1;}
+.ob-hero h2{font-size:19px;font-weight:600;color:#fff;position:relative;z-index:1;margin-bottom:2px;}
+.ob-hero p{font-size:11px;color:rgba(255,255,255,0.75);position:relative;z-index:1;}
+.ob-steps{padding:12px 24px 0;}
+.ob-step{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:0.5px solid #f1f5f9;opacity:0;transform:translateY(8px);animation:stepIn 0.3s ease forwards;}
+.ob-step:last-child{border-bottom:none;}
+.ob-step:nth-child(1){animation-delay:0.06s}
+.ob-step:nth-child(2){animation-delay:0.12s}
+.ob-step:nth-child(3){animation-delay:0.18s}
+.ob-step:nth-child(4){animation-delay:0.24s}
+.ob-step:nth-child(5){animation-delay:0.30s}
+.ob-step:nth-child(6){animation-delay:0.36s}
+@keyframes stepIn{to{opacity:1;transform:translateY(0)}}
+.ob-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.ob-step-text .title{font-size:12.5px;font-weight:500;color:#1e293b;}
+.ob-step-text .sub{font-size:11px;color:#64748b;margin-top:1px;line-height:1.4;}
+.sub-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;}
+.sub-tag{display:inline-flex;align-items:center;gap:2px;border-radius:5px;padding:2px 6px;font-size:10px;font-weight:500;}
+.tag-blue{background:#eff6ff;color:#1d4ed8;}
+.tag-green{background:#dcfce7;color:#15803d;}
+.tag-purple{background:#f3e8ff;color:#7e22ce;}
+.tag-orange{background:#fff7ed;color:#c2410c;}
+.ob-actions{padding:11px 24px 0;display:flex;flex-direction:column;gap:6px;}
+.ob-btn-primary{background:#2563EB;color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;transition:background 0.15s,transform 0.1s;}
+.ob-btn-primary:active{background:#1d4ed8;transform:scale(0.98);}
+.ob-btn-skip{background:none;border:none;color:#94a3b8;font-size:12px;cursor:pointer;font-family:inherit;padding:4px;}
+.ob-dots{display:flex;justify-content:center;gap:5px;padding:10px 0 0;}
+.ob-dot{width:6px;height:6px;border-radius:50%;background:#e2e8f0;transition:all 0.2s;}
+.ob-dot.active{width:18px;border-radius:3px;background:#2563EB;}
+.slide{display:none;}.slide.active{display:block;}
+.s2-cards{display:flex;flex-direction:column;gap:6px;padding:12px 24px 0;}
+.s2-card{background:#f8fafc;border-radius:11px;padding:10px 13px;display:flex;align-items:center;gap:10px;border:0.5px solid #e2e8f0;}
+.s2-card-icon{font-size:17px;width:26px;text-align:center;}
+.s2-card-title{font-size:12.5px;font-weight:500;color:#1e293b;}
+.s2-card-sub{font-size:11px;color:#64748b;margin-top:1px;}
+.s2-price{background:linear-gradient(135deg,#1d4ed8,#2563EB);border-radius:12px;padding:14px;margin:12px 24px 0;color:#fff;text-align:center;}
+.s2-price .amount{font-size:32px;font-weight:600;}
+.s2-price .period{font-size:12px;opacity:0.75;}
+.s2-price .trial{display:inline-block;margin-top:5px;background:rgba(255,255,255,0.2);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:500;}
+</style>
+
+<div class="ob-wrap">
+<div class="ob-sheet">
+
+  <!-- Slide 1 : 6 étapes -->
+  <div class="slide active" id="s1">
+    <div class="ob-hero">
+      <div class="ob-logo">🛡️</div>
+      <h2>Bienvenue sur SecuPRO</h2>
+      <p>L'appli conçue par un agent, pour les agents de sécurité</p>
+    </div>
+    <div class="ob-steps">
+
+      <div class="ob-step">
+        <div class="ob-icon" style="background:#eff6ff">📅</div>
+        <div class="ob-step-text">
+          <div class="title">Planning & import automatique</div>
+          <div class="sub">Import PDF Comète ou email employeur — détection automatique des vacations</div>
+          <div class="sub-tags"><span class="sub-tag tag-blue">📧 Import email</span><span class="sub-tag tag-blue">📄 PDF Comète</span></div>
+        </div>
+      </div>
+
+      <div class="ob-step">
+        <div class="ob-icon" style="background:#dcfce7">💶</div>
+        <div class="ob-step-text">
+          <div class="title">Suivi salaire & paie</div>
+          <div class="sub">Brut, net, heures supp. et historique de vos fiches de paie</div>
+        </div>
+      </div>
+
+      <div class="ob-step">
+        <div class="ob-icon" style="background:#ffedd5">📂</div>
+        <div class="ob-step-text">
+          <div class="title">Documents & alertes expiration</div>
+          <div class="sub">Carte pro, SST, CQP — alerte J-90 avant expiration CNAPS</div>
+        </div>
+      </div>
+
+      <div class="ob-step">
+        <div class="ob-icon" style="background:#f0fdf4">🏢</div>
+        <div class="ob-step-text">
+          <div class="title">Mes employeurs</div>
+          <div class="sub">Adresse, chef d'exploitation, service paie — tél. cliquables</div>
+          <div class="sub-tags"><span class="sub-tag tag-green">📍 Adresse</span><span class="sub-tag tag-green">📞 Tél. cliquable</span></div>
+        </div>
+      </div>
+
+      <div class="ob-step">
+        <div class="ob-icon" style="background:#f3e8ff">🏦</div>
+        <div class="ob-step-text">
+          <div class="title">Ma banque — alerte paie reçue</div>
+          <div class="sub">Connexion bancaire DSP2 — notification dès que le virement tombe</div>
+          <div class="sub-tags"><span class="sub-tag tag-purple">🔔 Push instantané</span><span class="sub-tag tag-purple">🔒 DSP2</span></div>
+        </div>
+      </div>
+
+      <div class="ob-step">
+        <div class="ob-icon" style="background:#fff7ed">👤</div>
+        <div class="ob-step-text">
+          <div class="title">Mon profil & abonnement</div>
+          <div class="sub">Gérez vos infos, votre abonnement Pro et vos préférences de notifications</div>
+          <div class="sub-tags"><span class="sub-tag tag-orange">⭐ Pro 9,99€/mois</span><span class="sub-tag tag-orange">🎁 7j gratuits</span></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="ob-dots"><div class="ob-dot active"></div><div class="ob-dot"></div></div>
+    <div class="ob-actions">
+      <button class="ob-btn-primary" onclick="goSlide2()">Continuer →</button>
+      <button class="ob-btn-skip" onclick="closeOnboarding()">Passer l'introduction</button>
+    </div>
+  </div>
+
+  <!-- Slide 2 : Tarif -->
+  <div class="slide" id="s2">
+    <div class="ob-hero">
+      <div class="ob-logo">⭐</div>
+      <h2>Passez à SecuPRO Pro</h2>
+      <p>Toutes les fonctionnalités, sans engagement</p>
+    </div>
+    <div class="s2-cards">
+      <div class="s2-card"><div class="s2-card-icon">✅</div><div><div class="s2-card-title">Planning illimité + import PDF & email</div><div class="s2-card-sub">Détection automatique des vacations</div></div></div>
+      <div class="s2-card"><div class="s2-card-icon">✅</div><div><div class="s2-card-title">Alertes expiration CNAPS J-90</div><div class="s2-card-sub">Notification avant expiration carte pro</div></div></div>
+      <div class="s2-card"><div class="s2-card-icon">✅</div><div><div class="s2-card-title">Employeurs — contacts cliquables</div><div class="s2-card-sub">Chef d'exploitation, service paie, adresse</div></div></div>
+      <div class="s2-card"><div class="s2-card-icon">✅</div><div><div class="s2-card-title">Alerte paie reçue en banque</div><div class="s2-card-sub">Connexion DSP2 — notification instantanée</div></div></div>
+      <div class="s2-card"><div class="s2-card-icon">✅</div><div><div class="s2-card-title">Profil & gestion abonnement</div><div class="s2-card-sub">Résiliable à tout moment depuis le profil</div></div></div>
+    </div>
+    <div class="s2-price">
+      <div class="amount">9,99€</div>
+      <div class="period">par mois · résiliable à tout moment</div>
+      <div class="trial">🎁 7 jours d'essai gratuit</div>
+    </div>
+    <div class="ob-dots" style="padding-top:10px"><div class="ob-dot"></div><div class="ob-dot active"></div></div>
+    <div class="ob-actions">
+      <button class="ob-btn-primary" onclick="closeOnboarding()">Commencer l'essai gratuit</button>
+      <button class="ob-btn-skip" onclick="closeOnboarding()">Continuer en version gratuite</button>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+function goSlide2(){document.getElementById('s1').classList.remove('active');document.getElementById('s2').classList.add('active');}
+function closeOnboarding(){const w=document.querySelector('.ob-wrap');w.style.transition='opacity 0.3s';w.style.opacity='0';setTimeout(()=>{w.style.display='none'},300);}
+</script>
