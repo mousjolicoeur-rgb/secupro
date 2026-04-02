@@ -318,9 +318,13 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let currentUser=null,currentProfile=null,allVacations=[];
 
 async function init(){
-  const{data:{session}}=await sb.auth.getSession();
-  if(session){currentUser=session.user;await loadProfile();showApp();}
-  else showAuth();
+  currentUser=null;currentProfile=null;allVacations=[];
+  const{data:{user}}=await sb.auth.getUser();
+  if(user){currentUser=user;await loadProfile();showApp();}
+  else{await sb.auth.signOut();showAuth();}
+  sb.auth.onAuthStateChange((event,session)=>{
+    if(event==='SIGNED_OUT'||!session){currentUser=null;currentProfile=null;allVacations=[];showAuth();}
+  });
 }
 
 function showAuth(){document.getElementById('loading').style.display='none';document.getElementById('auth-wrap').style.display='flex';document.getElementById('app-wrap').style.display='none';}
