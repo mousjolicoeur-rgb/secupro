@@ -63,8 +63,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
 .filter-tabs::-webkit-scrollbar{display:none;}
 .filter-tab{padding:6px 14px;border-radius:99px;font-size:12px;font-weight:500;border:1px solid var(--gray-200);background:white;color:var(--gray-500);white-space:nowrap;cursor:pointer;transition:all 0.15s;}
 .filter-tab.active{background:var(--blue);color:white;border-color:var(--blue);}
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:white;border-top:1px solid var(--gray-100);display:flex;padding:8px 0 20px;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,0.06);}
-.nav-item{flex:0 0 20%;min-width:60px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;color:var(--gray-400);transition:color 0.2s;border:none;background:none;font-family:inherit;}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:white;border-top:1px solid var(--gray-100);display:flex;padding:8px 0 20px;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,0.06);overflow-x:auto;}
+.nav-item{flex:0 0 16.66%;min-width:55px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;color:var(--gray-400);transition:color 0.2s;border:none;background:none;font-family:inherit;}
 .nav-item.active{color:var(--blue);}
 .nav-icon{font-size:20px;line-height:1;}
 .nav-label{font-size:10px;font-weight:500;}
@@ -256,7 +256,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
     <button class="nav-item" onclick="goTo('paie',this)"><span class="nav-icon">💶</span><span class="nav-label">Paie</span></button>
     <button class="nav-item" onclick="goTo('docs',this)"><span class="nav-icon">📂</span><span class="nav-label">Documents</span></button>
     <button class="nav-item" onclick="goTo('profil',this)"><span class="nav-icon">👤</span><span class="nav-label">Profil</span></button>
-    <button class="nav-item" onclick="goTo('assistant',this)"><span class="nav-icon">🤖</span><span class="nav-label">SecuIA</span></button>
     <button class="nav-item" onclick="goTo('assistant',this)"><span class="nav-icon">🤖</span><span class="nav-label">SecuIA</span></button>
   </nav>
 </div>
