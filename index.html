@@ -552,7 +552,7 @@ async function analyserPlanning(){
   try{
     const today=new Date().toISOString().split('T')[0];
     const prompt=`Tu es un assistant qui extrait les vacations d'un planning de sécurité.\n\nTexte du planning:\n"""\n${texte}\n"""\n\nDate d'aujourd'hui: ${today}\n\nExtrait TOUTES les vacations. Retourne UNIQUEMENT un JSON valide sans markdown:\n{"vacations":[{"date":"YYYY-MM-DD","site":"nom site","heure_debut":"HH:MM","heure_fin":"HH:MM","employeur":""}]}\n\nSi l'année manque, utilise l'année courante ou suivante selon logique. Si heure manque, mets "".`;
-    const response=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const response=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
     const data=await response.json();
     const clean=data.content[0].text.trim().replace(/```json|```/g,'').trim();
     const parsed=JSON.parse(clean);
@@ -670,7 +670,7 @@ async function handlePDFFile(input){
     const today=new Date().toISOString().split('T')[0];
     const prompt=`Tu es un assistant qui extrait les vacations d'un planning de sécurité en France.\n\nDate d'aujourd'hui: ${today}\n\nExtrait TOUTES les vacations/gardes/shifts de ce planning PDF.\nRetourne UNIQUEMENT un JSON valide sans markdown ni explication:\n{"vacations":[{"date":"YYYY-MM-DD","site":"nom du site ou lieu","heure_debut":"HH:MM","heure_fin":"HH:MM","employeur":"nom société si mentionné sinon vide"}]}\n\nRègles importantes:\n- Si l'année manque, utilise l'année courante ou suivante selon la logique\n- Si une heure manque, mets chaîne vide ""\n- Inclus TOUTES les vacations même si le format varie\n- Le site peut être une adresse, un nom de magasin, un bâtiment`;
 
-    const response=await fetch('https://api.anthropic.com/v1/messages',{
+    const response=await fetch('/api/analyze',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
