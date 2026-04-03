@@ -104,7 +104,7 @@ Règles :
         if (Array.isArray(parsed)) {
           articles.push(...parsed);
         }
-      } await sleep(15000);
+      } await sleep(30000);
     } catch (e) {
       errors.push({ query: q, error: e.message });
       console.error(`Erreur scraping "${q}":`, e.message);
