@@ -7,7 +7,7 @@
   ],
   "functions": {
     "api/scrape-actus.js": {
-      "maxDuration": 180
+      "maxDuration": 300
     }
   }
 }
