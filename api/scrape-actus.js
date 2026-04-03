@@ -45,24 +45,26 @@ export default async function handler(req, res) {
 
   for (const { q, cat } of queries) {
     try {
-      const prompt = `Tu es un expert en sécurité privée en France. Utilise la recherche web pour trouver les 2 actualités les plus récentes et pertinentes sur : "${q}".
+      const prompt = `Tu es un journaliste spécialisé en sécurité privée en France. Utilise la recherche web pour trouver les 2 actualités les plus récentes sur : "${q}".
 
-Pour chaque résultat trouvé, génère un JSON array avec ce format exact :
+RÈGLES STRICTES :
+1. Utilise UNIQUEMENT des informations trouvées via la recherche web - JAMAIS d'invention
+2. La source doit être le NOM EXACT du site web où tu as trouvé l'info (ex: legifrance.gouv.fr, cnaps.interieur.gouv.fr, 83-629.fr, securite-privee.org)
+3. La date_publication doit être la VRAIE date de publication de l'article source. Si tu ne trouves pas la date exacte, utilise "${new Date().toISOString().split('T')[0]}T00:00:00Z"
+4. Si tu ne trouves AUCUN résultat fiable, réponds avec un array vide : []
+5. Le contenu doit être factuel, vérifié et utile pour un agent de sécurité privée
+
+Réponds UNIQUEMENT avec un JSON array valide, sans texte avant ou après :
 [
   {
     "categorie": "${cat}",
-    "titre": "Titre accrocheur de l'actualité",
-    "resume": "Résumé clair en 2-3 lignes pour les agents de sécurité",
-    "contenu": "Article complet résumé en 6-10 lignes avec les informations essentielles et concrètes pour les professionnels",
-    "source": "Nom exact du site source (ex: Légifrance, CNAPS, USP, Syndicat des métiers de la sécurité...)",
+    "titre": "Titre exact ou fidèle de l'actualité trouvée",
+    "resume": "Résumé factuel en 2-3 lignes",
+    "contenu": "Synthèse complète en 6-10 lignes avec les faits concrets, chiffres, dates et impacts pour les agents",
+    "source": "nom-exact-du-site.fr",
     "date_publication": "2026-01-15T00:00:00Z"
   }
-]
-
-Règles :
-- Inclure uniquement des informations vérifiées et récentes (2025-2026)
-- Le contenu doit être utile et concret pour un agent de sécurité privée en France
-- Réponds UNIQUEMENT avec le JSON array valide, sans texte avant ou après`;
+]`;
 
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
