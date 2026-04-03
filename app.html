@@ -508,7 +508,7 @@ async function loadDocuments(){
       else if(diff<=90){ec='badge-orange';el2='Bientôt';if(d.type==='carte_pro')alertMsg=`⚠️ Carte pro expire dans <strong>${diff} jours</strong> — Renouvelez sur cnaps.fr`;}
     }
     const col=ec==='badge-green'?'var(--green)':ec==='badge-orange'?'var(--orange)':'var(--red)';
-    return `<div class="doc-card"><div style="width:48px;height:48px;border-radius:12px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${icons[d.type]||'📋'}</div><div style="flex:1"><div style="font-size:15px;font-weight:600">${d.nom}</div><div style="font-size:12px;color:var(--gray-500);margin-top:2px">${d.numero||''}</div>${et?`<div style="font-size:11px;margin-top:4px;font-weight:500;color:${col}">${et}</div>`:''}<div style="display:flex;gap:6px;margin-top:8px">${d.file_path?`<button onclick="handleView('${d.file_path}')" style="background:var(--blue-light);color:var(--blue);border:none;border-radius:8px;font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;font-family:inherit">📄 Voir</button>`:''}<button onclick="handleDelete('${d.id}','${d.file_path||''}')" style="background:var(--red-light);color:var(--red);border:none;border-radius:8px;font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;font-family:inherit">🗑️</button></div></div><span class="badge ${ec}">${el2}</span></div>`;
+    return `<div class="doc-card" style="cursor:${d.file_path?'pointer':'default'}" onclick="${d.file_path?`openDoc('${d.file_path}')`:''}" ><div style="width:48px;height:48px;border-radius:12px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${icons[d.type]||'📋'}</div><div style="flex:1"><div style="font-size:15px;font-weight:600">${d.nom}</div><div style="font-size:12px;color:var(--gray-500);margin-top:2px">${d.numero||''}</div>${et?`<div style="font-size:11px;margin-top:4px;font-weight:500;color:${col}">${et}</div>`:''}<div style="display:flex;gap:6px;margin-top:8px" onclick="event.stopPropagation()"><button onclick="handleDelete('${d.id}','${d.file_path||''}')" style="background:var(--red-light);color:var(--red);border:none;border-radius:8px;font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;font-family:inherit">🗑️</button></div></div><span class="badge ${ec}">${el2}</span></div>`;
   }).join('');
   al.innerHTML=alertMsg?`<div class="alert-banner">${alertMsg}</div>`:'';
 }
@@ -521,9 +521,11 @@ async function handleUpload(file){
   return path;
 }
 
-async function handleView(filePath){
-  const{data}=sb.storage.from('documents').getPublicUrl(filePath);
-  window.open(data.publicUrl,'_blank');
+async function openDoc(filePath){
+  if(!filePath)return;
+  const{data,error}=await sb.storage.from('documents').createSignedUrl(filePath,3600);
+  if(error||!data){showToast('❌ Impossible d\'ouvrir le document');return;}
+  window.open(data.signedUrl,'_blank');
 }
 
 async function handleDelete(docId,filePath){
