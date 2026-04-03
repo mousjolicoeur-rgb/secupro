@@ -142,7 +142,10 @@ select.form-input option{background:var(--card);color:var(--text);}
         <div class="page-title">Gestion des actualités</div>
         <div style="font-size:13px;color:var(--text-sub);margin-top:2px">Section Actu Sécu — SecuPRO</div>
       </div>
-      <button class="btn-sm" onclick="openModal()">+ Nouvel article</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-sm" id="btn-scrape" onclick="scrapeActus()">🤖 Scraper les actus IA</button>
+        <button class="btn-sm" onclick="openModal()">+ Nouvel article</button>
+      </div>
     </div>
 
     <!-- STATS -->
@@ -521,6 +524,26 @@ function showToast(msg, type=''){
 function copySql(){
   const sql = document.getElementById('sql-box').textContent;
   navigator.clipboard.writeText(sql).then(()=>showToast('📋 SQL copié !','success')).catch(()=>showToast('❌ Impossible de copier','error'));
+}
+
+// ===== SCRAPER IA =====
+async function scrapeActus(){
+  if(!sb){showToast('⚠️ Configurez Supabase d\'abord (onglet SQL Setup)','error');return;}
+  const btn = document.getElementById('btn-scrape');
+  btn.disabled = true;
+  btn.textContent = '⏳ Scraping en cours...';
+  try {
+    const res = await fetch('/api/scrape-actus?key=secupro2026');
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Erreur serveur');
+    showToast(`🤖 ${data.message || data.inserted + ' articles ajoutés en brouillon'}`, 'success');
+    loadArticles();
+  } catch(e) {
+    showToast('❌ ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🤖 Scraper les actus IA';
+  }
 }
 
 // ===== AUTO AUTH CHECK =====
