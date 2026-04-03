@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecuPRO — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --blue:#3B82F6;--blue-dark:#2563EB;--blue-light:rgba(59,130,246,0.15);
+  --green:#22C55E;--green-light:rgba(34,197,94,0.15);
+  --orange:#F59E0B;--orange-light:rgba(245,158,11,0.15);
+  --red:#EF4444;--red-light:rgba(239,68,68,0.15);
+  --violet:#A78BFA;--violet-light:rgba(167,139,250,0.15);
+  --bg:#0F172A;--card:#1E293B;--border:#334155;
+  --text:#F8FAFC;--text-sub:#94A3B8;--text-muted:#CBD5E1;
+  --gradient:linear-gradient(135deg,#2563EB,#7C3AED);
+  --radius:12px;--radius-lg:18px;
+  --shadow-card:0 2px 16px rgba(0,0,0,0.4);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;width:100%;max-width:380px;box-shadow:var(--shadow-card);}
+.login-logo{width:56px;height:56px;border-radius:16px;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 16px;}
+.login-title{font-size:22px;font-weight:600;text-align:center;margin-bottom:4px;}
+.login-sub{font-size:13px;color:var(--text-sub);text-align:center;margin-bottom:24px;}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:5px;display:block;}
+.form-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:11px 14px;font-size:14px;font-family:inherit;color:var(--text);outline:none;transition:all 0.3s ease;}
+.form-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,0.15);}
+.btn-primary{background:var(--gradient);color:white;border:none;border-radius:var(--radius);padding:13px 16px;font-size:14px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;transition:all 0.3s ease;box-shadow:0 4px 20px rgba(37,99,235,0.35);}
+.btn-primary:hover{opacity:0.9;transform:translateY(-1px);}
+.login-error{background:var(--red-light);color:var(--red);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:10px 12px;font-size:12px;margin-bottom:12px;display:none;}
+
+/* DASHBOARD */
+.dashboard{display:none;min-height:100vh;}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,0.3);}
+.topbar-logo{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600;}
+.topbar-logo-icon{width:34px;height:34px;border-radius:9px;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:16px;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.btn-sm{background:var(--gradient);color:white;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s ease;}
+.btn-sm:hover{opacity:0.9;}
+.btn-sm-outline{background:transparent;color:var(--text-sub);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all 0.2s ease;}
+.btn-sm-outline:hover{border-color:var(--blue);color:var(--blue);}
+.btn-danger-sm{background:var(--red-light);color:var(--red);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s ease;}
+.btn-danger-sm:hover{background:rgba(239,68,68,0.2);}
+
+.main-content{padding:24px;max-width:1100px;margin:0 auto;}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap;}
+.page-title{font-size:20px;font-weight:600;}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;box-shadow:var(--shadow-card);}
+.stat-num{font-size:28px;font-weight:700;color:var(--blue);}
+.stat-label{font-size:12px;color:var(--text-sub);margin-top:2px;}
+
+/* TABS */
+.tab-bar{display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;}
+.tab-btn{padding:9px 16px;border:none;background:none;color:var(--text-sub);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s ease;}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);}
+.tab-btn:hover:not(.active){color:var(--text);}
+
+/* ARTICLES TABLE */
+.articles-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-card);}
+.articles-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.search-input{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;color:var(--text);outline:none;width:220px;transition:all 0.2s ease;}
+.search-input:focus{border-color:var(--blue);}
+.article-row{padding:14px 16px;border-bottom:0.5px solid var(--border);display:grid;grid-template-columns:1fr auto auto auto;gap:12px;align-items:center;transition:background 0.2s ease;}
+.article-row:last-child{border-bottom:none;}
+.article-row:hover{background:rgba(59,130,246,0.04);}
+.art-title-cell{min-width:0;}
+.art-title-main{font-size:14px;font-weight:500;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.art-meta-cell{font-size:11px;color:var(--text-sub);}
+.art-actions{display:flex;gap:6px;}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:600;}
+.badge-published{background:var(--green-light);color:var(--green);border:1px solid rgba(34,197,94,0.25);}
+.badge-draft{background:var(--orange-light);color:var(--orange);border:1px solid rgba(245,158,11,0.25);}
+.badge-cnaps{background:var(--blue-light);color:var(--blue);border:1px solid rgba(59,130,246,0.25);}
+.badge-conv{background:var(--orange-light);color:var(--orange);border:1px solid rgba(245,158,11,0.25);}
+.badge-emploi{background:var(--green-light);color:var(--green);border:1px solid rgba(34,197,94,0.25);}
+.empty{text-align:center;padding:40px 20px;color:var(--text-sub);font-size:14px;}
+.loading-row{text-align:center;padding:30px;color:var(--text-sub);font-size:13px;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.3s ease;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;transform:scale(0.95);transition:transform 0.3s ease;box-shadow:0 8px 40px rgba(0,0,0,0.6);}
+.modal-overlay.open .modal-box{transform:scale(1);}
+.modal-title{font-size:17px;font-weight:600;margin-bottom:20px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;}
+.form-textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:11px 14px;font-size:14px;font-family:inherit;color:var(--text);outline:none;transition:all 0.3s ease;resize:vertical;min-height:90px;}
+.form-textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,0.15);}
+select.form-input option{background:var(--card);color:var(--text);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card);color:var(--text);border:1px solid var(--border);padding:12px 20px;border-radius:12px;font-size:13px;font-weight:500;z-index:300;opacity:0;transition:all 0.3s;box-shadow:var(--shadow-card);pointer-events:none;}
+.toast.show{opacity:1;}
+.toast.success{border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.1);color:var(--green);}
+.toast.error{border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);color:var(--red);}
+
+/* SQL HELPER */
+.sql-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px;font-family:monospace;font-size:12px;color:var(--green);line-height:1.8;overflow-x:auto;white-space:pre;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">🛡️</div>
+    <div class="login-title">SecuPRO Admin</div>
+    <div class="login-sub">Dashboard de gestion des actualités</div>
+    <div class="login-error" id="login-error"></div>
+    <div class="form-group">
+      <label class="form-label">Mot de passe admin</label>
+      <input type="password" class="form-input" id="admin-pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkLogin()">
+    </div>
+    <button class="btn-primary" onclick="checkLogin()">Accéder au dashboard</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">🛡️</div>
+      SecuPRO Admin
+    </div>
+    <div class="topbar-right">
+      <span style="font-size:12px;color:var(--text-sub)" id="topbar-date"></span>
+      <button class="btn-sm-outline" onclick="doLogout()">Déconnexion</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Gestion des actualités</div>
+        <div style="font-size:13px;color:var(--text-sub);margin-top:2px">Section Actu Sécu — SecuPRO</div>
+      </div>
+      <button class="btn-sm" onclick="openModal()">+ Nouvel article</button>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-total">—</div>
+        <div class="stat-label">Total articles</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="color:var(--green)" id="stat-published">—</div>
+        <div class="stat-label">Publiés</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="color:var(--orange)" id="stat-draft">—</div>
+        <div class="stat-label">Brouillons</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="color:var(--violet)" id="stat-emploi">—</div>
+        <div class="stat-label">Offres d'emploi</div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('all',this)">Tous</button>
+      <button class="tab-btn" onclick="switchTab('pending',this)">⏳ En attente</button>
+      <button class="tab-btn" onclick="switchTab('published',this)">✅ Publiés</button>
+      <button class="tab-btn" onclick="switchTab('brouillon',this)">📝 Brouillons</button>
+      <button class="tab-btn" onclick="switchTab('sql',this)">🗄️ SQL Setup</button>
+    </div>
+
+    <!-- ARTICLES -->
+    <div id="tab-content-articles">
+      <div class="articles-wrap">
+        <div class="articles-header">
+          <div style="font-size:13px;font-weight:600" id="tab-label">Tous les articles</div>
+          <input class="search-input" type="search" placeholder="🔍 Rechercher..." oninput="filterArticles(this.value)">
+        </div>
+        <div id="articles-container">
+          <div class="loading-row">Chargement...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SQL SETUP TAB -->
+    <div id="tab-content-sql" style="display:none">
+      <div class="articles-wrap" style="padding:20px">
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px">🗄️ Créer la table Supabase</div>
+        <div style="font-size:13px;color:var(--text-sub);margin-bottom:16px;line-height:1.6">Copiez ce SQL et exécutez-le dans <strong style="color:var(--blue)">Supabase → SQL Editor</strong> pour créer la table <code style="background:var(--bg);padding:2px 6px;border-radius:4px;color:var(--green)">actualites</code>.</div>
+        <div class="sql-box" id="sql-box">-- Table actualites pour SecuPRO Actu Sécu
+CREATE TABLE IF NOT EXISTS public.actualites (
+  id            uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  categorie     text NOT NULL CHECK (categorie IN ('cnaps','conv','emploi')),
+  titre         text NOT NULL,
+  resume        text NOT NULL,
+  contenu       text NOT NULL,
+  source        text NOT NULL DEFAULT 'SecuPRO',
+  date_publication timestamp with time zone DEFAULT now(),
+  statut        text NOT NULL DEFAULT 'brouillon' CHECK (statut IN ('brouillon','publié')),
+  created_at    timestamp with time zone DEFAULT now()
+);
+
+-- Activer RLS (Row Level Security)
+ALTER TABLE public.actualites ENABLE ROW LEVEL SECURITY;
+
+-- Politique : lecture publique pour les articles publiés
+CREATE POLICY "Lecture publique articles publiés"
+  ON public.actualites FOR SELECT
+  USING (statut = 'publié');
+
+-- Index pour les performances
+CREATE INDEX IF NOT EXISTS idx_actualites_statut ON public.actualites(statut);
+CREATE INDEX IF NOT EXISTS idx_actualites_categorie ON public.actualites(categorie);
+CREATE INDEX IF NOT EXISTS idx_actualites_date ON public.actualites(date_publication DESC);</div>
+        <button class="btn-sm" style="margin-top:14px" onclick="copySql()">📋 Copier le SQL</button>
+        <div style="margin-top:20px;padding:14px;background:var(--orange-light);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius);font-size:13px;color:var(--orange)">
+          <strong>⚠️ Note :</strong> Ce dashboard utilise les variables Supabase définies dans app.html. Assurez-vous de configurer les mêmes clés SUPABASE_URL et SUPABASE_KEY ci-dessous avant de gérer les articles.
+        </div>
+        <div style="margin-top:14px">
+          <div class="form-group">
+            <label class="form-label">Supabase URL</label>
+            <input class="form-input" id="sb-url" placeholder="https://xxxx.supabase.co" oninput="saveConfig()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Supabase Anon Key</label>
+            <input class="form-input" id="sb-key" placeholder="eyJhbGciOiJIUzI1NiIs..." oninput="saveConfig()">
+          </div>
+          <button class="btn-sm" onclick="initSupabase()">🔌 Connecter à Supabase</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL : Ajouter / Modifier -->
+<div class="modal-overlay" id="modal-article" onclick="closeModalIfOutside(event)">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Nouvel article</div>
+    <input type="hidden" id="edit-id">
+    <div class="form-group">
+      <label class="form-label">Catégorie *</label>
+      <select class="form-input" id="art-categorie">
+        <option value="cnaps">🛡️ CNAPS & Réglementation</option>
+        <option value="conv">📋 Convention & Secteur</option>
+        <option value="emploi">💼 Offres d'emploi</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Titre *</label>
+      <input class="form-input" id="art-titre" placeholder="Titre de l'article...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Résumé court (2-3 lignes) *</label>
+      <textarea class="form-textarea" id="art-resume" placeholder="Résumé affiché dans la liste..." style="min-height:70px"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Contenu complet *</label>
+      <textarea class="form-textarea" id="art-contenu" placeholder="Contenu détaillé de l'article..." style="min-height:140px"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Source</label>
+      <input class="form-input" id="art-source" placeholder="Légifrance, CNAPS, USP...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date de publication</label>
+      <input class="form-input" type="datetime-local" id="art-date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Statut</label>
+      <select class="form-input" id="art-statut">
+        <option value="brouillon">📝 Brouillon</option>
+        <option value="publié">✅ Publié</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-sm-outline" onclick="closeModal()">Annuler</button>
+      <button class="btn-sm" id="modal-save-btn" onclick="saveArticle()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ADMIN_PASSWORD = 'secupro2026';
+let sb = null;
+let allArticles = [];
+let currentTab = 'all';
+
+// ===== AUTH =====
+function checkLogin(){
+  const pwd = document.getElementById('admin-pwd').value;
+  const err = document.getElementById('login-error');
+  if(pwd === ADMIN_PASSWORD){
+    sessionStorage.setItem('admin_auth','1');
+    document.getElementById('login-wrap').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+    initDashboard();
+  }else{
+    err.style.display='block';
+    err.textContent='Mot de passe incorrect.';
+    setTimeout(()=>err.style.display='none',3000);
+  }
+}
+
+function doLogout(){
+  sessionStorage.removeItem('admin_auth');
+  location.reload();
+}
+
+// ===== INIT =====
+function initDashboard(){
+  const d = new Date();
+  document.getElementById('topbar-date').textContent = d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  loadConfig();
+  if(sb) loadArticles();
+}
+
+function loadConfig(){
+  const url = localStorage.getItem('sb_url')||'';
+  const key = localStorage.getItem('sb_key')||'';
+  document.getElementById('sb-url').value = url;
+  document.getElementById('sb-key').value = key;
+  if(url && key) initSupabaseClient(url, key);
+}
+
+function saveConfig(){
+  const url = document.getElementById('sb-url').value.trim();
+  const key = document.getElementById('sb-key').value.trim();
+  if(url) localStorage.setItem('sb_url', url);
+  if(key) localStorage.setItem('sb_key', key);
+}
+
+function initSupabase(){
+  const url = document.getElementById('sb-url').value.trim();
+  const key = document.getElementById('sb-key').value.trim();
+  if(!url||!key){showToast('⚠️ URL et clé requises','error');return;}
+  localStorage.setItem('sb_url',url);
+  localStorage.setItem('sb_key',key);
+  initSupabaseClient(url,key);
+  showToast('🔌 Connecté à Supabase !','success');
+  loadArticles();
+}
+
+function initSupabaseClient(url,key){
+  sb = supabase.createClient(url,key);
+}
+
+// ===== LOAD ARTICLES =====
+async function loadArticles(){
+  if(!sb){
+    document.getElementById('articles-container').innerHTML='<div class="loading-row" style="color:var(--orange)">⚠️ Configurez Supabase dans l\'onglet SQL Setup</div>';
+    updateStats([]);return;
+  }
+  try{
+    const {data,error} = await sb.from('actualites').select('*').order('created_at',{ascending:false});
+    if(error) throw error;
+    allArticles = data||[];
+    updateStats(allArticles);
+    renderArticles(allArticles, currentTab);
+  }catch(e){
+    document.getElementById('articles-container').innerHTML='<div class="loading-row" style="color:var(--red)">❌ Erreur : '+e.message+'</div>';
+  }
+}
+
+function updateStats(arts){
+  document.getElementById('stat-total').textContent = arts.length;
+  document.getElementById('stat-published').textContent = arts.filter(a=>a.statut==='publié').length;
+  document.getElementById('stat-draft').textContent = arts.filter(a=>a.statut==='brouillon').length;
+  document.getElementById('stat-emploi').textContent = arts.filter(a=>a.categorie==='emploi').length;
+}
+
+function renderArticles(arts, tab){
+  const container = document.getElementById('articles-container');
+  let filtered = arts;
+  if(tab==='pending') filtered = arts.filter(a=>a.statut==='brouillon');
+  else if(tab==='published') filtered = arts.filter(a=>a.statut==='publié');
+  else if(tab==='brouillon') filtered = arts.filter(a=>a.statut==='brouillon');
+
+  if(!filtered.length){
+    container.innerHTML='<div class="empty">Aucun article trouvé.</div>';return;
+  }
+  container.innerHTML = filtered.map(art=>renderRow(art)).join('');
+}
+
+function renderRow(art){
+  const catBadge = art.categorie==='cnaps'?'<span class="badge badge-cnaps">🛡️ CNAPS</span>':
+    art.categorie==='conv'?'<span class="badge badge-conv">📋 Convention</span>':
+    '<span class="badge badge-emploi">💼 Emploi</span>';
+  const statusBadge = art.statut==='publié'?'<span class="badge badge-published">✅ Publié</span>':'<span class="badge badge-draft">📝 Brouillon</span>';
+  const date = art.date_publication ? new Date(art.date_publication).toLocaleDateString('fr-FR') : '—';
+  return `<div class="article-row">
+    <div class="art-title-cell">
+      <div class="art-title-main">${escHtml(art.titre)}</div>
+      <div class="art-meta-cell" style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">${catBadge} ${statusBadge} <span style="opacity:0.6">${date} · ${escHtml(art.source||'')}</span></div>
+    </div>
+    <div class="art-actions">
+      ${art.statut==='brouillon'?`<button class="btn-sm" style="font-size:11px;padding:5px 10px" onclick="publish('${art.id}')">Publier</button>`:''}
+      <button class="btn-sm-outline" style="font-size:11px;padding:5px 10px" onclick="editArticle('${art.id}')">Modifier</button>
+      <button class="btn-danger-sm" style="font-size:11px;padding:5px 10px" onclick="deleteArticle('${art.id}')">Supprimer</button>
+    </div>
+  </div>`;
+}
+
+function escHtml(str){return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ===== TABS =====
+function switchTab(tab, btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentTab = tab;
+  if(tab==='sql'){
+    document.getElementById('tab-content-articles').style.display='none';
+    document.getElementById('tab-content-sql').style.display='block';
+  }else{
+    document.getElementById('tab-content-articles').style.display='block';
+    document.getElementById('tab-content-sql').style.display='none';
+    const labels = {all:'Tous les articles',pending:'En attente de validation',published:'Articles publiés',brouillon:'Brouillons'};
+    document.getElementById('tab-label').textContent = labels[tab]||'';
+    renderArticles(allArticles, tab);
+  }
+}
+
+function filterArticles(q){
+  const term = q.trim().toLowerCase();
+  const filtered = term ? allArticles.filter(a=>a.titre.toLowerCase().includes(term)||a.resume.toLowerCase().includes(term)) : allArticles;
+  renderArticles(filtered, currentTab);
+}
+
+// ===== ACTIONS =====
+async function publish(id){
+  if(!sb)return;
+  const {error} = await sb.from('actualites').update({statut:'publié'}).eq('id',id);
+  if(error){showToast('❌ Erreur','error');return;}
+  showToast('✅ Article publié !','success');
+  loadArticles();
+}
+
+async function deleteArticle(id){
+  if(!confirm('Supprimer cet article ?')) return;
+  if(!sb)return;
+  const {error} = await sb.from('actualites').delete().eq('id',id);
+  if(error){showToast('❌ Erreur','error');return;}
+  showToast('🗑️ Article supprimé','success');
+  loadArticles();
+}
+
+function editArticle(id){
+  const art = allArticles.find(a=>a.id===id);
+  if(!art)return;
+  document.getElementById('modal-title').textContent='Modifier l\'article';
+  document.getElementById('edit-id').value = art.id;
+  document.getElementById('art-categorie').value = art.categorie;
+  document.getElementById('art-titre').value = art.titre;
+  document.getElementById('art-resume').value = art.resume;
+  document.getElementById('art-contenu').value = art.contenu;
+  document.getElementById('art-source').value = art.source||'';
+  document.getElementById('art-statut').value = art.statut;
+  if(art.date_publication){
+    const d = new Date(art.date_publication);
+    document.getElementById('art-date').value = d.toISOString().slice(0,16);
+  }
+  document.getElementById('modal-save-btn').textContent='Mettre à jour';
+  document.getElementById('modal-article').classList.add('open');
+}
+
+async function saveArticle(){
+  if(!sb){showToast('⚠️ Supabase non configuré','error');return;}
+  const id = document.getElementById('edit-id').value;
+  const payload = {
+    categorie: document.getElementById('art-categorie').value,
+    titre: document.getElementById('art-titre').value.trim(),
+    resume: document.getElementById('art-resume').value.trim(),
+    contenu: document.getElementById('art-contenu').value.trim(),
+    source: document.getElementById('art-source').value.trim()||'SecuPRO',
+    statut: document.getElementById('art-statut').value,
+    date_publication: document.getElementById('art-date').value || new Date().toISOString()
+  };
+  if(!payload.titre||!payload.resume||!payload.contenu){showToast('⚠️ Champs obligatoires manquants','error');return;}
+
+  let error;
+  if(id){
+    ({error} = await sb.from('actualites').update(payload).eq('id',id));
+  }else{
+    ({error} = await sb.from('actualites').insert(payload));
+  }
+  if(error){showToast('❌ Erreur : '+error.message,'error');return;}
+  showToast(id?'✅ Article mis à jour !':'✅ Article créé !','success');
+  closeModal();
+  loadArticles();
+}
+
+// ===== MODAL =====
+function openModal(){
+  document.getElementById('modal-title').textContent='Nouvel article';
+  document.getElementById('edit-id').value='';
+  ['art-titre','art-resume','art-contenu','art-source'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('art-categorie').value='cnaps';
+  document.getElementById('art-statut').value='brouillon';
+  document.getElementById('art-date').value=new Date().toISOString().slice(0,16);
+  document.getElementById('modal-save-btn').textContent='Créer l\'article';
+  document.getElementById('modal-article').classList.add('open');
+}
+function closeModal(){document.getElementById('modal-article').classList.remove('open');}
+function closeModalIfOutside(e){if(e.target===document.getElementById('modal-article'))closeModal();}
+
+// ===== TOAST =====
+function showToast(msg, type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show '+(type||'');
+  setTimeout(()=>{t.className='toast';},3000);
+}
+
+// ===== SQL COPY =====
+function copySql(){
+  const sql = document.getElementById('sql-box').textContent;
+  navigator.clipboard.writeText(sql).then(()=>showToast('📋 SQL copié !','success')).catch(()=>showToast('❌ Impossible de copier','error'));
+}
+
+// ===== AUTO AUTH CHECK =====
+window.addEventListener('DOMContentLoaded',()=>{
+  if(sessionStorage.getItem('admin_auth')==='1'){
+    document.getElementById('login-wrap').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+    initDashboard();
+  }
+  document.getElementById('admin-pwd').addEventListener('keydown',e=>{if(e.key==='Enter')checkLogin();});
+});
+</script>
+</body>
+</html>

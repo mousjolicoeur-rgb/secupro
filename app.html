@@ -113,7 +113,7 @@ select.form-input option{background:var(--card);color:var(--text);}
 
 /* ===== BOTTOM NAV ===== */
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(15,23,42,0.9);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;padding:8px 0 20px;z-index:100;box-shadow:0 -4px 30px rgba(0,0,0,0.5);overflow-x:auto;}
-.nav-item{flex:0 0 14.28%;min-width:50px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;color:var(--text-sub);transition:all 0.3s ease;border:none;background:none;font-family:inherit;}
+.nav-item{flex:0 0 12.5%;min-width:46px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;color:var(--text-sub);transition:all 0.3s ease;border:none;background:none;font-family:inherit;}
 .nav-item:hover{color:var(--blue);}
 .nav-item.active{color:var(--blue);}
 .nav-item.active .nav-icon{transform:scale(1.15);filter:drop-shadow(0 0 6px rgba(59,130,246,0.6));}
@@ -225,6 +225,26 @@ select.form-input option{background:var(--card);color:var(--text);}
 .sd-art-title{font-size:13px;font-weight:600;color:var(--text);line-height:1.3;flex:1;}
 .sd-art-body{font-size:12px;color:var(--text-muted);line-height:1.7;}
 .sd-highlight{background:rgba(251,191,36,0.25);border-radius:2px;padding:0 2px;color:#FCD34D;}
+
+/* ===== ACTU SECU ===== */
+.actu-hero{background:var(--gradient);border-radius:var(--radius-xl);padding:18px 20px;color:white;margin-bottom:14px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(37,99,235,0.35);}
+.actu-hero::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.07);}
+.actu-hero::after{content:'';position:absolute;bottom:-30px;left:-20px;width:90px;height:90px;border-radius:50%;background:rgba(124,58,237,0.3);}
+.actu-card{background:var(--card);border-radius:var(--radius-lg);padding:16px;margin-bottom:10px;border:1px solid var(--border);box-shadow:var(--shadow-card);transition:all 0.25s ease;overflow:hidden;}
+.actu-card:hover{border-color:rgba(59,130,246,0.3);transform:translateY(-1px);box-shadow:0 6px 28px rgba(0,0,0,0.45);}
+.actu-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.actu-badge-cnaps{background:rgba(59,130,246,0.15);color:var(--blue);border:1px solid rgba(59,130,246,0.25);padding:3px 9px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap;}
+.actu-badge-conv{background:rgba(245,158,11,0.15);color:var(--orange);border:1px solid rgba(245,158,11,0.25);padding:3px 9px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap;}
+.actu-badge-emploi{background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.25);padding:3px 9px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap;}
+.actu-title{font-size:14px;font-weight:600;color:var(--text);line-height:1.35;margin-bottom:6px;}
+.actu-resume{font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:10px;}
+.actu-meta{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--text-sub);margin-bottom:10px;gap:8px;}
+.actu-source{background:var(--blue-light);color:var(--blue);padding:2px 8px;border-radius:4px;font-weight:600;font-size:10px;}
+.actu-content{display:none;border-top:0.5px solid var(--border);padding-top:12px;margin-top:4px;font-size:13px;color:var(--text-muted);line-height:1.7;}
+.actu-content.open{display:block;animation:fadeIn 0.2s ease;}
+.btn-lire-plus{background:var(--blue-light);color:var(--blue);border:1px solid rgba(59,130,246,0.25);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s ease;}
+.btn-lire-plus:hover{background:rgba(59,130,246,0.25);}
+.actu-glass-wrap{background:rgba(255,255,255,0.03);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius);padding:14px;margin-bottom:10px;}
 </style>
 </head>
 <body>
@@ -811,6 +831,179 @@ select.form-input option{background:var(--card);color:var(--text);}
     </div><!-- /content -->
   </div><!-- /screen-droit -->
 
+  <!-- ====== ACTU SECU SCREEN ====== -->
+  <div class="screen" id="screen-actu">
+    <div class="header" style="padding-bottom:16px">
+      <div class="header-top">
+        <div>
+          <div class="header-greeting">Actualités</div>
+          <div class="header-name">Actu Sécu 📰</div>
+        </div>
+        <div style="font-size:28px;position:relative;z-index:1">📰</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="actu-hero">
+        <div style="position:relative;z-index:1">
+          <div style="font-size:12px;opacity:0.8;margin-bottom:4px">Restez informé</div>
+          <div style="font-size:17px;font-weight:600;line-height:1.3">Toute l'actu de la<br>sécurité privée</div>
+          <div style="font-size:11px;opacity:0.7;margin-top:6px">CNAPS · Convention · Emploi</div>
+        </div>
+      </div>
+
+      <!-- FILTRES -->
+      <div class="filter-tabs" id="actu-filters">
+        <div class="filter-tab active" onclick="actuFilter('all',this)">Tout</div>
+        <div class="filter-tab" onclick="actuFilter('cnaps',this)">🛡️ CNAPS & Réglementation</div>
+        <div class="filter-tab" onclick="actuFilter('conv',this)">📋 Convention & Secteur</div>
+        <div class="filter-tab" onclick="actuFilter('emploi',this)">💼 Offres d'emploi</div>
+      </div>
+
+      <!-- LISTE ARTICLES -->
+      <div id="actu-list">
+
+        <!-- ARTICLE 1 : Inspection visuelle véhicules -->
+        <div class="actu-card" data-cat="cnaps">
+          <div class="actu-card-header">
+            <span class="actu-badge-cnaps">🛡️ CNAPS & Réglementation</span>
+            <span style="font-size:11px;color:var(--text-sub);white-space:nowrap">20 mars 2026</span>
+          </div>
+          <div class="actu-title">Inspection visuelle des véhicules : nouvelle habilitation légale (loi 2026-201)</div>
+          <div class="actu-resume">La loi n°2026-201 du 20 mars 2026 modifie l'article L613-2 du Code de la Sécurité Intérieure et donne aux agents de sécurité privée le droit d'inspecter visuellement les véhicules accédant à un site gardé, avec l'accord du conducteur.</div>
+          <div class="actu-meta">
+            <span>📅 20 mars 2026</span>
+            <span class="actu-source">Légifrance</span>
+          </div>
+          <button class="btn-lire-plus" onclick="actuToggle(this)">Lire plus ▾</button>
+          <div class="actu-content">
+            <p style="margin-bottom:10px"><strong>Contexte :</strong> La loi n°2026-201 du 20 mars 2026, publiée au Journal Officiel, introduit une modification substantielle de l'article L613-2 du Code de la Sécurité Intérieure (CSI). Cette évolution législative étend les prérogatives des agents de sécurité privée en matière de contrôle d'accès.</p>
+            <p style="margin-bottom:10px"><strong>Ce que dit le texte :</strong> Les agents habilités par leur employeur peuvent désormais procéder à l'inspection visuelle des bagages à main ainsi qu'à la fouille des véhicules accédant à une zone sécurisée, sous réserve du consentement exprès de la personne concernée. En cas de refus, l'accès au site peut être refusé.</p>
+            <p style="margin-bottom:10px"><strong>Conditions d'application :</strong>
+            <br>• L'inspection est strictement visuelle (pas de manipulation des objets sans accord)
+            <br>• Le conducteur doit donner son accord explicite
+            <br>• L'agent doit être clairement identifiable (tenue, badge)
+            <br>• La mesure ne peut s'appliquer qu'aux sites listés par décret (sites sensibles, établissements recevant du public de catégorie 1 et 2)</p>
+            <p><strong>Impact pour les agents :</strong> Une formation complémentaire spécifique sera intégrée aux modules de formation initiale SSIAP et APS dès septembre 2026. Les agents en poste devront suivre un module de mise à jour d'ici le 1er janvier 2027.</p>
+          </div>
+        </div>
+
+        <!-- ARTICLE 2 : Grilles salariales 2026 -->
+        <div class="actu-card" data-cat="conv">
+          <div class="actu-card-header">
+            <span class="actu-badge-conv">📋 Convention & Secteur</span>
+            <span style="font-size:11px;color:var(--text-sub);white-space:nowrap">15 janv. 2026</span>
+          </div>
+          <div class="actu-title">Grilles salariales 2026 : revalorisation de 3,2% pour les agents de sécurité</div>
+          <div class="actu-resume">Les partenaires sociaux de la branche sécurité privée ont signé un accord de branche prévoyant une revalorisation des grilles salariales de 3,2% au 1er janvier 2026, avec un focus sur les coefficients 140 à 150.</div>
+          <div class="actu-meta">
+            <span>📅 15 janvier 2026</span>
+            <span class="actu-source">USP / FFA</span>
+          </div>
+          <button class="btn-lire-plus" onclick="actuToggle(this)">Lire plus ▾</button>
+          <div class="actu-content">
+            <p style="margin-bottom:10px"><strong>Accord de branche signé :</strong> Le 15 janvier 2026, les syndicats (CGT, CFDT, FO) et les organisations patronales (USP, SNES, GES) ont conclu un accord de revalorisation salariale de 3,2% applicable à l'ensemble de la grille de la convention collective nationale des entreprises de prévention et de sécurité (IDCC 1351).</p>
+            <p style="margin-bottom:10px"><strong>Nouveaux minima par coefficient :</strong>
+            <br>• Coeff. 120 (ADS) : 1 835 € brut/mois
+            <br>• Coeff. 130 (Agent qualifié) : 1 892 € brut/mois
+            <br>• Coeff. 140 (Chef de poste) : 2 010 € brut/mois
+            <br>• Coeff. 150 (Agent de maîtrise) : 2 180 € brut/mois
+            <br>• Coeff. 160 (Responsable d'exploitation) : 2 420 € brut/mois</p>
+            <p><strong>Rappel :</strong> Ces minima s'entendent pour 151h67 mensuelles (temps plein). Les heures de nuit, les dimanches et jours fériés restent majorés conformément aux dispositions conventionnelles en vigueur.</p>
+          </div>
+        </div>
+
+        <!-- ARTICLE 3 : Carte pro dématérialisée -->
+        <div class="actu-card" data-cat="cnaps">
+          <div class="actu-card-header">
+            <span class="actu-badge-cnaps">🛡️ CNAPS & Réglementation</span>
+            <span style="font-size:11px;color:var(--text-sub);white-space:nowrap">8 févr. 2026</span>
+          </div>
+          <div class="actu-title">Renouvellement carte professionnelle 100% dématérialisé dès mars 2026</div>
+          <div class="actu-resume">Le CNAPS généralise la procédure de renouvellement de la carte professionnelle entièrement en ligne. Fini le courrier postal : le dossier, le paiement et la réception se font désormais via l'espace personnel sur cnaps.interieur.gouv.fr.</div>
+          <div class="actu-meta">
+            <span>📅 8 février 2026</span>
+            <span class="actu-source">CNAPS</span>
+          </div>
+          <button class="btn-lire-plus" onclick="actuToggle(this)">Lire plus ▾</button>
+          <div class="actu-content">
+            <p style="margin-bottom:10px"><strong>Nouvelle procédure :</strong> À compter du 1er mars 2026, le CNAPS (Conseil National des Activités Privées de Sécurité) impose la dématérialisation totale du renouvellement de la carte professionnelle pour les agents de sécurité privée.</p>
+            <p style="margin-bottom:10px"><strong>Ce qui change :</strong>
+            <br>• Dépôt du dossier uniquement via l'espace personnel CNAPS en ligne
+            <br>• Téléversement des justificatifs (formation, casier judiciaire B3, titre de séjour si applicable)
+            <br>• Paiement de la taxe par carte bancaire (55 €)
+            <br>• Réception de la carte par courrier recommandé sous 3 à 6 semaines
+            <br>• Suivi de l'avancement du dossier en temps réel</p>
+            <p style="margin-bottom:10px"><strong>Délai de renouvellement :</strong> Il est recommandé de déposer son dossier au moins 3 mois avant l'expiration de la carte pour éviter toute interruption d'activité. Un agent dont la carte est expirée ne peut légalement exercer.</p>
+            <p><strong>Aide :</strong> Une hotline dédiée au 0800 xxx xxx (numéro vert) est disponible du lundi au vendredi de 9h à 17h pour accompagner les agents dans la procédure.</p>
+          </div>
+        </div>
+
+        <!-- ARTICLE 4 : Offre emploi SSIAP Paris -->
+        <div class="actu-card" data-cat="emploi">
+          <div class="actu-card-header">
+            <span class="actu-badge-emploi">💼 Offre d'emploi</span>
+            <span style="font-size:11px;color:var(--text-sub);white-space:nowrap">1 avr. 2026</span>
+          </div>
+          <div class="actu-title">Agent SSIAP 1 — Centre commercial haut de gamme — Paris 8e</div>
+          <div class="actu-resume">Société de sécurité privée recherche agents SSIAP 1 pour un galerie commerciale haut de gamme dans le 8e arrondissement de Paris. CDI temps plein, coefficient 140, primes tenue et transport.</div>
+          <div class="actu-meta">
+            <span>📅 1er avril 2026</span>
+            <span class="actu-source">Offre interne</span>
+          </div>
+          <button class="btn-lire-plus" onclick="actuToggle(this)">Lire plus ▾</button>
+          <div class="actu-content">
+            <p style="margin-bottom:10px"><strong>Poste :</strong> Agent SSIAP 1 – CDI Temps plein (151h67/mois)</p>
+            <p style="margin-bottom:10px"><strong>Lieu :</strong> Paris 8e arrondissement — galerie commerciale haut de gamme (Champs-Élysées)</p>
+            <p style="margin-bottom:10px"><strong>Rémunération :</strong>
+            <br>• Coefficient 140 — 2 010 € brut/mois
+            <br>• Prime de tenue : 30 €/mois
+            <br>• Remboursement Navigo 50%
+            <br>• Majoration nuit, dimanche et jours fériés</p>
+            <p style="margin-bottom:10px"><strong>Profil recherché :</strong>
+            <br>• Carte professionnelle CNAPS valide
+            <br>• SSIAP 1 à jour
+            <br>• SST (Sauveteur Secouriste du Travail) apprécié
+            <br>• Présentation soignée, sens du service</p>
+            <p><strong>Contact :</strong> Envoyez CV + carte pro à recrutement@exemple-securite.fr — Ref : SSIAP1-P8-2026</p>
+          </div>
+        </div>
+
+        <!-- ARTICLE 5 : Offre emploi événementiel Lyon -->
+        <div class="actu-card" data-cat="emploi">
+          <div class="actu-card-header">
+            <span class="actu-badge-emploi">💼 Offre d'emploi</span>
+            <span style="font-size:11px;color:var(--text-sub);white-space:nowrap">28 mars 2026</span>
+          </div>
+          <div class="actu-title">Agent de sécurité événementiel — Festivals & Concerts — Lyon (69)</div>
+          <div class="actu-resume">Agence événementielle lyonnaise recrute agents de sécurité pour la saison festivals 2026 (avril à septembre). Missions ponctuelles ou régulières, palpations de sécurité, gestion des flux. CDD/Extra possible.</div>
+          <div class="actu-meta">
+            <span>📅 28 mars 2026</span>
+            <span class="actu-source">Offre interne</span>
+          </div>
+          <button class="btn-lire-plus" onclick="actuToggle(this)">Lire plus ▾</button>
+          <div class="actu-content">
+            <p style="margin-bottom:10px"><strong>Poste :</strong> Agent de Sécurité Événementiel (ASE) — Saison 2026</p>
+            <p style="margin-bottom:10px"><strong>Lieu :</strong> Lyon et agglomération lyonnaise — déplacements possibles Rhône-Alpes</p>
+            <p style="margin-bottom:10px"><strong>Missions :</strong>
+            <br>• Contrôle d'accès et billetterie
+            <br>• Palpations de sécurité (habilitation requise)
+            <br>• Gestion des flux de spectateurs
+            <br>• Surveillance générale et prévention des incidents
+            <br>• Assistance aux personnes</p>
+            <p style="margin-bottom:10px"><strong>Conditions :</strong>
+            <br>• CDD d'usage (extra) ou CDI intermittent selon profil
+            <br>• Coefficient 120 à 130 selon expérience
+            <br>• Majoration jours fériés et nuit
+            <br>• Frais de déplacement remboursés</p>
+            <p style="margin-bottom:10px"><strong>Profil :</strong> Carte pro CNAPS valide, TFP APS (Titre à finalité professionnelle Agent de Prévention et de Sécurité) ou CQP APS. Expérience événementiel appréciée.</p>
+            <p><strong>Contact :</strong> securite-events-lyon@exemple.fr — Objet : Candidature ASE Saison 2026</p>
+          </div>
+        </div>
+
+      </div><!-- /actu-list -->
+    </div><!-- /content -->
+  </div><!-- /screen-actu -->
+
 <nav class="bottom-nav">
     <button class="nav-item active" onclick="goTo('home',this)"><span class="nav-icon">🏠</span><span class="nav-label">Accueil</span></button>
     <button class="nav-item" onclick="goTo('planning',this)"><span class="nav-icon">📅</span><span class="nav-label">Planning</span></button>
@@ -819,6 +1012,7 @@ select.form-input option{background:var(--card);color:var(--text);}
     <button class="nav-item" onclick="goTo('droit',this)"><span class="nav-icon">⚖️</span><span class="nav-label">Droits</span></button>
     <button class="nav-item" onclick="goTo('profil',this)"><span class="nav-icon">👤</span><span class="nav-label">Profil</span></button>
     <button class="nav-item" onclick="goTo('assistant',this)"><span class="nav-icon">🤖</span><span class="nav-label">SecuIA</span></button>
+    <button class="nav-item" onclick="goTo('actu',this)"><span class="nav-icon">📰</span><span class="nav-label">Actu</span></button>
   </nav>
 </div>
 
@@ -1392,6 +1586,26 @@ function sdSearch(q){
       if(el.querySelector('mark')){el.textContent=el.textContent;}
     });
   }
+}
+
+/* ===== ACTU SECU JS ===== */
+function actuFilter(cat, btn){
+  document.querySelectorAll('#actu-filters .filter-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#actu-list .actu-card').forEach(card=>{
+    if(cat==='all'||card.dataset.cat===cat){
+      card.style.display='';
+    }else{
+      card.style.display='none';
+    }
+  });
+}
+
+function actuToggle(btn){
+  const content=btn.nextElementSibling;
+  const isOpen=content.classList.contains('open');
+  content.classList.toggle('open',!isOpen);
+  btn.textContent=isOpen?'Lire plus ▾':'Réduire ▴';
 }
 
 let chatHistory=[];
