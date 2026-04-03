@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#1d4ed8">
+<meta name="theme-color" content="#0F172A">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="SecuPRO">
 <link rel="manifest" href="manifest.json">
@@ -11,147 +11,228 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--blue:#2563EB;--blue-dark:#1d4ed8;--blue-light:#eff6ff;--green:#16a34a;--green-light:#dcfce7;--orange:#ea580c;--orange-light:#ffedd5;--red:#dc2626;--red-light:#fee2e2;--gray-50:#f8fafc;--gray-100:#f1f5f9;--gray-200:#e2e8f0;--gray-400:#94a3b8;--gray-500:#64748b;--gray-600:#475569;--gray-700:#334155;--gray-800:#1e293b;--gray-900:#0f172a;--radius:12px;--radius-lg:18px;--radius-xl:24px;--shadow:0 2px 12px rgba(37,99,235,0.08);}
+:root{
+  --blue:#3B82F6;--blue-dark:#2563EB;--blue-light:rgba(59,130,246,0.15);
+  --green:#22C55E;--green-light:rgba(34,197,94,0.15);
+  --orange:#F59E0B;--orange-light:rgba(245,158,11,0.15);
+  --red:#EF4444;--red-light:rgba(239,68,68,0.15);
+  --violet:#A78BFA;--violet-light:rgba(167,139,250,0.15);
+  --gray-50:#0F172A;--gray-100:#1E293B;--gray-200:#334155;
+  --gray-300:#475569;--gray-400:#94A3B8;--gray-500:#64748b;--gray-600:#CBD5E1;
+  --gray-700:#CBD5E1;--gray-800:#F8FAFC;--gray-900:#F8FAFC;
+  --bg:#0F172A;--card:#1E293B;--border:#334155;
+  --text:#F8FAFC;--text-sub:#94A3B8;--text-muted:#CBD5E1;
+  --gradient:linear-gradient(135deg,#2563EB,#7C3AED);
+  --radius:12px;--radius-lg:18px;--radius-xl:24px;
+  --shadow:0 4px 24px rgba(37,99,235,0.15);
+  --shadow-card:0 2px 16px rgba(0,0,0,0.4);
+}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray-800);max-width:430px;margin:0 auto;min-height:100dvh;overflow-x:hidden;}
-.auth-wrap{min-height:100dvh;display:flex;flex-direction:column;}
-.auth-hero{background:linear-gradient(135deg,#1d4ed8,#2563EB);padding:60px 28px 40px;color:white;text-align:center;}
-.auth-logo{width:64px;height:64px;border-radius:18px;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;}
-.auth-title{font-size:26px;font-weight:600;margin-bottom:6px;}
-.auth-sub{font-size:13px;opacity:0.75;}
-.auth-form{background:white;border-radius:24px 24px 0 0;flex:1;padding:28px 24px;margin-top:-16px;}
-.auth-tab{display:flex;margin-bottom:24px;background:var(--gray-100);border-radius:10px;padding:3px;}
-.auth-tab-btn{flex:1;padding:8px;border:none;background:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--gray-500);transition:all 0.15s;}
-.auth-tab-btn.active{background:white;color:var(--gray-800);box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;min-height:100dvh;overflow-x:hidden;}
+
+/* ===== AUTH ===== */
+.auth-wrap{min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);}
+.auth-hero{background:var(--gradient);padding:60px 28px 50px;color:white;text-align:center;position:relative;overflow:hidden;}
+.auth-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.06);}
+.auth-hero::after{content:'';position:absolute;bottom:-40px;left:-40px;width:150px;height:150px;border-radius:50%;background:rgba(124,58,237,0.3);}
+.auth-logo{width:64px;height:64px;border-radius:18px;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;position:relative;z-index:1;box-shadow:0 8px 32px rgba(0,0,0,0.3);}
+.auth-title{font-size:26px;font-weight:600;margin-bottom:6px;position:relative;z-index:1;}
+.auth-sub{font-size:13px;opacity:0.75;position:relative;z-index:1;}
+.auth-form{background:var(--card);border-radius:24px 24px 0 0;flex:1;padding:28px 24px;margin-top:-20px;border-top:1px solid var(--border);}
+.auth-tab{display:flex;margin-bottom:24px;background:var(--bg);border-radius:10px;padding:3px;border:1px solid var(--border);}
+.auth-tab-btn{flex:1;padding:8px;border:none;background:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--text-sub);transition:all 0.3s ease;}
+.auth-tab-btn.active{background:var(--gradient);color:white;box-shadow:0 2px 12px rgba(37,99,235,0.4);}
 .form-group{margin-bottom:14px;}
-.form-label{font-size:12px;font-weight:500;color:var(--gray-500);margin-bottom:5px;display:block;}
-.form-input{width:100%;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:12px 14px;font-size:14px;font-family:inherit;color:var(--gray-800);outline:none;transition:border 0.15s;}
-.form-input:focus{border-color:var(--blue);background:white;}
-.btn-auth{width:100%;background:var(--blue);color:white;border:none;border-radius:var(--radius);padding:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:6px;transition:all 0.15s;}
-.btn-auth:active{background:var(--blue-dark);transform:scale(0.98);}
-.auth-error{background:var(--red-light);color:var(--red);border-radius:8px;padding:10px 12px;font-size:12px;margin-bottom:12px;display:none;}
-.auth-success{background:var(--green-light);color:var(--green);border-radius:8px;padding:10px 12px;font-size:12px;margin-bottom:12px;display:none;}
+.form-label{font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:5px;display:block;}
+.form-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-size:14px;font-family:inherit;color:var(--text);outline:none;transition:all 0.3s ease;}
+.form-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,0.15);}
+select.form-input option{background:var(--card);color:var(--text);}
+.btn-auth{width:100%;background:var(--gradient);color:white;border:none;border-radius:var(--radius);padding:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:6px;transition:all 0.3s ease;box-shadow:0 4px 20px rgba(37,99,235,0.4);}
+.btn-auth:hover{opacity:0.92;box-shadow:0 6px 28px rgba(37,99,235,0.55);transform:translateY(-1px);}
+.btn-auth:active{transform:scale(0.98);}
+.auth-error{background:var(--red-light);color:var(--red);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:10px 12px;font-size:12px;margin-bottom:12px;display:none;}
+.auth-success{background:var(--green-light);color:var(--green);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:10px 12px;font-size:12px;margin-bottom:12px;display:none;}
+
+/* ===== APP SHELL ===== */
 .app-wrap{display:none;}
-.screen{display:none;flex-direction:column;min-height:100dvh;padding-bottom:80px;}
-.screen.active{display:flex;animation:fadeIn 0.2s ease;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.header{background:linear-gradient(135deg,#1d4ed8,#2563EB);padding:52px 20px 24px;color:white;position:relative;overflow:hidden;}
-.header::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,0.07);}
+.screen{display:none;flex-direction:column;min-height:100dvh;padding-bottom:80px;background:var(--bg);}
+.screen.active{display:flex;animation:fadeIn 0.25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== HEADER ===== */
+.header{background:var(--gradient);padding:52px 20px 24px;color:white;position:relative;overflow:hidden;}
+.header::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.06);}
+.header::after{content:'';position:absolute;bottom:-50px;left:-30px;width:140px;height:140px;border-radius:50%;background:rgba(124,58,237,0.25);}
 .header-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1;}
-.header-greeting{font-size:13px;opacity:0.75;margin-bottom:3px;}
+.header-greeting{font-size:13px;opacity:0.8;margin-bottom:3px;}
 .header-name{font-size:22px;font-weight:600;}
-.header-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:white;border:2px solid rgba(255,255,255,0.3);flex-shrink:0;}
-.header-sub{font-size:12px;opacity:0.65;margin-top:4px;position:relative;z-index:1;}
+.header-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:white;border:2px solid rgba(255,255,255,0.35);flex-shrink:0;transition:transform 0.3s ease;}
+.header-avatar:active{transform:scale(0.92);}
+.header-sub{font-size:12px;opacity:0.7;margin-top:4px;position:relative;z-index:1;}
+
+/* ===== CONTENT ===== */
 .content{padding:16px;flex:1;}
-.card{background:white;border-radius:var(--radius-lg);padding:16px;box-shadow:var(--shadow);margin-bottom:12px;}
-.section-label{font-size:13px;font-weight:600;color:var(--gray-600);margin:16px 0 8px;}
-.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:500;gap:4px;}
-.badge-green{background:var(--green-light);color:var(--green);}
-.badge-orange{background:var(--orange-light);color:var(--orange);}
-.badge-red{background:var(--red-light);color:var(--red);}
-.badge-blue{background:var(--blue-light);color:var(--blue);}
-.shift-card{background:linear-gradient(135deg,#1e3a8a,#1d4ed8);border-radius:var(--radius-xl);padding:20px;color:white;margin-bottom:12px;position:relative;overflow:hidden;}
-.shift-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.06);}
-.shift-pill{background:rgba(255,255,255,0.15);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:500;}
-.progress-bar-bg{background:var(--gray-100);border-radius:99px;height:8px;overflow:hidden;margin:8px 0 4px;}
-.progress-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#2563EB,#3b82f6);transition:width 0.8s ease;}
-.vacation-item{background:white;border-radius:var(--radius);padding:14px;margin-bottom:8px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;}
-.vacation-date-box{background:var(--blue-light);border-radius:10px;width:44px;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
+.card{background:var(--card);border-radius:var(--radius-lg);padding:16px;box-shadow:var(--shadow-card);margin-bottom:12px;border:1px solid var(--border);backdrop-filter:blur(10px);transition:transform 0.2s ease,box-shadow 0.2s ease;}
+.card:hover{transform:translateY(-1px);box-shadow:0 6px 30px rgba(0,0,0,0.5);}
+.section-label{font-size:13px;font-weight:600;color:var(--text-sub);margin:16px 0 8px;text-transform:uppercase;letter-spacing:0.05em;}
+
+/* ===== BADGES ===== */
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;gap:4px;}
+.badge-green{background:var(--green-light);color:var(--green);border:1px solid rgba(34,197,94,0.25);}
+.badge-orange{background:var(--orange-light);color:var(--orange);border:1px solid rgba(245,158,11,0.25);}
+.badge-red{background:var(--red-light);color:var(--red);border:1px solid rgba(239,68,68,0.25);}
+.badge-blue{background:var(--blue-light);color:var(--blue);border:1px solid rgba(59,130,246,0.25);}
+.badge-violet{background:var(--violet-light);color:var(--violet);border:1px solid rgba(167,139,250,0.25);}
+
+/* ===== SHIFT CARD ===== */
+.shift-card{background:var(--gradient);border-radius:var(--radius-xl);padding:20px;color:white;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(37,99,235,0.35);}
+.shift-card::before{content:'';position:absolute;top:-30px;right:-30px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.07);}
+.shift-card::after{content:'';position:absolute;bottom:-40px;left:-20px;width:100px;height:100px;border-radius:50%;background:rgba(124,58,237,0.3);}
+.shift-pill{background:rgba(255,255,255,0.18);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:500;}
+
+/* ===== PROGRESS ===== */
+.progress-bar-bg{background:rgba(255,255,255,0.15);border-radius:99px;height:6px;overflow:hidden;margin:8px 0 4px;}
+.progress-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#60A5FA,#A78BFA);transition:width 0.8s ease;box-shadow:0 0 8px rgba(96,165,250,0.5);}
+
+/* ===== VACATION ITEMS ===== */
+.vacation-item{background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:8px;box-shadow:var(--shadow-card);display:flex;align-items:center;gap:12px;border:1px solid var(--border);transition:all 0.2s ease;}
+.vacation-item:hover{border-color:rgba(59,130,246,0.3);transform:translateX(2px);}
+.vacation-date-box{background:var(--blue-light);border-radius:10px;width:44px;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(59,130,246,0.25);}
 .vd-day{font-size:18px;font-weight:700;color:var(--blue);line-height:1;}
-.vd-month{font-size:9px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:0.05em;}
+.vd-month{font-size:9px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.05em;}
+
+/* ===== FILTER TABS ===== */
 .filter-tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px;}
 .filter-tabs::-webkit-scrollbar{display:none;}
-.filter-tab{padding:6px 14px;border-radius:99px;font-size:12px;font-weight:500;border:1px solid var(--gray-200);background:white;color:var(--gray-500);white-space:nowrap;cursor:pointer;transition:all 0.15s;}
-.filter-tab.active{background:var(--blue);color:white;border-color:var(--blue);}
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:white;border-top:1px solid var(--gray-100);display:flex;padding:8px 0 20px;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,0.06);overflow-x:auto;}
-.nav-item{flex:0 0 14.28%;min-width:50px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;color:var(--gray-400);transition:color 0.2s;border:none;background:none;font-family:inherit;}
+.filter-tab{padding:6px 14px;border-radius:99px;font-size:12px;font-weight:500;border:1px solid var(--border);background:var(--card);color:var(--text-sub);white-space:nowrap;cursor:pointer;transition:all 0.3s ease;}
+.filter-tab:hover{border-color:var(--blue);color:var(--blue);}
+.filter-tab.active{background:var(--gradient);color:white;border-color:transparent;box-shadow:0 3px 12px rgba(37,99,235,0.4);}
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(15,23,42,0.9);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;padding:8px 0 20px;z-index:100;box-shadow:0 -4px 30px rgba(0,0,0,0.5);overflow-x:auto;}
+.nav-item{flex:0 0 14.28%;min-width:50px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;color:var(--text-sub);transition:all 0.3s ease;border:none;background:none;font-family:inherit;}
+.nav-item:hover{color:var(--blue);}
 .nav-item.active{color:var(--blue);}
-.nav-icon{font-size:20px;line-height:1;}
-.nav-label{font-size:10px;font-weight:500;}
-.paie-hero{background:linear-gradient(135deg,#1d4ed8,#2563EB);border-radius:var(--radius-xl);padding:24px;color:white;margin-bottom:12px;}
-.fiche-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid var(--gray-100);}
+.nav-item.active .nav-icon{transform:scale(1.15);filter:drop-shadow(0 0 6px rgba(59,130,246,0.6));}
+.nav-item.active .nav-label{color:var(--blue);}
+.nav-icon{font-size:20px;line-height:1;transition:all 0.3s ease;}
+.nav-label{font-size:10px;font-weight:500;transition:color 0.3s ease;}
+
+/* ===== PAIE HERO ===== */
+.paie-hero{background:var(--gradient);border-radius:var(--radius-xl);padding:24px;color:white;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(37,99,235,0.35);}
+.paie-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,0.06);}
+
+/* ===== FICHE ITEMS ===== */
+.fiche-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid var(--border);}
 .fiche-item:last-child{border-bottom:none;}
-.fiche-icon{width:36px;height:36px;border-radius:9px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-.doc-card{background:white;border-radius:var(--radius-lg);padding:16px;margin-bottom:10px;box-shadow:var(--shadow);display:flex;align-items:center;gap:14px;}
-.alert-banner{background:var(--orange-light);border-left:3px solid var(--orange);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--orange);margin-bottom:12px;font-weight:500;}
-.profil-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#1d4ed8,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;color:white;margin:0 auto 10px;}
-.profil-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:0.5px solid var(--gray-100);}
+.fiche-icon{width:36px;height:36px;border-radius:9px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;border:1px solid rgba(59,130,246,0.2);}
+
+/* ===== DOC CARDS ===== */
+.doc-card{background:var(--card);border-radius:var(--radius-lg);padding:16px;margin-bottom:10px;box-shadow:var(--shadow-card);display:flex;align-items:center;gap:14px;border:1px solid var(--border);transition:all 0.2s ease;}
+.doc-card:hover{border-color:rgba(59,130,246,0.3);}
+
+/* ===== ALERT BANNER ===== */
+.alert-banner{background:var(--orange-light);border-left:3px solid var(--orange);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--orange);margin-bottom:12px;font-weight:500;border:1px solid rgba(245,158,11,0.25);}
+
+/* ===== PROFIL ===== */
+.profil-avatar{width:72px;height:72px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;color:white;margin:0 auto 10px;box-shadow:0 8px 24px rgba(37,99,235,0.4);}
+.profil-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:0.5px solid var(--border);}
 .profil-row:last-child{border-bottom:none;}
-.btn-primary{background:var(--blue);color:white;border:none;border-radius:var(--radius);padding:13px 16px;font-size:14px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;}
-.btn-primary:active{background:var(--blue-dark);transform:scale(0.98);}
-.btn-danger{background:var(--red-light);color:var(--red);border:none;border-radius:var(--radius);padding:13px 16px;font-size:14px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;margin-top:4px;}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+
+/* ===== BUTTONS ===== */
+.btn-primary{background:var(--gradient);color:white;border:none;border-radius:var(--radius);padding:13px 16px;font-size:14px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;transition:all 0.3s ease;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;box-shadow:0 4px 20px rgba(37,99,235,0.35);}
+.btn-primary:hover{opacity:0.9;box-shadow:0 6px 28px rgba(37,99,235,0.5);transform:translateY(-1px);}
+.btn-primary:active{transform:scale(0.98);}
+.btn-danger{background:var(--red-light);color:var(--red);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius);padding:13px 16px;font-size:14px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;margin-top:4px;transition:all 0.3s ease;}
+.btn-danger:hover{background:rgba(239,68,68,0.2);}
+
+/* ===== MODALS ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s ease;}
 .modal-overlay.open{opacity:1;pointer-events:all;}
-.modal-sheet{background:white;border-radius:24px 24px 0 0;padding:20px;width:100%;max-width:430px;max-height:80dvh;overflow-y:auto;transform:translateY(100%);transition:transform 0.3s ease;}
+.modal-sheet{background:var(--card);border-radius:24px 24px 0 0;padding:20px;width:100%;max-width:430px;max-height:80dvh;overflow-y:auto;transform:translateY(100%);transition:transform 0.3s ease;border-top:1px solid var(--border);}
 .modal-overlay.open .modal-sheet{transform:translateY(0);}
-.modal-handle{width:36px;height:4px;border-radius:99px;background:var(--gray-200);margin:0 auto 16px;}
-.modal-title{font-size:17px;font-weight:600;margin-bottom:16px;}
-.loading-screen{position:fixed;inset:0;background:linear-gradient(135deg,#1d4ed8,#2563EB);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;color:white;}
-.spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;margin-top:24px;}
+.modal-handle{width:36px;height:4px;border-radius:99px;background:var(--border);margin:0 auto 16px;}
+.modal-title{font-size:17px;font-weight:600;margin-bottom:16px;color:var(--text);}
+
+/* ===== LOADING ===== */
+.loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;color:white;}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;margin-top:24px;}
 @keyframes spin{to{transform:rotate(360deg)}}
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--gray-900);color:white;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:500;z-index:300;white-space:nowrap;opacity:0;transition:all 0.3s;font-family:'DM Sans',sans-serif;}
+
+/* ===== TOAST ===== */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);color:var(--text);border:1px solid var(--border);padding:10px 20px;border-radius:99px;font-size:13px;font-weight:500;z-index:300;white-space:nowrap;opacity:0;transition:all 0.3s;font-family:'DM Sans',sans-serif;box-shadow:var(--shadow-card);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-.empty-state{text-align:center;padding:40px 20px;color:var(--gray-400);}
-.empty-state-icon{font-size:40px;margin-bottom:12px;}
+
+/* ===== EMPTY STATE ===== */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-sub);}
+.empty-state-icon{font-size:40px;margin-bottom:12px;opacity:0.6;}
 .empty-state-text{font-size:14px;}
 
-/* ===== Bulletin Paie Analyse ===== */
+/* ===== BULLETIN PAIE ANALYSE ===== */
 .bpa-wrap{margin-top:4px;}
-.bpa-upload-btn{width:100%;background:linear-gradient(135deg,#1e3a8a,#2563EB);color:white;border:none;border-radius:var(--radius);padding:14px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;transition:all 0.15s;}
+.bpa-upload-btn{width:100%;background:var(--gradient);color:white;border:none;border-radius:var(--radius);padding:14px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;transition:all 0.3s ease;box-shadow:0 4px 20px rgba(37,99,235,0.35);}
+.bpa-upload-btn:hover{opacity:0.9;box-shadow:0 6px 28px rgba(37,99,235,0.5);transform:translateY(-1px);}
 .bpa-upload-btn:active{transform:scale(0.98);opacity:0.9;}
-.bpa-analyzing{background:var(--blue-light);border-radius:var(--radius);padding:16px;text-align:center;display:none;margin-bottom:10px;}
-.bpa-spinner{width:24px;height:24px;border:3px solid rgba(37,99,235,0.2);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px;}
-.bpa-result{background:white;border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;margin-bottom:10px;display:none;}
-.bpa-result-header{background:linear-gradient(135deg,#1e3a8a,#2563EB);color:white;padding:16px;}
-.bpa-alert{background:#fef2f2;border-left:4px solid var(--red);border-radius:0 10px 10px 0;padding:14px;margin:14px;display:none;}
+.bpa-analyzing{background:var(--blue-light);border:1px solid rgba(59,130,246,0.2);border-radius:var(--radius);padding:16px;text-align:center;display:none;margin-bottom:10px;}
+.bpa-spinner{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px;}
+.bpa-result{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);overflow:hidden;margin-bottom:10px;display:none;border:1px solid var(--border);}
+.bpa-result-header{background:var(--gradient);color:white;padding:16px;}
+.bpa-alert{background:var(--red-light);border-left:4px solid var(--red);border-radius:0 10px 10px 0;padding:14px;margin:14px;display:none;border:1px solid rgba(239,68,68,0.2);}
 .bpa-alert-title{font-size:14px;font-weight:700;color:var(--red);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
-.bpa-alert-item{font-size:13px;color:#991b1b;padding:4px 0;display:flex;justify-content:space-between;border-bottom:0.5px solid #fecaca;}
+.bpa-alert-item{font-size:13px;color:var(--red);padding:4px 0;display:flex;justify-content:space-between;border-bottom:0.5px solid rgba(239,68,68,0.2);}
 .bpa-alert-item:last-child{border-bottom:none;}
 .bpa-alert-amount{font-weight:700;color:var(--red);}
-.bpa-section{padding:14px 16px;border-bottom:0.5px solid var(--gray-100);}
+.bpa-section{padding:14px 16px;border-bottom:0.5px solid var(--border);}
 .bpa-section:last-child{border-bottom:none;}
-.bpa-section-title{font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;}
+.bpa-section-title{font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;}
 .bpa-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;}
-.bpa-row-label{font-size:13px;color:var(--gray-600);}
-.bpa-row-val{font-size:13px;font-weight:600;color:var(--gray-800);}
+.bpa-row-label{font-size:13px;color:var(--text-muted);}
+.bpa-row-val{font-size:13px;font-weight:600;color:var(--text);}
 .bpa-row-val.green{color:var(--green);}
 .bpa-row-val.red{color:var(--red);}
 .bpa-row-val.orange{color:var(--orange);}
 .bpa-big-net{font-size:32px;font-weight:700;margin:4px 0 2px;}
-.bpa-save-btn{width:calc(100% - 32px);margin:0 16px 16px;background:var(--green);color:white;border:none;border-radius:var(--radius);padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
+.bpa-save-btn{width:calc(100% - 32px);margin:0 16px 16px;background:linear-gradient(135deg,#16a34a,#22C55E);color:white;border:none;border-radius:var(--radius);padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(34,197,94,0.35);transition:all 0.3s ease;}
+.bpa-save-btn:hover{opacity:0.9;transform:translateY(-1px);}
 
-/* ===== SecuDroit ===== */
+/* ===== SECU DROIT ===== */
 .sd-search-wrap{position:relative;margin-bottom:16px;}
-.sd-search{width:100%;background:white;border:1.5px solid var(--gray-200);border-radius:var(--radius);padding:11px 14px 11px 40px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--gray-800);outline:none;transition:border 0.15s;box-shadow:var(--shadow);}
-.sd-search:focus{border-color:var(--blue);}
+.sd-search{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:11px 14px 11px 40px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;transition:all 0.3s ease;box-shadow:var(--shadow-card);}
+.sd-search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,0.15);}
+.sd-search::placeholder{color:var(--text-sub);}
 .sd-search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none;}
-.sd-no-results{text-align:center;padding:32px 20px;color:var(--gray-400);font-size:14px;}
-.sd-category{background:white;border-radius:var(--radius-lg);margin-bottom:10px;box-shadow:var(--shadow);overflow:hidden;}
-.sd-cat-header{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;gap:12px;}
-.sd-cat-header:active{background:var(--gray-50);}
+.sd-no-results{text-align:center;padding:32px 20px;color:var(--text-sub);font-size:14px;}
+.sd-category{background:var(--card);border-radius:var(--radius-lg);margin-bottom:10px;box-shadow:var(--shadow-card);overflow:hidden;border:1px solid var(--border);transition:border-color 0.3s ease;}
+.sd-category.open{border-color:rgba(59,130,246,0.3);}
+.sd-cat-header{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;gap:12px;transition:background 0.2s ease;}
+.sd-cat-header:active{background:rgba(59,130,246,0.05);}
 .sd-cat-left{display:flex;align-items:center;gap:12px;flex:1;min-width:0;}
 .sd-cat-emoji{font-size:22px;flex-shrink:0;}
-.sd-cat-title{font-size:15px;font-weight:600;color:var(--gray-800);line-height:1.2;}
-.sd-cat-count{font-size:11px;color:var(--gray-400);margin-top:2px;}
-.sd-chevron{font-size:12px;color:var(--gray-400);transition:transform 0.25s;flex-shrink:0;}
+.sd-cat-title{font-size:15px;font-weight:600;color:var(--text);line-height:1.2;}
+.sd-cat-count{font-size:11px;color:var(--text-sub);margin-top:2px;}
+.sd-chevron{font-size:12px;color:var(--text-sub);transition:transform 0.25s ease;flex-shrink:0;}
 .sd-category.open .sd-chevron{transform:rotate(180deg);}
-.sd-articles{display:none;border-top:0.5px solid var(--gray-100);}
+.sd-articles{display:none;border-top:0.5px solid var(--border);}
 .sd-category.open .sd-articles{display:block;}
-.sd-article{padding:14px 16px;border-bottom:0.5px solid var(--gray-100);}
+.sd-article{padding:14px 16px;border-bottom:0.5px solid var(--border);transition:background 0.2s ease;}
+.sd-article:hover{background:rgba(59,130,246,0.04);}
 .sd-article:last-child{border-bottom:none;}
 .sd-art-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;}
-.sd-art-num{font-size:11px;font-weight:700;color:var(--blue);background:var(--blue-light);padding:2px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0;}
-.sd-art-title{font-size:13px;font-weight:600;color:var(--gray-800);line-height:1.3;flex:1;}
-.sd-art-body{font-size:12px;color:var(--gray-600);line-height:1.6;}
-.sd-highlight{background:#fef9c3;border-radius:2px;padding:0 1px;}
+.sd-art-num{font-size:11px;font-weight:700;color:var(--violet);background:var(--violet-light);padding:2px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0;border:1px solid rgba(167,139,250,0.2);}
+.sd-art-title{font-size:13px;font-weight:600;color:var(--text);line-height:1.3;flex:1;}
+.sd-art-body{font-size:12px;color:var(--text-muted);line-height:1.7;}
+.sd-highlight{background:rgba(251,191,36,0.25);border-radius:2px;padding:0 2px;color:#FCD34D;}
 </style>
 </head>
 <body>
 
 <div class="loading-screen" id="loading">
-  <div style="width:64px;height:64px;border-radius:18px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px">🛡️</div>
-  <div style="font-size:24px;font-weight:600;margin-bottom:8px">SecuPRO</div>
-  <div style="font-size:13px;opacity:0.7">Chargement...</div>
+  <div style="width:64px;height:64px;border-radius:18px;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px;box-shadow:0 8px 32px rgba(37,99,235,0.5)">🛡️</div>
+  <div style="font-size:24px;font-weight:600;margin-bottom:8px;color:var(--text)">SecuPRO</div>
+  <div style="font-size:13px;color:var(--text-sub)">Chargement...</div>
   <div class="spinner"></div>
 </div>
 
@@ -197,11 +278,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
       <div class="section-label">Ce mois-ci</div>
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <div><div style="font-size:13px;color:var(--gray-500)">Salaire net</div><div style="font-size:22px;font-weight:600" id="paie-amount">—</div></div>
+          <div><div style="font-size:13px;color:var(--text-sub)">Salaire net</div><div style="font-size:22px;font-weight:600;color:var(--green)" id="paie-amount">—</div></div>
         </div>
-        <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px" id="heures-label">Heures — 0 / 151h</div>
+        <div style="font-size:11px;color:var(--text-sub);margin-bottom:4px" id="heures-label">Heures — 0 / 151h</div>
         <div class="progress-bar-bg"><div class="progress-bar-fill" id="heures-bar" style="width:0%"></div></div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray-400)"><span id="h-done">0h travaillées</span><span>151h contractuelles</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-sub)"><span id="h-done">0h travaillées</span><span>151h contractuelles</span></div>
       </div>
     </div>
   </div>
@@ -210,7 +291,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
     <div class="header" style="padding-bottom:16px">
       <div class="header-top">
         <div><div class="header-greeting">Planning</div><div class="header-name">Vos vacations</div></div>
-        <div style="display:flex;gap:8px"><button onclick="openImportPDF()" style="background:rgba(255,255,255,0.2);border:none;border-radius:10px;color:white;font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer;font-family:inherit">📄 Import PDF</button><button onclick="openAddVacation()" style="background:rgba(255,255,255,0.2);border:none;border-radius:10px;color:white;font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer;font-family:inherit">+ Ajouter</button></div>
+        <div style="display:flex;gap:8px"><button onclick="openImportPDF()" style="background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.25);border-radius:10px;color:white;font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer;font-family:inherit;transition:all 0.3s ease">📄 Import PDF</button><button onclick="openAddVacation()" style="background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.25);border-radius:10px;color:white;font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer;font-family:inherit;transition:all 0.3s ease">+ Ajouter</button></div>
       </div>
     </div>
     <div class="content">
@@ -230,11 +311,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
     </div>
     <div class="content">
       <div class="paie-hero">
-        <div style="font-size:12px;opacity:0.7;margin-bottom:4px">Salaire net</div>
-        <div style="font-size:36px;font-weight:600" id="paie-net-big">—</div>
-        <div style="font-size:12px;opacity:0.65" id="paie-brut-display">Brut : —</div>
-        <div class="progress-bar-bg" style="margin-top:14px"><div class="progress-bar-fill" id="paie-bar" style="width:0%"></div></div>
-        <div style="display:flex;justify-content:space-between;font-size:12px;opacity:0.75;margin-top:4px"><span id="paie-h-done">0h</span><span>151h contractuelles</span></div>
+        <div style="font-size:12px;opacity:0.75;margin-bottom:4px;position:relative;z-index:1">Salaire net estimé</div>
+        <div style="font-size:36px;font-weight:700;position:relative;z-index:1" id="paie-net-big">—</div>
+        <div style="font-size:12px;opacity:0.7;position:relative;z-index:1" id="paie-brut-display">Brut : —</div>
+        <div class="progress-bar-bg" style="margin-top:14px;background:rgba(255,255,255,0.15)"><div class="progress-bar-fill" id="paie-bar" style="width:0%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;opacity:0.75;margin-top:4px;position:relative;z-index:1"><span id="paie-h-done">0h</span><span>151h contractuelles</span></div>
       </div>
       <div class="section-label">Analyse automatique</div>
       <div class="bpa-wrap">
@@ -242,8 +323,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
         <button class="bpa-upload-btn" onclick="document.getElementById('bpa-input').click()">📄 Importer mon bulletin de salaire (PDF)</button>
         <div class="bpa-analyzing" id="bpa-analyzing">
           <div class="bpa-spinner"></div>
-          <div style="font-size:14px;color:var(--blue);font-weight:600">Analyse en cours...</div>
-          <div style="font-size:12px;color:var(--gray-400);margin-top:4px">L'IA lit votre bulletin</div>
+          <div style="font-size:14px;color:var(--violet);font-weight:600">Analyse en cours...</div>
+          <div style="font-size:12px;color:var(--text-sub);margin-top:4px">L'IA lit votre bulletin</div>
         </div>
         <div class="bpa-result" id="bpa-result"></div>
       </div>
@@ -271,19 +352,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
     <div class="content">
       <div class="card" style="text-align:center;padding-top:20px;padding-bottom:20px">
         <div class="profil-avatar" id="profil-avatar">?</div>
-        <div style="font-size:20px;font-weight:600" id="profil-name">...</div>
+        <div style="font-size:20px;font-weight:600;color:var(--text)" id="profil-name">...</div>
         <div style="display:flex;justify-content:center;margin-top:6px"><span class="badge badge-blue">Agent de sécurité</span></div>
       </div>
       <div class="section-label">Informations</div>
       <div class="card">
-        <div class="profil-row"><div style="font-size:18px;width:28px;text-align:center">✉️</div><div><div style="font-size:12px;color:var(--gray-400)">Email</div><div style="font-size:14px;font-weight:500" id="profil-email">—</div></div></div>
-        <div class="profil-row" style="border-bottom:none"><div style="font-size:18px;width:28px;text-align:center">🏙️</div><div><div style="font-size:12px;color:var(--gray-400)">Ville</div><div style="font-size:14px;font-weight:500" id="profil-ville">Non renseignée</div></div></div>
+        <div class="profil-row"><div style="font-size:18px;width:28px;text-align:center">✉️</div><div><div style="font-size:12px;color:var(--text-sub)">Email</div><div style="font-size:14px;font-weight:500;color:var(--text)" id="profil-email">—</div></div></div>
+        <div class="profil-row" style="border-bottom:none"><div style="font-size:18px;width:28px;text-align:center">🏙️</div><div><div style="font-size:12px;color:var(--text-sub)">Ville</div><div style="font-size:14px;font-weight:500;color:var(--text)" id="profil-ville">Non renseignée</div></div></div>
       </div>
       <div class="section-label">Abonnement</div>
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><div style="font-size:14px;font-weight:600">SecuPRO Pro</div><div style="font-size:12px;color:var(--gray-400);margin-top:2px">14,99€/mois · Essai 7 jours</div></div>
-          <span class="badge badge-blue">⭐ Pro</span>
+          <div><div style="font-size:14px;font-weight:600;color:var(--text)">SecuPRO Pro</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">14,99€/mois · Essai 7 jours</div></div>
+          <span class="badge badge-violet">⭐ Pro</span>
         </div>
       </div>
       <button class="btn-danger" onclick="logout()">Se déconnecter</button>
@@ -299,14 +380,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
     </div>
     <div class="content" style="display:flex;flex-direction:column;height:calc(100dvh - 145px)">
       <div id="chat-messages" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-bottom:16px">
-        <div style="background:#eff6ff;border-radius:14px 14px 14px 4px;padding:14px;max-width:85%">
-          <div style="font-size:13px;color:#2563EB;font-weight:600;margin-bottom:6px">SecuIA</div>
-          <div style="font-size:14px;color:#334155;line-height:1.5">Bonjour ! Je suis votre assistant specialise en securite privee. Posez vos questions sur vos droits, convention collective, carte CNAPS, heures supplementaires...</div>
+        <div style="background:var(--violet-light);border:1px solid rgba(167,139,250,0.2);border-radius:14px 14px 14px 4px;padding:14px;max-width:85%">
+          <div style="font-size:13px;color:var(--violet);font-weight:600;margin-bottom:6px">SecuIA</div>
+          <div style="font-size:14px;color:var(--text-muted);line-height:1.5">Bonjour ! Je suis votre assistant specialise en securite privee. Posez vos questions sur vos droits, convention collective, carte CNAPS, heures supplementaires...</div>
         </div>
       </div>
-      <div style="display:flex;gap:8px;padding-top:12px;border-top:0.5px solid #f1f5f9">
-        <input type="text" id="chat-input" placeholder="Posez votre question..." style="flex:1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;font-family:inherit;color:#1e293b;outline:none">
-        <button id="chat-send" style="background:#2563EB;color:white;border:none;border-radius:12px;padding:12px 16px;font-size:18px;cursor:pointer">&#10148;</button>
+      <div style="display:flex;gap:8px;padding-top:12px;border-top:0.5px solid var(--border)">
+        <input type="text" id="chat-input" placeholder="Posez votre question..." style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:inherit;color:var(--text);outline:none;transition:border-color 0.3s ease">
+        <button id="chat-send" style="background:var(--gradient);color:white;border:none;border-radius:12px;padding:12px 16px;font-size:18px;cursor:pointer;box-shadow:0 4px 16px rgba(37,99,235,0.4);transition:all 0.3s ease">&#10148;</button>
       </div>
     </div>
   </div>
@@ -753,7 +834,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
     </div>
     <div class="form-group"><label class="form-label">Employeur</label><input type="text" class="form-input" id="v-employeur" placeholder="SecuGuard SARL"></div>
     <button class="btn-primary" onclick="addVacation()">✅ Ajouter</button>
-    <button style="width:100%;background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;padding:8px;font-family:inherit" onclick="closeModal('modal-vacation')">Annuler</button>
+    <button style="width:100%;background:none;border:none;color:var(--text-sub);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;transition:color 0.3s ease" onclick="closeModal('modal-vacation')">Annuler</button>
   </div>
 </div>
 
@@ -766,7 +847,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
     <div class="form-group"><label class="form-label">Salaire net (€)</label><input type="number" class="form-input" id="f-net" placeholder="1847"></div>
     <div class="form-group"><label class="form-label">Heures effectuées</label><input type="number" class="form-input" id="f-heures" placeholder="151"></div>
     <button class="btn-primary" onclick="addFiche()">✅ Ajouter</button>
-    <button style="width:100%;background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;padding:8px;font-family:inherit" onclick="closeModal('modal-fiche')">Annuler</button>
+    <button style="width:100%;background:none;border:none;color:var(--text-sub);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;transition:color 0.3s ease" onclick="closeModal('modal-fiche')">Annuler</button>
   </div>
 </div>
 
@@ -787,7 +868,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
     <div class="form-group"><label class="form-label">Date d'expiration</label><input type="date" class="form-input" id="d-expiration"></div>
     <div class="form-group"><label class="form-label">Fichier PDF (optionnel)</label><input type="file" class="form-input" id="d-file" accept=".pdf,.jpg,.jpeg,.png" style="padding:10px 14px"></div>
     <button class="btn-primary" onclick="addDoc()">✅ Ajouter</button>
-    <button style="width:100%;background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;padding:8px;font-family:inherit" onclick="closeModal('modal-doc')">Annuler</button>
+    <button style="width:100%;background:none;border:none;color:var(--text-sub);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;transition:color 0.3s ease" onclick="closeModal('modal-doc')">Annuler</button>
   </div>
 </div>
 
@@ -895,7 +976,7 @@ function renderVacations(list){
     const s=sm[v.statut]||sm.confirmed;
     const db=v.heure_debut?v.heure_debut.slice(0,5):'--';
     const fi=v.heure_fin?v.heure_fin.slice(0,5):'--';
-    return `<div class="vacation-item"><div class="vacation-date-box"><div class="vd-day">${d.getDate()}</div><div class="vd-month">${mo[d.getMonth()]}</div></div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.site||'Site'}</div><div style="font-size:12px;color:var(--gray-500);margin-top:2px">${db} → ${fi} · ${v.employeur||''}</div></div><span class="badge ${s.c}">${s.l}</span></div>`;
+    return `<div class="vacation-item"><div class="vacation-date-box"><div class="vd-day">${d.getDate()}</div><div class="vd-month">${mo[d.getMonth()]}</div></div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.site||'Site'}</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">${db} → ${fi} · ${v.employeur||''}</div></div><span class="badge ${s.c}">${s.l}</span></div>`;
   }).join('');
 }
 
@@ -952,7 +1033,7 @@ async function loadFiches(){
   const f=data||[];
   const el=document.getElementById('fiches-list');
   if(!f.length){el.innerHTML='<div class="empty-state"><div class="empty-state-icon">💶</div><div class="empty-state-text">Aucune fiche de paie</div></div>';return;}
-  el.innerHTML=f.map(x=>`<div class="fiche-item"><div class="fiche-icon">📄</div><div style="flex:1"><div style="font-size:14px;font-weight:500">${x.mois}</div><div style="font-size:11px;color:var(--gray-400)">${x.heures_effectuees||0}h</div></div><div style="font-size:14px;font-weight:600">${x.salaire_net?x.salaire_net.toLocaleString('fr-FR')+' €':'—'}</div></div>`).join('');
+  el.innerHTML=f.map(x=>`<div class="fiche-item"><div class="fiche-icon">📄</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--text)">${x.mois}</div><div style="font-size:11px;color:var(--text-sub)">${x.heures_effectuees||0}h</div></div><div style="font-size:14px;font-weight:600;color:var(--green)">${x.salaire_net?x.salaire_net.toLocaleString('fr-FR')+' €':'—'}</div></div>`).join('');
   if(f[0]){
     document.getElementById('paie-net-big').textContent=f[0].salaire_net?f[0].salaire_net.toLocaleString('fr-FR')+' €':'—';
     document.getElementById('paie-brut-display').textContent='Brut : '+(f[0].salaire_brut?f[0].salaire_brut.toLocaleString('fr-FR')+' €':'—');
@@ -989,7 +1070,7 @@ async function loadDocuments(){
       else if(diff<=90){ec='badge-orange';el2='Bientôt';if(d.type==='carte_pro')alertMsg=`⚠️ Carte pro expire dans <strong>${diff} jours</strong> — Renouvelez sur cnaps.fr`;}
     }
     const col=ec==='badge-green'?'var(--green)':ec==='badge-orange'?'var(--orange)':'var(--red)';
-    return `<div class="doc-card" style="cursor:${d.file_path?'pointer':'default'}" onclick="${d.file_path?`openDoc('${d.file_path}')`:''}" ><div style="width:48px;height:48px;border-radius:12px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${icons[d.type]||'📋'}</div><div style="flex:1"><div style="font-size:15px;font-weight:600">${d.nom}</div><div style="font-size:12px;color:var(--gray-500);margin-top:2px">${d.numero||''}</div>${et?`<div style="font-size:11px;margin-top:4px;font-weight:500;color:${col}">${et}</div>`:''}<div style="display:flex;gap:6px;margin-top:8px" onclick="event.stopPropagation()"><button onclick="handleDelete('${d.id}','${d.file_path||''}')" style="background:var(--red-light);color:var(--red);border:none;border-radius:8px;font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;font-family:inherit">🗑️</button></div></div><span class="badge ${ec}">${el2}</span></div>`;
+    return `<div class="doc-card" style="cursor:${d.file_path?'pointer':'default'}" onclick="${d.file_path?`openDoc('${d.file_path}')`:''}" ><div style="width:48px;height:48px;border-radius:12px;background:var(--blue-light);border:1px solid rgba(59,130,246,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${icons[d.type]||'📋'}</div><div style="flex:1"><div style="font-size:15px;font-weight:600;color:var(--text)">${d.nom}</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">${d.numero||''}</div>${et?`<div style="font-size:11px;margin-top:4px;font-weight:500;color:${col}">${et}</div>`:''}<div style="display:flex;gap:6px;margin-top:8px" onclick="event.stopPropagation()"><button onclick="handleDelete('${d.id}','${d.file_path||''}')" style="background:var(--red-light);color:var(--red);border:1px solid rgba(239,68,68,0.25);border-radius:8px;font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;font-family:inherit">🗑️</button></div></div><span class="badge ${ec}">${el2}</span></div>`;
   }).join('');
   al.innerHTML=alertMsg?`<div class="alert-banner">${alertMsg}</div>`:'';
 }
@@ -1119,7 +1200,7 @@ function renderBpaResult(d){
   const alertHtml=alertItems.length?`<div class="bpa-alert" style="display:block"><div class="bpa-alert-title">🚨 RETENUES DÉTECTÉES — Argent déduit de votre salaire</div>${alertItems.map(a=>`<div class="bpa-alert-item"><span>${a.motif}</span><span class="bpa-alert-amount">− ${typeof a.montant==='number'?a.montant.toLocaleString('fr-FR'):a.montant} €</span></div>`).join('')}</div>`:'';
   const fmt=v=>v!=null?(typeof v==='number'?v.toLocaleString('fr-FR')+' €':parseFloat(v).toLocaleString('fr-FR')+' €'):'—';
   const fmtH=v=>v!=null?v+'h':'—';
-  const primesHtml=d.primes&&d.primes.length?d.primes.map(p=>`<div class="bpa-row"><span class="bpa-row-label">${p.nom||p.name||'Prime'}</span><span class="bpa-row-val green">+ ${fmt(p.montant||p.amount)}</span></div>`).join(''):'<div class="bpa-row"><span class="bpa-row-label" style="color:var(--gray-400)">Aucune prime</span></div>';
+  const primesHtml=d.primes&&d.primes.length?d.primes.map(p=>`<div class="bpa-row"><span class="bpa-row-label">${p.nom||p.name||'Prime'}</span><span class="bpa-row-val green">+ ${fmt(p.montant||p.amount)}</span></div>`).join(''):'<div class="bpa-row"><span class="bpa-row-label" style="color:var(--text-sub)">Aucune prime</span></div>';
   resultDiv.innerHTML=`
     <div class="bpa-result-header">
       <div style="font-size:11px;opacity:0.75;margin-bottom:2px">${d.mois||''} ${d.annee||''} · ${d.employeur||'Employeur'}</div>
@@ -1199,9 +1280,9 @@ function addMessage(role, text) {
   const div = document.createElement('div');
   const isUser = role === 'user';
   div.style.cssText = 'display:flex;flex-direction:column;align-items:' + (isUser ? 'flex-end' : 'flex-start');
-  div.innerHTML = '<div style="background:' + (isUser ? 'var(--blue)' : 'var(--blue-light)') + ';border-radius:' + (isUser ? '14px 14px 4px 14px' : '14px 14px 14px 4px') + ';padding:12px 14px;max-width:85%">' +
-    (isUser ? '' : '<div style="font-size:11px;color:var(--blue);font-weight:600;margin-bottom:4px">SecuIA</div>') +
-    '<div class="msg-text" style="font-size:14px;color:' + (isUser ? 'white' : 'var(--gray-700)') + ';line-height:1.5;white-space:pre-wrap">' + text + '</div></div>';
+  div.innerHTML = '<div style="background:' + (isUser ? 'var(--gradient)' : 'var(--violet-light)') + ';border:1px solid ' + (isUser ? 'transparent' : 'rgba(167,139,250,0.2)') + ';border-radius:' + (isUser ? '14px 14px 4px 14px' : '14px 14px 14px 4px') + ';padding:12px 14px;max-width:85%;box-shadow:' + (isUser ? '0 4px 16px rgba(37,99,235,0.3)' : 'none') + '">' +
+    (isUser ? '' : '<div style="font-size:11px;color:var(--violet);font-weight:600;margin-bottom:4px">SecuIA</div>') +
+    '<div class="msg-text" style="font-size:14px;color:' + (isUser ? 'white' : 'var(--text-muted)') + ';line-height:1.5;white-space:pre-wrap">' + text + '</div></div>';
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
   return div;
@@ -1285,7 +1366,7 @@ function addChatMsg(role,text){
   d.style.display='flex';
   d.style.flexDirection='column';
   d.style.alignItems=isUser?'flex-end':'flex-start';
-  d.innerHTML='<div style="background:'+(isUser?'#2563EB':'#eff6ff')+';border-radius:'+(isUser?'14px 14px 4px 14px':'14px 14px 14px 4px')+';padding:12px 14px;max-width:85%">'+(isUser?'':'<div style="font-size:11px;color:#2563EB;font-weight:600;margin-bottom:4px">SecuIA</div>')+'<div class="ct" style="font-size:14px;color:'+(isUser?'white':'#334155')+';line-height:1.5;white-space:pre-wrap">'+text+'</div></div>';
+  d.innerHTML='<div style="background:'+(isUser?'var(--gradient)':'var(--violet-light)')+';border:1px solid '+(isUser?'transparent':'rgba(167,139,250,0.2)')+';border-radius:'+(isUser?'14px 14px 4px 14px':'14px 14px 14px 4px')+';padding:12px 14px;max-width:85%;box-shadow:'+(isUser?'0 4px 16px rgba(37,99,235,0.3)':'none')+'">'+((isUser)?'':'<div style="font-size:11px;color:var(--violet);font-weight:600;margin-bottom:4px">SecuIA</div>')+'<div class="ct" style="font-size:14px;color:'+(isUser?'white':'var(--text-muted)')+';line-height:1.5;white-space:pre-wrap">'+text+'</div></div>';
   c.appendChild(d);
   c.scrollTop=c.scrollHeight;
   return d;
@@ -1298,20 +1379,20 @@ function addChatMsg(role,text){
   <div class="modal-sheet" style="max-height:90dvh">
     <div class="modal-handle"></div>
     <div class="modal-title">📧 Importer depuis un email</div>
-    <div style="font-size:13px;color:var(--gray-500);margin-bottom:14px;line-height:1.5">Copiez le texte de votre email de planning et collez-le ici — l'IA détecte automatiquement vos vacations.</div>
+    <div style="font-size:13px;color:var(--text-sub);margin-bottom:14px;line-height:1.5">Copiez le texte de votre email de planning et collez-le ici — l'IA détecte automatiquement vos vacations.</div>
     <div id="import-step-1">
-      <div style="font-size:12px;font-weight:600;color:var(--gray-500);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Texte du planning</div>
-      <textarea id="planning-text" style="width:100%;height:160px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--gray-800);outline:none;resize:none;line-height:1.5" placeholder="Collez ici le texte de votre email de planning...&#10;&#10;Exemple :&#10;Lundi 07/04 - Site Bellecour - 06h00/14h00&#10;Mercredi 09/04 - Gare Part-Dieu - 14h00/22h00"></textarea>
-      <div style="display:flex;gap:8px;margin-top:8px;align-items:center"><div style="font-size:11px;color:var(--gray-400);flex:1">💡 Fonctionne avec n'importe quel format</div><button onclick="document.getElementById('planning-text').value=''" style="background:none;border:none;color:var(--gray-400);font-size:12px;cursor:pointer;font-family:inherit">Effacer</button></div>
+      <div style="font-size:12px;font-weight:600;color:var(--text-sub);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">Texte du planning</div>
+      <textarea id="planning-text" style="width:100%;height:160px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;resize:none;line-height:1.5;transition:border-color 0.3s ease" placeholder="Collez ici le texte de votre email de planning...&#10;&#10;Exemple :&#10;Lundi 07/04 - Site Bellecour - 06h00/14h00&#10;Mercredi 09/04 - Gare Part-Dieu - 14h00/22h00"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;align-items:center"><div style="font-size:11px;color:var(--text-sub);flex:1">💡 Fonctionne avec n'importe quel format</div><button onclick="document.getElementById('planning-text').value=''" style="background:none;border:none;color:var(--text-sub);font-size:12px;cursor:pointer;font-family:inherit">Effacer</button></div>
       <button class="btn-primary" id="btn-analyser" style="margin-top:12px" onclick="analyserPlanning()">🤖 Analyser avec l'IA</button>
     </div>
     <div id="import-step-2" style="display:none">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div><div style="font-size:14px;font-weight:600" id="detected-count">0 vacations détectées</div></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div><div style="font-size:14px;font-weight:600;color:var(--text)" id="detected-count">0 vacations détectées</div></div>
       <div id="detected-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
       <button class="btn-primary" id="btn-confirmer" onclick="confirmerVacations()">✅ Confirmer et ajouter au planning</button>
       <button style="width:100%;background:none;border:none;color:var(--blue);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;margin-top:4px" onclick="retourStep1()">← Modifier le texte</button>
     </div>
-    <button style="width:100%;background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;margin-top:4px" onclick="closeModal('modal-import-mail')">Annuler</button>
+    <button style="width:100%;background:none;border:none;color:var(--text-sub);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;margin-top:4px;transition:color 0.3s ease" onclick="closeModal('modal-import-mail')">Annuler</button>
   </div>
 </div>
 
@@ -1367,28 +1448,28 @@ async function confirmerVacations(){
     <div class="modal-title">📄 Importer un planning PDF</div>
 
     <div id="pdf-step-1">
-      <div style="font-size:13px;color:var(--gray-500);margin-bottom:16px;line-height:1.5">Sélectionnez votre planning PDF — l'IA extrait automatiquement toutes vos vacations.</div>
-      <div onclick="document.getElementById('pdf-file-input').click()" style="border:2px dashed var(--gray-200);border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;transition:all 0.15s" id="pdf-dropzone">
+      <div style="font-size:13px;color:var(--text-sub);margin-bottom:16px;line-height:1.5">Sélectionnez votre planning PDF — l'IA extrait automatiquement toutes vos vacations.</div>
+      <div onclick="document.getElementById('pdf-file-input').click()" style="border:2px dashed var(--border);border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;transition:all 0.3s ease;background:rgba(59,130,246,0.03)" id="pdf-dropzone">
         <div style="font-size:36px;margin-bottom:10px">📄</div>
-        <div style="font-size:14px;font-weight:600;color:var(--gray-700)">Appuyez pour sélectionner</div>
-        <div style="font-size:12px;color:var(--gray-400);margin-top:4px">Planning PDF, Comète, tout format accepté</div>
+        <div style="font-size:14px;font-weight:600;color:var(--text)">Appuyez pour sélectionner</div>
+        <div style="font-size:12px;color:var(--text-sub);margin-top:4px">Planning PDF, Comète, tout format accepté</div>
       </div>
-      <div style="background:var(--blue-light);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:12px;color:var(--blue)">
+      <div style="background:var(--blue-light);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:12px;color:var(--blue)">
         💡 Fonctionne avec tous les formats de planning PDF — Comète SQL, Word converti, scan...
       </div>
     </div>
 
     <div id="pdf-step-loading" style="display:none;text-align:center;padding:32px 0">
       <div style="font-size:36px;margin-bottom:12px">🤖</div>
-      <div style="font-size:15px;font-weight:600;color:var(--gray-800);margin-bottom:6px">Analyse en cours...</div>
-      <div style="font-size:13px;color:var(--gray-400)" id="pdf-loading-text">Lecture du PDF...</div>
-      <div style="width:48px;height:48px;border:3px solid var(--gray-200);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;margin:16px auto 0"></div>
+      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">Analyse en cours...</div>
+      <div style="font-size:13px;color:var(--text-sub)" id="pdf-loading-text">Lecture du PDF...</div>
+      <div style="width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;margin:16px auto 0"></div>
     </div>
 
     <div id="pdf-step-2" style="display:none">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
         <div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>
-        <div style="font-size:14px;font-weight:600;color:var(--gray-800)" id="pdf-detected-count">0 vacations détectées</div>
+        <div style="font-size:14px;font-weight:600;color:var(--text)" id="pdf-detected-count">0 vacations détectées</div>
       </div>
       <div id="pdf-detected-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:300px;overflow-y:auto"></div>
       <button class="btn-primary" id="btn-pdf-confirmer" onclick="confirmerPDFVacations()">✅ Confirmer et ajouter au planning</button>
@@ -1403,7 +1484,7 @@ async function confirmerVacations(){
       <button class="btn-primary" onclick="retourPDFStep1()">Réessayer avec un autre fichier</button>
     </div>
 
-    <button style="width:100%;background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;margin-top:4px" onclick="closeModal('modal-import-pdf')">Annuler</button>
+    <button style="width:100%;background:none;border:none;color:var(--text-sub);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;margin-top:4px;transition:color 0.3s ease" onclick="closeModal('modal-import-pdf')">Annuler</button>
   </div>
 </div>
 
