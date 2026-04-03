@@ -64,7 +64,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
 .filter-tab{padding:6px 14px;border-radius:99px;font-size:12px;font-weight:500;border:1px solid var(--gray-200);background:white;color:var(--gray-500);white-space:nowrap;cursor:pointer;transition:all 0.15s;}
 .filter-tab.active{background:var(--blue);color:white;border-color:var(--blue);}
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:white;border-top:1px solid var(--gray-100);display:flex;padding:8px 0 20px;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,0.06);overflow-x:auto;}
-.nav-item{flex:0 0 16.66%;min-width:55px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;color:var(--gray-400);transition:color 0.2s;border:none;background:none;font-family:inherit;}
+.nav-item{flex:0 0 14.28%;min-width:50px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;color:var(--gray-400);transition:color 0.2s;border:none;background:none;font-family:inherit;}
 .nav-item.active{color:var(--blue);}
 .nav-icon{font-size:20px;line-height:1;}
 .nav-label{font-size:10px;font-weight:500;}
@@ -94,6 +94,31 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
 .empty-state{text-align:center;padding:40px 20px;color:var(--gray-400);}
 .empty-state-icon{font-size:40px;margin-bottom:12px;}
 .empty-state-text{font-size:14px;}
+
+/* ===== SecuDroit ===== */
+.sd-search-wrap{position:relative;margin-bottom:16px;}
+.sd-search{width:100%;background:white;border:1.5px solid var(--gray-200);border-radius:var(--radius);padding:11px 14px 11px 40px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--gray-800);outline:none;transition:border 0.15s;box-shadow:var(--shadow);}
+.sd-search:focus{border-color:var(--blue);}
+.sd-search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none;}
+.sd-no-results{text-align:center;padding:32px 20px;color:var(--gray-400);font-size:14px;}
+.sd-category{background:white;border-radius:var(--radius-lg);margin-bottom:10px;box-shadow:var(--shadow);overflow:hidden;}
+.sd-cat-header{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;gap:12px;}
+.sd-cat-header:active{background:var(--gray-50);}
+.sd-cat-left{display:flex;align-items:center;gap:12px;flex:1;min-width:0;}
+.sd-cat-emoji{font-size:22px;flex-shrink:0;}
+.sd-cat-title{font-size:15px;font-weight:600;color:var(--gray-800);line-height:1.2;}
+.sd-cat-count{font-size:11px;color:var(--gray-400);margin-top:2px;}
+.sd-chevron{font-size:12px;color:var(--gray-400);transition:transform 0.25s;flex-shrink:0;}
+.sd-category.open .sd-chevron{transform:rotate(180deg);}
+.sd-articles{display:none;border-top:0.5px solid var(--gray-100);}
+.sd-category.open .sd-articles{display:block;}
+.sd-article{padding:14px 16px;border-bottom:0.5px solid var(--gray-100);}
+.sd-article:last-child{border-bottom:none;}
+.sd-art-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;}
+.sd-art-num{font-size:11px;font-weight:700;color:var(--blue);background:var(--blue-light);padding:2px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0;}
+.sd-art-title{font-size:13px;font-weight:600;color:var(--gray-800);line-height:1.3;flex:1;}
+.sd-art-body{font-size:12px;color:var(--gray-600);line-height:1.6;}
+.sd-highlight{background:#fef9c3;border-radius:2px;padding:0 1px;}
 </style>
 </head>
 <body>
@@ -250,11 +275,431 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
     </div>
   </div>
 
+  <!-- ====== SECU DROIT SCREEN ====== -->
+  <div class="screen" id="screen-droit">
+    <div class="header" style="padding-bottom:16px">
+      <div class="header-top">
+        <div>
+          <div class="header-greeting">Référence juridique</div>
+          <div class="header-name">SecuDroit — Vos droits</div>
+        </div>
+        <div style="font-size:28px">⚖️</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="sd-search-wrap">
+        <span class="sd-search-icon">🔍</span>
+        <input class="sd-search" type="search" id="sd-search" placeholder="Rechercher un article, un droit…" oninput="sdSearch(this.value)">
+      </div>
+      <div id="sd-no-results" class="sd-no-results" style="display:none">Aucun résultat pour cette recherche.</div>
+      <div id="sd-categories">
+
+        <!-- CATÉGORIE 1 : CSI Livre VI -->
+        <div class="sd-category open" data-cat="csi">
+          <div class="sd-cat-header" onclick="sdToggle(this.parentElement)">
+            <div class="sd-cat-left">
+              <span class="sd-cat-emoji">⚖️</span>
+              <div>
+                <div class="sd-cat-title">Code de la Sécurité Intérieure — Livre VI</div>
+                <div class="sd-cat-count">Articles L611-1 à L634-4 · Exercice de la profession</div>
+              </div>
+            </div>
+            <span class="sd-chevron">▼</span>
+          </div>
+          <div class="sd-articles">
+
+            <div class="sd-article" data-keywords="activité surveillance gardiennage protection personnes biens">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L611-1</span>
+                <span class="sd-art-title">Définition des activités de sécurité privée</span>
+              </div>
+              <div class="sd-art-body">Sont soumises aux dispositions du présent titre les activités de surveillance et de gardiennage, de transport de fonds, de protection de personnes et de sécurité aéroportuaire. Ces activités ne peuvent être exercées que par des entreprises immatriculées et autorisées par le CNAPS. Toute personne physique ou morale souhaitant exercer ces activités doit obtenir une autorisation préalable.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="missions autorisées rondes inspections vigile agent">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L611-2</span>
+                <span class="sd-art-title">Missions autorisées — périmètre légal</span>
+              </div>
+              <div class="sd-art-body">Les agents de sécurité privée peuvent : effectuer des rondes de surveillance, contrôler l'accès à des lieux privés, porter assistance aux personnes, prévenir les incendies et dommages, vérifier l'état des installations. Ils ne disposent d'aucun pouvoir de police judiciaire. Toute immobilisation d'une personne doit être immédiatement signalée aux forces de l'ordre.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="palpation sécurité fouille inspection aéroportuaire">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L611-4</span>
+                <span class="sd-art-title">Palpations de sécurité</span>
+              </div>
+              <div class="sd-art-body">Dans le cadre de manifestations sportives, récréatives ou culturelles rassemblant plus de 300 personnes, les agents peuvent, avec le consentement exprès des personnes, procéder à des palpations de sécurité. Ces palpations sont effectuées par un agent du même sexe que la personne qui en fait l'objet, et ne constituent pas une fouille à corps.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="conditions exercice nationalité casier judiciaire aptitude">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L612-1</span>
+                <span class="sd-art-title">Conditions d'exercice individuelles</span>
+              </div>
+              <div class="sd-art-body">Nul ne peut exercer une activité de sécurité privée s'il ne remplit pas les conditions suivantes : être de nationalité française ou ressortissant de l'UE/EEE, ne pas avoir fait l'objet d'une condamnation pénale (liste fixée par décret), justifier d'une aptitude professionnelle (CQP ou titre équivalent), obtenir une carte professionnelle délivrée par le CNAPS.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="carte professionnelle CNAPS validité 5 ans">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L612-7 à L612-9</span>
+                <span class="sd-art-title">Carte professionnelle — obtention et durée</span>
+              </div>
+              <div class="sd-art-body">La carte professionnelle est délivrée par le CNAPS pour une durée de 5 ans. Elle est personnelle et incessible. L'agent doit la présenter à toute réquisition des forces de l'ordre ou de son employeur. La demande doit être faite 2 mois avant expiration. En cas de perte, une déclaration auprès du CNAPS est obligatoire. La carte doit être portée apparente pendant les missions.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="tenue uniforme badge identification agent">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L612-10</span>
+                <span class="sd-art-title">Tenue et identification obligatoires</span>
+              </div>
+              <div class="sd-art-body">Tout agent en mission doit être distinctement identifiable. La tenue professionnelle ne doit pas prêter à confusion avec celle des forces de l'ordre. Un badge d'identification visible est obligatoire. Il est interdit de porter des tenues de couleur bleu marine assimilables à la police sur la voie publique. L'agent doit afficher son prénom et le nom de son employeur.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="autorisation exercer agrément entreprise société">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L612-14 à L612-16</span>
+                <span class="sd-art-title">Autorisation d'exercer pour les entreprises</span>
+              </div>
+              <div class="sd-art-body">Toute entreprise de sécurité privée doit obtenir une autorisation préalable du CNAPS avant toute activité. Cette autorisation est accordée pour 5 ans et est soumise à renouvellement. Les dirigeants et gérants doivent remplir les mêmes conditions de moralité que les agents. L'autorisation peut être suspendue ou retirée en cas de manquements graves.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="obligations signalement incident rapport intervention police">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L612-20 à L612-22</span>
+                <span class="sd-art-title">Obligations des agents en mission</span>
+              </div>
+              <div class="sd-art-body">Les agents sont tenus de : rédiger un rapport d'intervention pour tout incident, alerter immédiatement les services d'urgence en cas de danger pour des personnes, respecter le secret professionnel sur les informations recueillies en mission, ne pas exercer leur activité hors des lieux désignés dans le contrat, et refuser toute instruction contraire aux lois et règlements.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="CNAPS conseil national activités privées sécurité contrôle">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L632-1 à L634-4</span>
+                <span class="sd-art-title">CNAPS — Missions et pouvoirs de contrôle</span>
+              </div>
+              <div class="sd-art-body">Le Conseil National des Activités Privées de Sécurité (CNAPS) est l'organe de régulation de la profession. Il délivre les autorisations et cartes professionnelles, contrôle le respect de la réglementation, instruit les plaintes et peut prononcer des sanctions disciplinaires (avertissement, blâme, suspension ou retrait de carte, interdiction d'exercer). Il est placé sous la tutelle du ministère de l'Intérieur.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="sous-traitance interdite prestations exclusivité">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L613-1</span>
+                <span class="sd-art-title">Interdiction de sous-traitance non autorisée</span>
+              </div>
+              <div class="sd-art-body">Il est interdit à toute entreprise autorisée de confier tout ou partie de ses prestations à une entreprise non autorisée. La sous-traitance entre entreprises autorisées est permise sous réserve d'une information préalable du CNAPS. Le donneur d'ordre reste solidairement responsable du respect des obligations légales par le sous-traitant.</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- CATÉGORIE 2 : Convention Collective -->
+        <div class="sd-category" data-cat="ccn">
+          <div class="sd-cat-header" onclick="sdToggle(this.parentElement)">
+            <div class="sd-cat-left">
+              <span class="sd-cat-emoji">📋</span>
+              <div>
+                <div class="sd-cat-title">Convention Collective Nationale</div>
+                <div class="sd-cat-count">Prévention &amp; Sécurité · Salaires, primes, congés, droits</div>
+              </div>
+            </div>
+            <span class="sd-chevron">▼</span>
+          </div>
+          <div class="sd-articles">
+
+            <div class="sd-article" data-keywords="classification coefficient niveau emploi agent gardien">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Art. 3.01</span>
+                <span class="sd-art-title">Grille de classification — Niveaux I à V</span>
+              </div>
+              <div class="sd-art-body">La CCN distingue 5 niveaux de qualification : Niveau I (coef. 120) Agent d'Exécution ; Niveau II (coef. 130-140) Agent Qualifié ; Niveau III (coef. 150-160) Agent de Maîtrise ; Niveau IV (coef. 170-190) Chef de Site / Agent Cynophile ; Niveau V (coef. 200+) Cadre. Le coefficient détermine le salaire minimum conventionnel. La promotion est subordonnée à l'ancienneté et/ou une formation qualifiante.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="salaire minimum SMIC brut mensuel coefficient rémunération">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Art. 3.02</span>
+                <span class="sd-art-title">Salaires minimums conventionnels (2024)</span>
+              </div>
+              <div class="sd-art-body">Salaires minimums pour 151h33 mensuelles (base 35h/sem.) : Coef. 120 → 1 839,76 €/mois brut ; Coef. 130 → 1 883,13 € ; Coef. 140 → 1 921,82 € ; Coef. 150 → 1 967,12 € ; Coef. 160 → 2 063,65 € ; Coef. 170 → 2 111,22 € ; Coef. 180 → 2 213,78 € ; Coef. 200 → 2 395,18 €. Ces minima s'appliquent quelle que soit la région.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="heures supplémentaires majoration 25% 50% contingent annuel">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Art. 5.01</span>
+                <span class="sd-art-title">Heures supplémentaires — majorations conventionnelles</span>
+              </div>
+              <div class="sd-art-body">Les heures effectuées au-delà de 151h33/mois sont des heures supplémentaires. Majoration : +25% pour les 8 premières heures supplémentaires hebdomadaires (de la 36e à la 43e heure) ; +50% au-delà de la 43e heure. La CCN sécurité prévoit un contingent annuel de 240h. Au-delà, une contrepartie obligatoire en repos (COR) s'applique : 50% des heures dépassant le contingent.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="travail nuit prime nocturne 21h 6h majoration">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Art. 5.03</span>
+                <span class="sd-art-title">Travail de nuit — prime et statut</span>
+              </div>
+              <div class="sd-art-body">Est considéré travail de nuit toute heure accomplie entre 21h00 et 06h00. Prime de nuit : majoration de 10% du salaire de base par heure de nuit travaillée. Le travailleur de nuit habituel (au moins 270h de nuit/an) bénéficie d'une surveillance médicale renforcée (2 visites/an), d'une priorité pour un poste de jour, et d'une compensation repos minimum de 1% des heures de nuit.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="dimanche férié prime jours fériés travail majoré">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Art. 5.04</span>
+                <span class="sd-art-title">Jours fériés et dimanches travaillés</span>
+              </div>
+              <div class="sd-art-body">Travail le dimanche : majoration de 10% du salaire de base. Travail un jour férié légal : majoration de 100% (doublement) du salaire de base de l'heure considérée, en sus de la rémunération normale. Le 1er Mai est obligatoirement chômé sauf nécessité de service continu ; dans ce cas, doublement de salaire + récupération obligatoire.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="prime habillage tenue vestiaire déshabillage">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Art. 5.05</span>
+                <span class="sd-art-title">Primes d'habillage et de déshabillage</span>
+              </div>
+              <div class="sd-art-body">Lorsque l'employeur impose le port d'une tenue spécifique ET que l'habillage/déshabillage s'effectue sur le lieu de travail, une prime est due. Montant conventionnel : au minimum 3,77 €/jour travaillé. Si l'habillage se fait à domicile, aucune prime n'est due. L'employeur peut remplacer la prime par un temps payé d'habillage/déshabillage.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="congés payés annuels 5 semaines droit acquis CP">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Art. 6.01</span>
+                <span class="sd-art-title">Congés payés annuels</span>
+              </div>
+              <div class="sd-art-body">Tout salarié acquiert 2,5 jours ouvrables de CP par mois de travail effectif, soit 30 jours ouvrables (5 semaines) par an. La période de référence va du 1er juin au 31 mai. Les CP doivent être pris entre le 1er mai et le 31 octobre pour la période principale (au moins 12 jours ouvrables consécutifs). Le reliquat peut être pris en dehors de cette période. L'indemnité de congés est égale à 10% de la rémunération brute totale de la période ou au maintien de salaire, selon la solution la plus favorable.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="repos compensateur remplacement RCR heure travail">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Art. 5.02</span>
+                <span class="sd-art-title">Repos compensateur de remplacement (RCR)</span>
+              </div>
+              <div class="sd-art-body">Par accord d'entreprise, les heures supplémentaires peuvent être remplacées en tout ou partie par un repos compensateur équivalent (RCR) plutôt qu'une majoration en salaire. Le RCR doit être accordé dans les 2 mois qui suivent l'ouverture du droit. Le salarié peut demander ses droits à repos dès qu'il a acquis 7h de RCR. Le refus de l'employeur doit être motivé.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="ancienneté prime gratification anciens salariés">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Art. 4.03</span>
+                <span class="sd-art-title">Prime d'ancienneté</span>
+              </div>
+              <div class="sd-art-body">Les salariés bénéficient d'une prime d'ancienneté calculée sur le salaire minimum conventionnel : +3% après 3 ans, +6% après 6 ans, +9% après 9 ans, +12% après 12 ans, +15% après 15 ans. Cette prime est versée mensuellement et figure distinctement sur la fiche de paie. Elle s'applique sur le salaire minimum du coefficient, pas sur le salaire réel si supérieur.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="indemnité licenciement préavis fin de contrat rupture">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Art. 7.02</span>
+                <span class="sd-art-title">Indemnité de licenciement conventionnelle</span>
+              </div>
+              <div class="sd-art-body">En cas de licenciement (hors faute grave), l'indemnité conventionnelle est plus favorable que l'indemnité légale : 1/4 de mois de salaire par année d'ancienneté pour les 10 premières années, puis 1/3 de mois par année au-delà. Le préavis est de : 1 semaine (moins d'1 an) ; 1 mois (1 à 2 ans) ; 2 mois (plus de 2 ans). Le préavis est doublé pour les travailleurs reconnus handicapés.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="formation professionnelle CQP TFP SST recyclage obligation">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Art. 8.01</span>
+                <span class="sd-art-title">Formation professionnelle continue</span>
+              </div>
+              <div class="sd-art-body">L'employeur doit assurer le maintien et le développement des compétences. La formation CQP APS (Agent de Prévention et de Sécurité) est l'accès à la profession. Le renouvellement de carte CNAPS exige une formation de 14h tous les 5 ans. La formation SST (Sauveteur Secouriste du Travail) doit être recyclée tous les 2 ans. Ces formations sont à la charge de l'employeur et effectuées sur le temps de travail.</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- CATÉGORIE 3 : Code du Travail -->
+        <div class="sd-category" data-cat="cdt">
+          <div class="sd-cat-header" onclick="sdToggle(this.parentElement)">
+            <div class="sd-cat-left">
+              <span class="sd-cat-emoji">👷</span>
+              <div>
+                <div class="sd-cat-title">Code du Travail — Articles clés</div>
+                <div class="sd-cat-count">Durée du travail, repos, congés, licenciement</div>
+              </div>
+            </div>
+            <span class="sd-chevron">▼</span>
+          </div>
+          <div class="sd-articles">
+
+            <div class="sd-article" data-keywords="durée légale 35 heures semaine temps plein hebdomadaire">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L3121-27</span>
+                <span class="sd-art-title">Durée légale hebdomadaire</span>
+              </div>
+              <div class="sd-art-body">La durée légale de travail effectif des salariés à temps complet est fixée à 35 heures par semaine civile. Toute heure accomplie au-delà de cette durée est une heure supplémentaire, qui donne lieu à une majoration de salaire ou, le cas échéant, à un repos compensateur de remplacement.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="durée maximale quotidienne 10 heures par jour limite travail">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L3121-18</span>
+                <span class="sd-art-title">Durée maximale quotidienne</span>
+              </div>
+              <div class="sd-art-body">La durée quotidienne de travail effectif d'un salarié ne peut excéder 10 heures. Des dérogations peuvent être accordées par convention ou accord collectif ou par l'inspecteur du travail. Dans la sécurité privée, une dérogation conventionnelle permet des vacations allant jusqu'à 12 heures dans certains cas (sites industriels, événementiel).</div>
+            </div>
+
+            <div class="sd-article" data-keywords="durée maximale hebdomadaire 48h 44h semaine absolue">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L3121-20 à 22</span>
+                <span class="sd-art-title">Durées maximales hebdomadaires</span>
+              </div>
+              <div class="sd-art-body">La durée maximale absolue est de 48h par semaine. Sur 12 semaines consécutives, la moyenne ne peut dépasser 44h. Une dérogation temporaire jusqu'à 60h est possible sur autorisation de l'inspection du travail en cas de circonstances exceptionnelles. L'employeur qui dépasse ces limites s'expose à des sanctions pénales (amende, voire emprisonnement).</div>
+            </div>
+
+            <div class="sd-article" data-keywords="repos quotidien 11 heures consécutives minimum entre 2 vacations">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L3131-1</span>
+                <span class="sd-art-title">Repos quotidien minimum</span>
+              </div>
+              <div class="sd-art-body">Tout salarié bénéficie d'un repos quotidien d'une durée minimale de 11 heures consécutives entre deux postes. Ce repos ne peut être réduit qu'en cas d'activités caractérisées par la nécessité d'assurer la continuité du service ou par des périodes d'intervention fractionnées. En cas de non-respect, le salarié peut saisir les prud'hommes pour préjudice.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="repos hebdomadaire dimanche 24 heures 35 heures semaine">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L3132-1 à L3132-3</span>
+                <span class="sd-art-title">Repos hebdomadaire</span>
+              </div>
+              <div class="sd-art-body">Il est interdit de faire travailler un même salarié plus de 6 jours par semaine. Le repos hebdomadaire est d'une durée minimale de 35 heures consécutives (24h + 11h repos quotidien). Dans les entreprises de sécurité (service continu), des dérogations au repos dominical sont autorisées, mais le repos de 35h consécutives reste impératif au cours de chaque semaine.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="travail nuit travailleurs nocturnes 21h 6h définition">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L3122-1 à L3122-8</span>
+                <span class="sd-art-title">Travail de nuit — cadre légal</span>
+              </div>
+              <div class="sd-art-body">Est considéré comme travailleur de nuit le salarié qui accomplit, au moins 2 fois par semaine, au moins 3 heures de son temps de travail quotidien entre 21h et 6h, ou au moins 270 heures de travail de nuit sur 12 mois consécutifs. Le travail de nuit est encadré : surveillance médicale renforcée obligatoire, durée de travail nocturne limitée à 8h par nuit (avec dérogation possible à 12h dans la sécurité).</div>
+            </div>
+
+            <div class="sd-article" data-keywords="pauses 20 minutes 6 heures travail consécutives">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L3121-16 à L3121-17</span>
+                <span class="sd-art-title">Droit à pause</span>
+              </div>
+              <div class="sd-art-body">Dès que le temps de travail quotidien atteint 6 heures, le salarié bénéficie d'un temps de pause d'au moins 20 minutes consécutives. Une convention ou accord collectif peut fixer un temps de pause supérieur. La pause n'est pas assimilée à du temps de travail effectif, sauf si le salarié reste à la disposition de l'employeur et doit se conformer à ses directives (cas fréquent dans la sécurité).</div>
+            </div>
+
+            <div class="sd-article" data-keywords="congés payés 5 semaines droit salarié prise période">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L3141-1 à L3141-6</span>
+                <span class="sd-art-title">Congés payés légaux</span>
+              </div>
+              <div class="sd-art-body">Tout salarié a droit à 2,5 jours ouvrables de congés par mois de travail effectif chez le même employeur, soit 30 jours ouvrables par année de référence (1er juin - 31 mai). Le droit est ouvert dès le premier jour de travail. En cas de licenciement (sauf faute grave), l'indemnité compensatrice de congés payés est due pour les jours acquis non pris.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="bulletin de paie salaire remise mensuelle obligation employeur">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L3243-1 à L3243-4</span>
+                <span class="sd-art-title">Bulletin de paie — obligations</span>
+              </div>
+              <div class="sd-art-body">L'employeur est tenu de remettre un bulletin de paie au salarié lors de chaque versement de salaire. Le bulletin doit mentionner obligatoirement : l'identité employeur/salarié, le coefficient de classification, le salaire de base, les heures travaillées (normales, supplémentaires), les primes, les cotisations et contributions sociales, le salaire net. Conservation : l'employeur 5 ans, le salarié sans limite.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="licenciement motif réel sérieux procédure entretien lettre">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L1232-1 à L1232-6</span>
+                <span class="sd-art-title">Licenciement — procédure et droits</span>
+              </div>
+              <div class="sd-art-body">Tout licenciement pour motif personnel doit reposer sur une cause réelle et sérieuse. Procédure obligatoire : convocation à entretien préalable (lettre R/AR ou remise en mains propres, délai 5 jours ouvrables minimum), entretien préalable (possibilité d'être assisté par un salarié ou un conseiller du salarié), notification du licenciement par lettre motivée au plus tôt 2 jours ouvrables après l'entretien.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="faute grave lourde licenciement sans préavis ni indemnité">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L1234-1 à L1234-9</span>
+                <span class="sd-art-title">Faute grave et faute lourde</span>
+              </div>
+              <div class="sd-art-body">En cas de faute grave (manquement rendant impossible le maintien), l'employeur peut rompre le contrat sans préavis ni indemnité de licenciement. En cas de faute lourde (intention de nuire), même régime + perte de l'indemnité de congés payés (sauf arrêt récent). La mise à pied conservatoire peut accompagner l'engagement d'une procédure disciplinaire. Délai de prescription des faits : 2 mois.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="harcèlement moral discrimination protection signalement">
+              <div class="sd-art-header">
+                <span class="sd-art-num">L1152-1 à L1152-6</span>
+                <span class="sd-art-title">Harcèlement moral — protection du salarié</span>
+              </div>
+              <div class="sd-art-body">Aucun salarié ne doit subir des agissements répétés de harcèlement moral ayant pour objet ou effet une dégradation de ses conditions de travail. Sont interdits : toute sanction, licenciement ou mesure discriminatoire contre une personne ayant subi ou relaté des faits de harcèlement. L'employeur est tenu de prévenir les faits de harcèlement. Voies de recours : inspection du travail, Défenseur des droits, Conseil des prud'hommes.</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- CATÉGORIE 4 : CNAPS -->
+        <div class="sd-category" data-cat="cnaps">
+          <div class="sd-cat-header" onclick="sdToggle(this.parentElement)">
+            <div class="sd-cat-left">
+              <span class="sd-cat-emoji">🛡️</span>
+              <div>
+                <div class="sd-cat-title">Réglementation CNAPS</div>
+                <div class="sd-cat-count">Carte pro, renouvellement, formations, sanctions</div>
+              </div>
+            </div>
+            <span class="sd-chevron">▼</span>
+          </div>
+          <div class="sd-articles">
+
+            <div class="sd-article" data-keywords="carte professionnelle APS obtention dossier CNAPS demande">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Proc. CNAPS 1</span>
+                <span class="sd-art-title">Obtention de la carte professionnelle</span>
+              </div>
+              <div class="sd-art-body">Pièces requises pour la demande initiale : formulaire CERFA n°15052, copie CNI ou passeport, justificatif de domicile (-3 mois), 2 photos d'identité, attestation de réussite CQP APS ou TFP APS (diplôme équivalent), extrait de casier judiciaire (obtenu automatiquement par le CNAPS via la procédure dématérialisée). Délai moyen de traitement : 2 à 4 semaines. La carte est valable 5 ans. Coût : gratuit pour la première demande.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="renouvellement carte pro CNAPS 5 ans délai recyclage">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Proc. CNAPS 2</span>
+                <span class="sd-art-title">Renouvellement de la carte professionnelle</span>
+              </div>
+              <div class="sd-art-body">Le renouvellement doit être demandé 2 mois avant l'expiration. Documents requis : formulaire de renouvellement (espace personnel cnaps.fr), justificatif identité, attestation de formation continue de 14h (obligatoire depuis 2017 pour tout renouvellement). Sans cette formation, le renouvellement est refusé. L'exercice de la profession avec une carte expirée constitue une infraction passible de sanctions pénales et disciplinaires.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="formation continue 14 heures recyclage maintien compétences">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Proc. CNAPS 3</span>
+                <span class="sd-art-title">Formation continue obligatoire (14h)</span>
+              </div>
+              <div class="sd-art-body">Tout titulaire d'une carte professionnelle doit justifier d'une formation continue de 14 heures au cours des 5 années de validité de la carte. Cette formation peut être réalisée en une ou plusieurs sessions auprès d'un organisme agréé CNAPS. Contenu minimum : gestes et soins d'urgence, réglementation, déontologie, prévention des risques professionnels. L'employeur doit prendre en charge le coût et accorder le temps nécessaire.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="sanctions disciplinaires CNAPS avertissement blâme suspension retrait">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Proc. CNAPS 4</span>
+                <span class="sd-art-title">Sanctions disciplinaires CNAPS</span>
+              </div>
+              <div class="sd-art-body">Le CNAPS peut prononcer les sanctions suivantes à l'encontre d'un agent ou d'une entreprise : (1) Avertissement ; (2) Blâme ; (3) Interdiction temporaire d'exercice (1 à 5 ans) ; (4) Retrait définitif de la carte ou de l'autorisation. Les motifs : infraction à la réglementation, manquements déontologiques, activité exercée sans autorisation, fausse déclaration. Toute sanction est précédée d'une procédure contradictoire (droit de s'expliquer).</div>
+            </div>
+
+            <div class="sd-article" data-keywords="déontologie code conduite éthique sécurité privée obligations">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Proc. CNAPS 5</span>
+                <span class="sd-art-title">Code de déontologie de la sécurité privée</span>
+              </div>
+              <div class="sd-art-body">Le décret n°2012-870 impose un code de déontologie. Principes fondamentaux : respect de la dignité et des droits des personnes, discrétion et secret professionnel, comportement exemplaire (ni alcool, ni substance illicite en service), usage de la force strictement limité à la légitime défense, obligation de signalement de tout acte illégal, refus de toute discrimination. Le non-respect expose à des sanctions disciplinaires CNAPS et pénales.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="casier judiciaire B2 incompatibilité condamnation refus carte">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Proc. CNAPS 6</span>
+                <span class="sd-art-title">Incompatibilités — Casier judiciaire</span>
+              </div>
+              <div class="sd-art-body">La carte professionnelle est refusée ou retirée en cas de condamnation figurant au bulletin n°2 du casier judiciaire pour : crimes, délits intentionnels contre des personnes, vol, escroquerie, abus de confiance, infractions à la législation sur les stupéfiants, violence, mise en danger de la vie d'autrui. Le CNAPS consulte automatiquement le fichier. En cas de réhabilitation judiciaire, la demande de carte peut être reformulée.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="plainte réclamation CNAPS signalement commission locale">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Proc. CNAPS 7</span>
+                <span class="sd-art-title">Plaintes et recours auprès du CNAPS</span>
+              </div>
+              <div class="sd-art-body">Tout salarié ou particulier peut saisir le CNAPS (via cnaps.fr ou par courrier) pour signaler un manquement d'une entreprise ou d'un agent de sécurité. Le CNAPS instruit les plaintes via ses Commissions Locales d'Agrément et de Contrôle (CLAC). En cas de décision défavorable, un recours hiérarchique devant la Commission Nationale est possible, puis un recours contentieux devant le tribunal administratif.</div>
+            </div>
+
+            <div class="sd-article" data-keywords="aptitude professionnelle CQP APS TFP équivalence diplôme">
+              <div class="sd-art-header">
+                <span class="sd-art-num">Proc. CNAPS 8</span>
+                <span class="sd-art-title">Aptitude professionnelle reconnue</span>
+              </div>
+              <div class="sd-art-body">Diplômes et titres ouvrant droit à la carte professionnelle : CQP Agent de Prévention et de Sécurité (APS), TFP Agent de Prévention et de Sécurité (TITRE I et II du ministère de l'Intérieur), Mention complémentaire Sécurité Civile et Professionnelle, BAC Pro Métiers de la Sécurité. Les ressortissants UE/EEE peuvent faire reconnaître leurs qualifications étrangères équivalentes. Une Validation des Acquis de l'Expérience (VAE) est possible sous conditions.</div>
+            </div>
+
+          </div>
+        </div>
+
+      </div><!-- /sd-categories -->
+    </div><!-- /content -->
+  </div><!-- /screen-droit -->
+
 <nav class="bottom-nav">
     <button class="nav-item active" onclick="goTo('home',this)"><span class="nav-icon">🏠</span><span class="nav-label">Accueil</span></button>
     <button class="nav-item" onclick="goTo('planning',this)"><span class="nav-icon">📅</span><span class="nav-label">Planning</span></button>
     <button class="nav-item" onclick="goTo('paie',this)"><span class="nav-icon">💶</span><span class="nav-label">Paie</span></button>
-    <button class="nav-item" onclick="goTo('docs',this)"><span class="nav-icon">📂</span><span class="nav-label">Documents</span></button>
+    <button class="nav-item" onclick="goTo('docs',this)"><span class="nav-icon">📂</span><span class="nav-label">Docs</span></button>
+    <button class="nav-item" onclick="goTo('droit',this)"><span class="nav-icon">⚖️</span><span class="nav-label">Droits</span></button>
     <button class="nav-item" onclick="goTo('profil',this)"><span class="nav-icon">👤</span><span class="nav-label">Profil</span></button>
     <button class="nav-item" onclick="goTo('assistant',this)"><span class="nav-icon">🤖</span><span class="nav-label">SecuIA</span></button>
   </nav>
@@ -621,6 +1066,48 @@ function addMessage(role, text) {
 
 
 <script>
+/* ===== SecuDroit JS ===== */
+function sdToggle(cat){cat.classList.toggle('open');}
+
+function sdSearch(q){
+  const term=q.trim().toLowerCase();
+  const cats=document.querySelectorAll('.sd-category');
+  let totalVisible=0;
+  cats.forEach(cat=>{
+    const articles=cat.querySelectorAll('.sd-article');
+    let catVisible=0;
+    articles.forEach(art=>{
+      const kw=(art.dataset.keywords||'').toLowerCase();
+      const title=art.querySelector('.sd-art-title').textContent.toLowerCase();
+      const body=art.querySelector('.sd-art-body').textContent.toLowerCase();
+      const num=art.querySelector('.sd-art-num').textContent.toLowerCase();
+      const match=!term||kw.includes(term)||title.includes(term)||body.includes(term)||num.includes(term);
+      art.style.display=match?'':'none';
+      if(match){
+        catVisible++;
+        // highlight
+        if(term){
+          [art.querySelector('.sd-art-title'),art.querySelector('.sd-art-body'),art.querySelector('.sd-art-num')].forEach(el=>{
+            if(!el)return;
+            el.innerHTML=el.textContent.replace(new RegExp('('+term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark class="sd-highlight">$1</mark>');
+          });
+        }else{
+          [art.querySelector('.sd-art-title'),art.querySelector('.sd-art-body'),art.querySelector('.sd-art-num')].forEach(el=>{if(el)el.textContent=el.textContent;});
+        }
+      }
+    });
+    cat.style.display=catVisible>0?'':'none';
+    if(catVisible>0){cat.classList.add('open');totalVisible+=catVisible;}
+  });
+  document.getElementById('sd-no-results').style.display=totalVisible===0&&term?'block':'none';
+  if(!term){
+    // restore highlights
+    document.querySelectorAll('.sd-art-title,.sd-art-body,.sd-art-num').forEach(el=>{
+      if(el.querySelector('mark')){el.textContent=el.textContent;}
+    });
+  }
+}
+
 let chatHistory=[];
 document.addEventListener('DOMContentLoaded',function(){
   var inp=document.getElementById('chat-input');
