@@ -1,7 +1,13 @@
 {
+  "crons": [
+    {
+      "path": "/api/scrape-actus?key=secupro2026",
+      "schedule": "0 0 * * *"
+    }
+  ],
   "functions": {
-    "api/analyze.js": {
-      "maxDuration": 60
+    "api/scrape-actus.js": {
+      "maxDuration": 180
     }
   }
 }
