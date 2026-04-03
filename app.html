@@ -304,6 +304,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
     </div>
     <div class="form-group"><label class="form-label">Numéro (optionnel)</label><input type="text" class="form-input" id="d-numero" placeholder="APS-69-2021-04847"></div>
     <div class="form-group"><label class="form-label">Date d'expiration</label><input type="date" class="form-input" id="d-expiration"></div>
+    <div class="form-group"><label class="form-label">Fichier PDF (optionnel)</label><input type="file" class="form-input" id="d-file" accept=".pdf,.jpg,.jpeg,.png" style="padding:10px 14px"></div>
     <button class="btn-primary" onclick="addDoc()">✅ Ajouter</button>
     <button style="width:100%;background:none;border:none;color:var(--gray-400);font-size:13px;cursor:pointer;padding:8px;font-family:inherit" onclick="closeModal('modal-doc')">Annuler</button>
   </div>
@@ -507,15 +508,39 @@ async function loadDocuments(){
       else if(diff<=90){ec='badge-orange';el2='Bientôt';if(d.type==='carte_pro')alertMsg=`⚠️ Carte pro expire dans <strong>${diff} jours</strong> — Renouvelez sur cnaps.fr`;}
     }
     const col=ec==='badge-green'?'var(--green)':ec==='badge-orange'?'var(--orange)':'var(--red)';
-    return `<div class="doc-card"><div style="width:48px;height:48px;border-radius:12px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${icons[d.type]||'📋'}</div><div style="flex:1"><div style="font-size:15px;font-weight:600">${d.nom}</div><div style="font-size:12px;color:var(--gray-500);margin-top:2px">${d.numero||''}</div>${et?`<div style="font-size:11px;margin-top:4px;font-weight:500;color:${col}">${et}</div>`:''}</div><span class="badge ${ec}">${el2}</span></div>`;
+    return `<div class="doc-card"><div style="width:48px;height:48px;border-radius:12px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${icons[d.type]||'📋'}</div><div style="flex:1"><div style="font-size:15px;font-weight:600">${d.nom}</div><div style="font-size:12px;color:var(--gray-500);margin-top:2px">${d.numero||''}</div>${et?`<div style="font-size:11px;margin-top:4px;font-weight:500;color:${col}">${et}</div>`:''}<div style="display:flex;gap:6px;margin-top:8px">${d.file_path?`<button onclick="handleView('${d.file_path}')" style="background:var(--blue-light);color:var(--blue);border:none;border-radius:8px;font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;font-family:inherit">📄 Voir</button>`:''}<button onclick="handleDelete('${d.id}','${d.file_path||''}')" style="background:var(--red-light);color:var(--red);border:none;border-radius:8px;font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;font-family:inherit">🗑️</button></div></div><span class="badge ${ec}">${el2}</span></div>`;
   }).join('');
   al.innerHTML=alertMsg?`<div class="alert-banner">${alertMsg}</div>`:'';
+}
+
+async function handleUpload(file){
+  const ext=file.name.split('.').pop();
+  const path=`${currentUser.id}/${Date.now()}.${ext}`;
+  const{error}=await sb.storage.from('documents').upload(path,file);
+  if(error)throw error;
+  return path;
+}
+
+async function handleView(filePath){
+  const{data}=sb.storage.from('documents').getPublicUrl(filePath);
+  window.open(data.publicUrl,'_blank');
+}
+
+async function handleDelete(docId,filePath){
+  if(!confirm('Supprimer ce document ?'))return;
+  if(filePath)await sb.storage.from('documents').remove([filePath]);
+  await sb.from('documents').delete().eq('id',docId);
+  showToast('🗑️ Document supprimé');await loadDocuments();
 }
 
 async function addDoc(){
   const nom=document.getElementById('d-nom').value.trim();
   if(!nom){showToast('⚠️ Le nom est obligatoire');return;}
-  const{error}=await sb.from('documents').insert({user_id:currentUser.id,nom,type:document.getElementById('d-type').value,numero:document.getElementById('d-numero').value.trim()||null,date_expiration:document.getElementById('d-expiration').value||null});
+  const fileInput=document.getElementById('d-file');
+  const file=fileInput&&fileInput.files[0]?fileInput.files[0]:null;
+  let file_path=null;
+  if(file){try{file_path=await handleUpload(file);}catch(e){showToast('❌ Erreur upload : '+e.message);return;}}
+  const{error}=await sb.from('documents').insert({user_id:currentUser.id,nom,type:document.getElementById('d-type').value,numero:document.getElementById('d-numero').value.trim()||null,date_expiration:document.getElementById('d-expiration').value||null,file_path});
   if(error){showToast('❌ Erreur');return;}
   closeModal('modal-doc');showToast('✅ Document ajouté !');await loadDocuments();
 }
