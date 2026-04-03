@@ -16,6 +16,7 @@ export default async function handler(req, res) {
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
   if (!ANTHROPIC_API_KEY) {
     return res.status(500).json({ error: 'Variable ANTHROPIC_API_KEY manquante sur Vercel' });
@@ -103,7 +104,7 @@ Règles :
         if (Array.isArray(parsed)) {
           articles.push(...parsed);
         }
-      }
+      } await sleep(15000);
     } catch (e) {
       errors.push({ query: q, error: e.message });
       console.error(`Erreur scraping "${q}":`, e.message);
