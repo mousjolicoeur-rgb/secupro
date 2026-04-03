@@ -880,7 +880,68 @@ const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let currentUser=null,currentProfile=null,allVacations=[];
 
+// ===== MODE DÉMO (?demo=true) =====
+const DEMO_MODE=new URLSearchParams(location.search).get('demo')==='true';
+
+function showDemoApp(){
+  document.getElementById('loading').style.display='none';
+  document.getElementById('auth-wrap').style.display='none';
+  document.getElementById('app-wrap').style.display='block';
+  // Home header
+  const now=new Date();
+  const jj=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const mm=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  document.getElementById('home-date').textContent=`${jj[now.getDay()]} ${now.getDate()} ${mm[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById('home-name').textContent='Thomas D.';
+  document.getElementById('home-avatar').textContent='T';
+  document.getElementById('profil-avatar').textContent='T';
+  document.getElementById('profil-name').textContent='Thomas D.';
+  document.getElementById('profil-email').textContent='thomas.d@email.com';
+  document.getElementById('profil-ville').textContent='Paris';
+  // Salaire accueil
+  document.getElementById('paie-amount').textContent='1\u202f847,00\u00a0€';
+  document.getElementById('heures-label').textContent='Heures — 152 / 151h';
+  document.getElementById('heures-bar').style.width='100%';
+  document.getElementById('h-done').textContent='152h travaillées';
+  // Écran paie
+  document.getElementById('paie-net-big').textContent='1\u202f847,00\u00a0€';
+  document.getElementById('paie-brut-display').textContent='Brut\u00a0: 2\u202f194,32\u00a0€';
+  document.getElementById('paie-mois').textContent='Mars 2025';
+  document.getElementById('paie-h-done').textContent='152h';
+  document.getElementById('paie-bar').style.width='100%';
+  document.getElementById('fiches-list').innerHTML=
+    '<div class="fiche-item"><div class="fiche-icon">📄</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--text)">Mars 2025</div><div style="font-size:11px;color:var(--text-sub)">151.67h</div></div><div style="font-size:14px;font-weight:600;color:var(--green)">1\u202f847,00\u00a0€</div></div>'+
+    '<div class="fiche-item"><div class="fiche-icon">📄</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--text)">Février 2025</div><div style="font-size:11px;color:var(--text-sub)">151.67h</div></div><div style="font-size:14px;font-weight:600;color:var(--green)">1\u202f847,00\u00a0€</div></div>'+
+    '<div class="fiche-item"><div class="fiche-icon">📄</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--text)">Janvier 2025</div><div style="font-size:11px;color:var(--text-sub)">143h</div></div><div style="font-size:14px;font-weight:600;color:var(--green)">1\u202f803,50\u00a0€</div></div>';
+  // Vacations fictives
+  const fmtD=d=>d.toISOString().split('T')[0];
+  const t1=new Date();t1.setDate(t1.getDate()+1);
+  const t2=new Date();t2.setDate(t2.getDate()+3);
+  const t3=new Date();t3.setDate(t3.getDate()+5);
+  const t4=new Date();t4.setDate(t4.getDate()+7);
+  const t5=new Date();t5.setDate(t5.getDate()+10);
+  const t6=new Date();t6.setDate(t6.getDate()+13);
+  allVacations=[
+    {id:'d1',site:'Site Défense',date:fmtD(t1),heure_debut:'06:00:00',heure_fin:'18:00:00',employeur:'Securitas',statut:'confirmed'},
+    {id:'d2',site:'Tour Montparnasse',date:fmtD(t2),heure_debut:'08:00:00',heure_fin:'20:00:00',employeur:'Securitas',statut:'confirmed'},
+    {id:'d3',site:'Centre Commercial Vélizy',date:fmtD(t3),heure_debut:'06:00:00',heure_fin:'18:00:00',employeur:'Securitas',statut:'confirmed'},
+    {id:'d4',site:'Stade de France',date:fmtD(t4),heure_debut:'18:00:00',heure_fin:'06:00:00',employeur:'Securitas',statut:'confirmed'},
+    {id:'d5',site:'Aéroport CDG Terminal 2',date:fmtD(t5),heure_debut:'22:00:00',heure_fin:'06:00:00',employeur:'Securitas',statut:'pending'},
+    {id:'d6',site:'La Défense — Grande Arche',date:fmtD(t6),heure_debut:'07:00:00',heure_fin:'19:00:00',employeur:'Securitas',statut:'confirmed'},
+  ];
+  renderVacations(allVacations);
+  renderNextVacation();
+  // Documents
+  document.getElementById('docs-alert').innerHTML='';
+  document.getElementById('docs-list').innerHTML=
+    '<div class="doc-card"><div style="width:48px;height:48px;border-radius:12px;background:var(--blue-light);border:1px solid rgba(59,130,246,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🪪</div><div style="flex:1"><div style="font-size:15px;font-weight:600;color:var(--text)">Carte Professionnelle CNAPS</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">N° CP-2024-XXXXX</div><div style="font-size:11px;margin-top:4px;font-weight:500;color:var(--green)">Expire le 15/03/2026</div></div><span class="badge badge-green">Valide</span></div>'+
+    '<div class="doc-card"><div style="width:48px;height:48px;border-radius:12px;background:var(--blue-light);border:1px solid rgba(59,130,246,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🩺</div><div style="flex:1"><div style="font-size:15px;font-weight:600;color:var(--text)">SST — Sauveteur Secouriste</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">SST-2024-0892</div><div style="font-size:11px;margin-top:4px;font-weight:500;color:var(--green)">Expire le 30/09/2026</div></div><span class="badge badge-green">Valide</span></div>'+
+    '<div class="doc-card"><div style="width:48px;height:48px;border-radius:12px;background:var(--blue-light);border:1px solid rgba(59,130,246,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🎓</div><div style="flex:1"><div style="font-size:15px;font-weight:600;color:var(--text)">CQP APS</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">CQP-2019-4421</div></div><span class="badge badge-blue">Permanent</span></div>';
+}
+// ===== FIN MODE DÉMO =====
+
 async function init(){
+  if(DEMO_MODE){showDemoApp();return;}
   currentUser=null;currentProfile=null;allVacations=[];
   const{data:{user}}=await sb.auth.getUser();
   if(user){currentUser=user;await loadProfile();showApp();}
