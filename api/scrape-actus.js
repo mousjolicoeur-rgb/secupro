@@ -135,12 +135,13 @@ Réponds UNIQUEMENT avec un JSON array valide, sans texte avant ou après :
   }
 
   // Normalize and force statut brouillon before inserting
+  const stripHtml = (str) => String(str || '').replace(/<[^>]*>/g, '');
   const toInsert = articles.map(a => ({
     categorie: a.categorie,
-    titre: String(a.titre || '').slice(0, 500),
-    resume: String(a.resume || '').slice(0, 1000),
-    contenu: String(a.contenu || ''),
-    source: String(a.source || 'SecuPRO').slice(0, 200),
+    titre: stripHtml(a.titre).slice(0, 500),
+    resume: stripHtml(a.resume).slice(0, 1000),
+    contenu: stripHtml(a.contenu),
+    source: stripHtml(a.source || 'SecuPRO').slice(0, 200),
     date_publication: a.date_publication || new Date().toISOString(),
     statut: 'brouillon'
   })).filter(a => a.titre && a.resume && a.contenu);
