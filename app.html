@@ -1659,3 +1659,92 @@ async function confirmerPDFVacations(){
   await loadVacations();
 }
 </script>
+
+<style>
+#pwa-install-popup{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);
+  width:100%;max-width:430px;z-index:9999;
+  background:#1E293B;border-top:1px solid #334155;border-radius:24px 24px 0 0;
+  padding:20px 20px 36px;box-shadow:0 -8px 40px rgba(0,0,0,0.5);
+  transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+#pwa-install-popup.show{transform:translateX(-50%) translateY(0);}
+#pwa-install-popup .pwa-handle{width:36px;height:4px;border-radius:99px;background:#334155;margin:0 auto 20px;}
+#pwa-install-popup .pwa-top{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+#pwa-install-popup .pwa-logo{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#2563EB,#7C3AED);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;box-shadow:0 4px 16px rgba(37,99,235,0.4);}
+#pwa-install-popup .pwa-title{font-size:16px;font-weight:600;color:#F8FAFC;margin-bottom:3px;}
+#pwa-install-popup .pwa-sub{font-size:12px;color:#94A3B8;line-height:1.45;}
+#pwa-install-popup .pwa-desc{font-size:13px;color:#CBD5E1;line-height:1.55;margin-bottom:18px;}
+#pwa-install-popup .pwa-safari-hint{display:flex;align-items:flex-start;gap:10px;background:#0F172A;border:1px solid #334155;border-radius:12px;padding:12px 14px;margin-bottom:18px;}
+#pwa-install-popup .pwa-safari-hint .hint-icon{font-size:22px;flex-shrink:0;margin-top:1px;}
+#pwa-install-popup .pwa-safari-hint .hint-text{font-size:13px;color:#CBD5E1;line-height:1.5;}
+#pwa-install-popup .pwa-safari-hint .hint-text strong{color:#F8FAFC;}
+#pwa-install-popup .btn-pwa-install{width:100%;background:linear-gradient(135deg,#2563EB,#7C3AED);color:white;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:8px;box-shadow:0 4px 20px rgba(37,99,235,0.4);transition:opacity 0.2s,transform 0.2s;}
+#pwa-install-popup .btn-pwa-install:active{opacity:0.88;transform:scale(0.98);}
+#pwa-install-popup .btn-pwa-later{width:100%;background:none;border:none;color:#64748b;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;padding:8px;}
+</style>
+
+<div id="pwa-install-popup">
+  <div class="pwa-handle"></div>
+  <div class="pwa-top">
+    <div class="pwa-logo">🛡️</div>
+    <div>
+      <div class="pwa-title">SecuPRO</div>
+      <div class="pwa-sub">Application Agent de Sécurité</div>
+    </div>
+  </div>
+  <p class="pwa-desc">Installer SecuPRO sur votre téléphone pour un accès rapide — comme une app native, sans passer par le Store.</p>
+  <div class="pwa-safari-hint" id="pwa-safari-hint" style="display:none">
+    <span class="hint-icon">📤</span>
+    <span class="hint-text">Appuyez sur <strong>Partager</strong> <span style="font-size:15px">⬆️</span> puis <strong>Ajouter à l'écran d'accueil</strong></span>
+  </div>
+  <button class="btn-pwa-install" id="btn-pwa-install" onclick="triggerPWAInstall()">📲 Installer l'app</button>
+  <button class="btn-pwa-later" onclick="dismissPWAPopup()">Plus tard</button>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY='secupro_pwa_dismissed';
+  const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+  const isMobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  let deferredPrompt=null;
+
+  if(isStandalone||!isMobile||localStorage.getItem(STORAGE_KEY))return;
+
+  window.addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault();
+    deferredPrompt=e;
+  });
+
+  function showPWAPopup(){
+    const popup=document.getElementById('pwa-install-popup');
+    if(!popup)return;
+    const isSafari=/^((?!chrome|android).)*safari/i.test(navigator.userAgent)||/iPad|iPhone|iPod/.test(navigator.userAgent);
+    if(isSafari||!deferredPrompt){
+      document.getElementById('pwa-safari-hint').style.display='flex';
+      document.getElementById('btn-pwa-install').style.display='none';
+    }
+    popup.classList.add('show');
+  }
+
+  setTimeout(showPWAPopup, 3000);
+
+  window.triggerPWAInstall=function(){
+    if(deferredPrompt){
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(){
+        deferredPrompt=null;
+        dismissPWAPopup();
+      });
+    } else {
+      dismissPWAPopup();
+    }
+  };
+
+  window.dismissPWAPopup=function(){
+    localStorage.setItem(STORAGE_KEY,'1');
+    const popup=document.getElementById('pwa-install-popup');
+    if(popup)popup.classList.remove('show');
+  };
+})();
+</script>
