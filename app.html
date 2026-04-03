@@ -381,10 +381,20 @@ select.form-input option{background:var(--card);color:var(--text);}
         <div class="profil-row" style="border-bottom:none"><div style="font-size:18px;width:28px;text-align:center">🏙️</div><div><div style="font-size:12px;color:var(--text-sub)">Ville</div><div style="font-size:14px;font-weight:500;color:var(--text)" id="profil-ville">Non renseignée</div></div></div>
       </div>
       <div class="section-label">Abonnement</div>
-      <div class="card">
+      <div class="card" style="display:flex;flex-direction:column;gap:12px">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><div style="font-size:14px;font-weight:600;color:var(--text)">SecuPRO Pro</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">14,99€/mois · Essai 7 jours</div></div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--text)">Essentiel</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">9,99€/mois · 7 jours gratuits</div></div>
+          <span class="badge badge-blue">Essentiel</span>
+        </div>
+        <div style="height:1px;background:var(--border)"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><div style="font-size:14px;font-weight:600;color:var(--text)">Pro</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">19,99€/mois · 7 jours gratuits</div></div>
           <span class="badge badge-violet">⭐ Pro</span>
+        </div>
+        <div style="height:1px;background:var(--border)"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><div style="font-size:14px;font-weight:600;color:var(--text)">Premium</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">24,99€/mois · 7 jours gratuits</div></div>
+          <span class="badge badge-orange">🏆 VIP</span>
         </div>
       </div>
       <button class="btn-danger" onclick="logout()">Se déconnecter</button>

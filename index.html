@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="SecuPRO — L'appli indispensable des agents de sécurité. Planning, salaire, CNAPS, assistant IA. 14,99€/mois. 7 jours gratuits.">
+<meta name="description" content="SecuPRO — L'appli indispensable des agents de sécurité. Planning, salaire, CNAPS, assistant IA. Dès 9,99€/mois. 7 jours gratuits.">
 <meta property="og:title" content="SecuPRO — L'appli des agents de sécurité">
 <meta property="og:description" content="Planning PDF, alerte paie banque, assistant juridique IA. Fait par un agent, pour les agents.">
 <title>SecuPRO — L'appli des agents de sécurité</title>
@@ -111,9 +111,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,
 .testi-job{font-size:12px;color:var(--gray-400);}
 
 /* PRICING */
-.pricing-wrap{max-width:700px;margin:52px auto 0;}
-.pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
-@media(max-width:500px){.pricing-grid{grid-template-columns:1fr;}}
+.pricing-wrap{max-width:1000px;margin:52px auto 0;}
+.pricing-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;}
+@media(max-width:768px){.pricing-grid{grid-template-columns:1fr;}}
 .pricing-card{background:white;border-radius:20px;padding:28px;border:1.5px solid var(--gray-200);position:relative;transition:all 0.2s;}
 .pricing-card.featured{border-color:var(--blue);box-shadow:0 0 0 5px rgba(37,99,235,0.08);}
 .pricing-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--blue);color:white;border-radius:99px;padding:4px 16px;font-size:11px;font-weight:700;white-space:nowrap;}
@@ -129,6 +129,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,
 .btn-plan-primary{background:var(--blue);color:white;}
 .btn-plan-primary:hover{background:var(--blue-dark);}
 .btn-plan-secondary{background:var(--gray-100);color:var(--gray-700);}
+.btn-plan-gold{background:linear-gradient(135deg,#f59e0b,#d97706);color:white;}
+.btn-plan-gold:hover{background:linear-gradient(135deg,#d97706,#b45309);}
+.pricing-card.premium{border-color:#f59e0b;box-shadow:0 0 0 5px rgba(245,158,11,0.08);}
+.pricing-badge-gold{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border-radius:99px;padding:4px 16px;font-size:11px;font-weight:700;white-space:nowrap;}
 
 /* FAQ */
 .faq-list{max-width:720px;margin:48px auto 0;}
@@ -202,7 +206,7 @@ fbq('track', 'PageView');
   <div class="hero-stats">
     <div><div class="hero-stat-num">180 000</div><div class="hero-stat-label">Agents en France</div></div>
     <div><div class="hero-stat-num">7 jours</div><div class="hero-stat-label">Essai gratuit</div></div>
-    <div><div class="hero-stat-num">14,99€</div><div class="hero-stat-label">Par mois seulement</div></div>
+    <div><div class="hero-stat-num">9,99€</div><div class="hero-stat-label">Par mois seulement</div></div>
     <div><div class="hero-stat-num">0€</div><div class="hero-stat-label">Pour commencer</div></div>
   </div>
 </div>
@@ -326,38 +330,67 @@ fbq('track', 'PageView');
 <div class="section reveal" id="tarifs" style="text-align:center">
   <div class="section-tag">Tarifs</div>
   <h2 class="section-title">Simple et transparent</h2>
-  <p class="section-sub" style="margin:0 auto">Commencez gratuitement. Passez Pro quand vous êtes convaincu.</p>
+  <p class="section-sub" style="margin:0 auto">7 jours gratuits sur tous les plans. Sans carte bancaire.</p>
   <div class="pricing-wrap">
     <div class="pricing-grid">
+
+      <!-- ESSENTIEL -->
       <div class="pricing-card reveal">
-        <div class="pricing-name">Gratuit</div>
-        <div class="pricing-price">0€ <span>/mois</span></div>
-        <div class="pricing-trial">Pour toujours</div>
+        <div class="pricing-name">Essentiel</div>
+        <div class="pricing-price">9,99€ <span>/mois</span></div>
+        <div class="pricing-trial">🎁 7 jours d'essai gratuit — sans CB</div>
         <div class="pricing-features">
-          <div class="pf"><span class="pf-check">✓</span>1 employeur</div>
-          <div class="pf"><span class="pf-check">✓</span>5 vacations max</div>
-          <div class="pf"><span class="pf-check">✓</span>Documents de base</div>
+          <div class="pf"><span class="pf-check">✓</span>Planning manuel illimité</div>
+          <div class="pf"><span class="pf-check">✓</span>Suivi salaire brut/net</div>
+          <div class="pf"><span class="pf-check">✓</span>3 employeurs max</div>
+          <div class="pf"><span class="pf-check">✓</span>Documents & alertes CNAPS J-90</div>
+          <div class="pf"><span class="pf-check">✓</span>SecuDroit (référence juridique)</div>
+          <div class="pf"><span class="pf-check">✓</span>Actu Sécu (lecture)</div>
           <div class="pf"><span class="pf-cross">✗</span><span style="color:var(--gray-400)">Import PDF par IA</span></div>
-          <div class="pf"><span class="pf-cross">✗</span><span style="color:var(--gray-400)">Alerte paie banque</span></div>
-          <div class="pf"><span class="pf-cross">✗</span><span style="color:var(--gray-400)">SecuIA assistant</span></div>
+          <div class="pf"><span class="pf-cross">✗</span><span style="color:var(--gray-400)">Import email planning</span></div>
+          <div class="pf"><span class="pf-cross">✗</span><span style="color:var(--gray-400)">Analyse bulletin de paie IA</span></div>
+          <div class="pf"><span class="pf-cross">✗</span><span style="color:var(--gray-400)">SecuIA assistant 24h/24</span></div>
+          <div class="pf"><span class="pf-cross">✗</span><span style="color:var(--gray-400)">Alerte paie en banque DSP2</span></div>
         </div>
-        <button class="btn-plan btn-plan-secondary" onclick="window.open('https://secupro.vercel.app/app.html')">Commencer gratuitement</button>
+        <button class="btn-plan btn-plan-secondary" onclick="window.open('https://secupro.vercel.app/app.html')">Démarrer l'essai gratuit</button>
       </div>
+
+      <!-- PRO -->
       <div class="pricing-card featured reveal">
         <div class="pricing-badge">⭐ Recommandé</div>
         <div class="pricing-name">Pro</div>
-        <div class="pricing-price">14,99€ <span>/mois</span></div>
+        <div class="pricing-price">19,99€ <span>/mois</span></div>
         <div class="pricing-trial">🎁 7 jours d'essai gratuit — sans CB</div>
         <div class="pricing-features">
+          <div class="pf"><span class="pf-check">✓</span>Tout Essentiel inclus</div>
           <div class="pf"><span class="pf-check">✓</span>Employeurs illimités</div>
-          <div class="pf"><span class="pf-check">✓</span>Planning illimité</div>
-          <div class="pf"><span class="pf-check">✓</span>Import PDF par IA</div>
-          <div class="pf"><span class="pf-check">✓</span>Alerte CNAPS J-90</div>
-          <div class="pf"><span class="pf-check">✓</span>Alerte paie en banque</div>
-          <div class="pf"><span class="pf-check">✓</span>SecuIA assistant 24h/24</div>
+          <div class="pf"><span class="pf-check">✓</span>Import PDF planning par IA</div>
+          <div class="pf"><span class="pf-check">✓</span>Import email planning par IA</div>
+          <div class="pf"><span class="pf-check">✓</span>Analyse bulletin de paie IA</div>
+          <div class="pf"><span class="pf-check">✓</span>SecuIA assistant juridique 24h/24</div>
+          <div class="pf"><span class="pf-check">✓</span>Historique fiches de paie illimité</div>
+          <div class="pf"><span class="pf-cross">✗</span><span style="color:var(--gray-400)">Alerte paie en banque DSP2</span></div>
         </div>
         <button class="btn-plan btn-plan-primary" onclick="window.open('https://secupro.vercel.app/app.html')">Démarrer l'essai gratuit</button>
       </div>
+
+      <!-- PREMIUM -->
+      <div class="pricing-card premium reveal">
+        <div class="pricing-badge-gold">🏆 VIP</div>
+        <div class="pricing-name">Premium</div>
+        <div class="pricing-price">24,99€ <span>/mois</span></div>
+        <div class="pricing-trial">🎁 7 jours d'essai gratuit — sans CB</div>
+        <div class="pricing-features">
+          <div class="pf"><span class="pf-check">✓</span>Tout Pro inclus</div>
+          <div class="pf"><span class="pf-check">✓</span>Alerte paie en banque DSP2</div>
+          <div class="pf"><span class="pf-check">✓</span>Notifications push + email salaire</div>
+          <div class="pf"><span class="pf-check">✓</span>Connexion multi-banques</div>
+          <div class="pf"><span class="pf-check">✓</span>Support prioritaire</div>
+          <div class="pf"><span class="pf-check">✓</span>Accès anticipé nouvelles features</div>
+        </div>
+        <button class="btn-plan btn-plan-gold" onclick="window.open('https://secupro.vercel.app/app.html')">Démarrer l'essai gratuit</button>
+      </div>
+
     </div>
   </div>
 </div>
