@@ -95,6 +95,31 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
 .empty-state-icon{font-size:40px;margin-bottom:12px;}
 .empty-state-text{font-size:14px;}
 
+/* ===== Bulletin Paie Analyse ===== */
+.bpa-wrap{margin-top:4px;}
+.bpa-upload-btn{width:100%;background:linear-gradient(135deg,#1e3a8a,#2563EB);color:white;border:none;border-radius:var(--radius);padding:14px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;transition:all 0.15s;}
+.bpa-upload-btn:active{transform:scale(0.98);opacity:0.9;}
+.bpa-analyzing{background:var(--blue-light);border-radius:var(--radius);padding:16px;text-align:center;display:none;margin-bottom:10px;}
+.bpa-spinner{width:24px;height:24px;border:3px solid rgba(37,99,235,0.2);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px;}
+.bpa-result{background:white;border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;margin-bottom:10px;display:none;}
+.bpa-result-header{background:linear-gradient(135deg,#1e3a8a,#2563EB);color:white;padding:16px;}
+.bpa-alert{background:#fef2f2;border-left:4px solid var(--red);border-radius:0 10px 10px 0;padding:14px;margin:14px;display:none;}
+.bpa-alert-title{font-size:14px;font-weight:700;color:var(--red);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.bpa-alert-item{font-size:13px;color:#991b1b;padding:4px 0;display:flex;justify-content:space-between;border-bottom:0.5px solid #fecaca;}
+.bpa-alert-item:last-child{border-bottom:none;}
+.bpa-alert-amount{font-weight:700;color:var(--red);}
+.bpa-section{padding:14px 16px;border-bottom:0.5px solid var(--gray-100);}
+.bpa-section:last-child{border-bottom:none;}
+.bpa-section-title{font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;}
+.bpa-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;}
+.bpa-row-label{font-size:13px;color:var(--gray-600);}
+.bpa-row-val{font-size:13px;font-weight:600;color:var(--gray-800);}
+.bpa-row-val.green{color:var(--green);}
+.bpa-row-val.red{color:var(--red);}
+.bpa-row-val.orange{color:var(--orange);}
+.bpa-big-net{font-size:32px;font-weight:700;margin:4px 0 2px;}
+.bpa-save-btn{width:calc(100% - 32px);margin:0 16px 16px;background:var(--green);color:white;border:none;border-radius:var(--radius);padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
+
 /* ===== SecuDroit ===== */
 .sd-search-wrap{position:relative;margin-bottom:16px;}
 .sd-search{width:100%;background:white;border:1.5px solid var(--gray-200);border-radius:var(--radius);padding:11px 14px 11px 40px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--gray-800);outline:none;transition:border 0.15s;box-shadow:var(--shadow);}
@@ -210,6 +235,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray
         <div style="font-size:12px;opacity:0.65" id="paie-brut-display">Brut : —</div>
         <div class="progress-bar-bg" style="margin-top:14px"><div class="progress-bar-fill" id="paie-bar" style="width:0%"></div></div>
         <div style="display:flex;justify-content:space-between;font-size:12px;opacity:0.75;margin-top:4px"><span id="paie-h-done">0h</span><span>151h contractuelles</span></div>
+      </div>
+      <div class="section-label">Analyse automatique</div>
+      <div class="bpa-wrap">
+        <input type="file" id="bpa-input" accept=".pdf" style="display:none" onchange="analyzeBulletinPaie(this.files[0])">
+        <button class="bpa-upload-btn" onclick="document.getElementById('bpa-input').click()">📄 Importer mon bulletin de salaire (PDF)</button>
+        <div class="bpa-analyzing" id="bpa-analyzing">
+          <div class="bpa-spinner"></div>
+          <div style="font-size:14px;color:var(--blue);font-weight:600">Analyse en cours...</div>
+          <div style="font-size:12px;color:var(--gray-400);margin-top:4px">L'IA lit votre bulletin</div>
+        </div>
+        <div class="bpa-result" id="bpa-result"></div>
       </div>
       <div class="section-label">Historique des fiches de paie</div>
       <div class="card" id="fiches-list"><div class="empty-state"><div class="empty-state-icon">💶</div><div class="empty-state-text">Aucune fiche de paie</div></div></div>
@@ -1010,6 +1046,114 @@ function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+async function analyzeBulletinPaie(file){
+  if(!file)return;
+  if(!currentUser){showToast('⚠️ Connectez-vous');return;}
+  const analyzing=document.getElementById('bpa-analyzing');
+  const resultDiv=document.getElementById('bpa-result');
+  analyzing.style.display='block';
+  resultDiv.style.display='none';
+  try{
+    const base64=await new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=e=>resolve(e.target.result.split(',')[1]);
+      reader.onerror=reject;
+      reader.readAsDataURL(file);
+    });
+    const pdfPath=`${currentUser.id}/paie/${Date.now()}.pdf`;
+    const{error:uploadErr}=await sb.storage.from('documents').upload(pdfPath,file);
+    if(uploadErr)console.warn('Upload:',uploadErr.message);
+    const resp=await fetch('/api/analyze',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-opus-4-6',
+        max_tokens:2048,
+        system:'Tu es un expert en fiches de paie françaises du secteur de la sécurité privée. Analyse ce bulletin de salaire et extrais les informations suivantes en JSON : nom_agent, mois, annee, employeur, brut, net_a_payer, net_imposable, heures_normales, heures_supplementaires, heures_de_nuit, primes (liste avec nom et montant), retenues (liste avec motif et montant, notamment les absences non justifiées, absences injustifiées, retenues sur salaire, toute ligne négative ou déduction), absences_non_justifiees (nombre de jours et montant déduit), conges_restants, anciennete, coefficient, mutuelle, transport. IMPORTANT : mets en évidence toutes les lignes de retenue et déductions, surtout les absences non justifiées avec le montant exact déduit. Si une information n\'est pas trouvée, mets null. Réponds uniquement avec le JSON, sans markdown ni explication.',
+        messages:[{role:'user',content:[
+          {type:'document',source:{type:'base64',media_type:'application/pdf',data:base64}},
+          {type:'text',text:'Analyse ce bulletin de salaire et retourne uniquement le JSON demandé.'}
+        ]}]
+      })
+    });
+    const apiData=await resp.json();
+    if(apiData.error)throw new Error(apiData.error.message);
+    const text=apiData.content[0].text.trim();
+    const match=text.match(/\{[\s\S]*\}/);
+    if(!match)throw new Error('Format invalide');
+    const d=JSON.parse(match[0]);
+    const moisLabel=(d.mois&&d.annee)?`${d.mois} ${d.annee}`:(d.mois||'Inconnu');
+    const{error:dbErr}=await sb.from('fiches_paie').insert({
+      user_id:currentUser.id,
+      mois:moisLabel,
+      salaire_brut:d.brut?parseFloat(d.brut):null,
+      salaire_net:d.net_a_payer?parseFloat(d.net_a_payer):null,
+      heures_effectuees:d.heures_normales?parseFloat(d.heures_normales):null,
+      file_path:uploadErr?null:pdfPath,
+      donnees_extraites:d
+    });
+    if(dbErr)console.warn('DB:',dbErr.message);
+    renderBpaResult(d);
+    await loadFiches();
+    showToast('✅ Bulletin analysé !');
+  }catch(e){
+    showToast('❌ Erreur : '+e.message);
+    console.error(e);
+  }finally{
+    analyzing.style.display='none';
+    document.getElementById('bpa-input').value='';
+  }
+}
+
+function renderBpaResult(d){
+  const resultDiv=document.getElementById('bpa-result');
+  const alertItems=[];
+  if(d.absences_non_justifiees&&(d.absences_non_justifiees.montant||d.absences_non_justifiees.jours)){
+    alertItems.push({motif:`Absences non justifiées (${d.absences_non_justifiees.jours||'?'} j)`,montant:d.absences_non_justifiees.montant});
+  }
+  if(d.retenues&&Array.isArray(d.retenues)){
+    d.retenues.forEach(r=>{if(r.motif&&r.montant!=null)alertItems.push(r);});
+  }
+  const alertHtml=alertItems.length?`<div class="bpa-alert" style="display:block"><div class="bpa-alert-title">🚨 RETENUES DÉTECTÉES — Argent déduit de votre salaire</div>${alertItems.map(a=>`<div class="bpa-alert-item"><span>${a.motif}</span><span class="bpa-alert-amount">− ${typeof a.montant==='number'?a.montant.toLocaleString('fr-FR'):a.montant} €</span></div>`).join('')}</div>`:'';
+  const fmt=v=>v!=null?(typeof v==='number'?v.toLocaleString('fr-FR')+' €':parseFloat(v).toLocaleString('fr-FR')+' €'):'—';
+  const fmtH=v=>v!=null?v+'h':'—';
+  const primesHtml=d.primes&&d.primes.length?d.primes.map(p=>`<div class="bpa-row"><span class="bpa-row-label">${p.nom||p.name||'Prime'}</span><span class="bpa-row-val green">+ ${fmt(p.montant||p.amount)}</span></div>`).join(''):'<div class="bpa-row"><span class="bpa-row-label" style="color:var(--gray-400)">Aucune prime</span></div>';
+  resultDiv.innerHTML=`
+    <div class="bpa-result-header">
+      <div style="font-size:11px;opacity:0.75;margin-bottom:2px">${d.mois||''} ${d.annee||''} · ${d.employeur||'Employeur'}</div>
+      <div class="bpa-big-net">${d.net_a_payer!=null?parseFloat(d.net_a_payer).toLocaleString('fr-FR')+' €':'—'}</div>
+      <div style="font-size:13px;opacity:0.8">Net à payer · Brut : ${d.brut!=null?parseFloat(d.brut).toLocaleString('fr-FR')+' €':'—'}</div>
+    </div>
+    ${alertHtml}
+    <div class="bpa-section">
+      <div class="bpa-section-title">Identité</div>
+      <div class="bpa-row"><span class="bpa-row-label">Agent</span><span class="bpa-row-val">${d.nom_agent||'—'}</span></div>
+      <div class="bpa-row"><span class="bpa-row-label">Coefficient</span><span class="bpa-row-val">${d.coefficient||'—'}</span></div>
+      <div class="bpa-row"><span class="bpa-row-label">Ancienneté</span><span class="bpa-row-val">${d.anciennete||'—'}</span></div>
+    </div>
+    <div class="bpa-section">
+      <div class="bpa-section-title">Heures</div>
+      <div class="bpa-row"><span class="bpa-row-label">Normales</span><span class="bpa-row-val">${fmtH(d.heures_normales)}</span></div>
+      <div class="bpa-row"><span class="bpa-row-label">Supplémentaires</span><span class="bpa-row-val ${d.heures_supplementaires?'green':''}">${fmtH(d.heures_supplementaires)}</span></div>
+      <div class="bpa-row"><span class="bpa-row-label">Nuit</span><span class="bpa-row-val">${fmtH(d.heures_de_nuit)}</span></div>
+    </div>
+    <div class="bpa-section">
+      <div class="bpa-section-title">Primes</div>
+      ${primesHtml}
+    </div>
+    <div class="bpa-section">
+      <div class="bpa-section-title">Salaire détaillé</div>
+      <div class="bpa-row"><span class="bpa-row-label">Brut</span><span class="bpa-row-val">${fmt(d.brut)}</span></div>
+      <div class="bpa-row"><span class="bpa-row-label">Net imposable</span><span class="bpa-row-val">${fmt(d.net_imposable)}</span></div>
+      <div class="bpa-row"><span class="bpa-row-label">Mutuelle</span><span class="bpa-row-val red">${fmt(d.mutuelle)}</span></div>
+      <div class="bpa-row"><span class="bpa-row-label">Transport</span><span class="bpa-row-val green">${fmt(d.transport)}</span></div>
+      <div class="bpa-row" style="border-top:1px solid var(--gray-100);margin-top:6px;padding-top:10px"><span class="bpa-row-label" style="font-weight:700">Net à payer</span><span class="bpa-row-val" style="font-size:16px;color:var(--blue)">${d.net_a_payer!=null?parseFloat(d.net_a_payer).toLocaleString('fr-FR')+' €':'—'}</span></div>
+    </div>
+    ${d.conges_restants!=null?`<div class="bpa-section"><div class="bpa-row"><span class="bpa-row-label">Congés restants</span><span class="bpa-row-val orange">${d.conges_restants} j</span></div></div>`:''}
+  `;
+  resultDiv.style.display='block';
 }
 
 init();
