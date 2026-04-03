@@ -130,6 +130,36 @@ Règles :
     statut: 'brouillon'
   })).filter(a => a.titre && a.resume && a.contenu);
 
+  // Deduplication: fetch existing titles from Supabase
+  let existingTitles = [];
+  try {
+    const existRes = await fetch(`${SUPABASE_URL}/rest/v1/actualites?select=titre`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
+      }
+    });
+    if (existRes.ok) {
+      const existData = await existRes.json();
+      existingTitles = existData.map(a => a.titre.toLowerCase().trim());
+    }
+  } catch (e) {
+    console.error('Erreur fetch titres existants:', e.message);
+  }
+
+  const uniqueToInsert = toInsert.filter(a => 
+    !existingTitles.includes(a.titre.toLowerCase().trim())
+  );
+
+  if (!uniqueToInsert.length) {
+    return res.status(200).json({
+      inserted: 0,
+      skipped: toInsert.length,
+      message: 'Tous les articles existent déjà',
+      errors: errors.length ? errors : undefined
+    });
+  }
+
   const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/actualites`, {
     method: 'POST',
     headers: {
@@ -138,17 +168,18 @@ Règles :
       'Authorization': `Bearer ${SUPABASE_KEY}`,
       'Prefer': 'return=minimal'
     },
-    body: JSON.stringify(toInsert)
+    body: JSON.stringify(uniqueToInsert)
   });
 
   if (!insertRes.ok) {
     const errText = await insertRes.text();
-    return res.status(500).json({ error: 'Erreur insertion Supabase: ' + errText, articles: toInsert });
+    return res.status(500).json({ error: 'Erreur insertion Supabase: ' + errText, articles: uniqueToInsert });
   }
 
   return res.status(200).json({
-    inserted: toInsert.length,
-    message: `${toInsert.length} article(s) ajouté(s) en brouillon`,
+    inserted: uniqueToInsert.length,
+    skipped: toInsert.length - uniqueToInsert.length,
+    message: `${uniqueToInsert.length} article(s) ajouté(s), ${toInsert.length - uniqueToInsert.length} doublon(s) ignoré(s)`,
     errors: errors.length ? errors : undefined
   });
 }
