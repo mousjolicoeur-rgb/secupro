@@ -100,11 +100,24 @@ Règles :
       // Extract JSON array from text
       const jsonMatch = jsonText.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
+        // Clean invalid characters before parsing
+        const cleanJson = jsonMatch[0]
+          .replace(/[\u00C0-\u024F]/g, match => match) // keep accented chars
+          .replace(/[\x00-\x1F\x7F]/g, ' '); // remove control chars
+        let parsed;
+        try {
+          parsed = JSON.parse(cleanJson);
+        } catch (parseErr) {
+          // Try to fix common JSON issues
+          const fixedJson = cleanJson
+            .replace(/,\s*]/g, ']')
+            .replace(/,\s*}/g, '}');
+          parsed = JSON.parse(fixedJson);
+        }
         if (Array.isArray(parsed)) {
           articles.push(...parsed);
         }
-      } await sleep(45000);
+      } await sleep(60000);
     } catch (e) {
       errors.push({ query: q, error: e.message });
       console.error(`Erreur scraping "${q}":`, e.message);
