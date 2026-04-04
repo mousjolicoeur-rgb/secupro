@@ -1284,13 +1284,37 @@ async function init(){
   if(DEMO_MODE){showDemoApp();return;}
   registerSW();
   currentUser=null;currentProfile=null;allVacations=[];
-  const{data:{user}}=await sb.auth.getUser();
-  if(user){currentUser=user;await loadProfile();showApp();}
-  else{await sb.auth.signOut();showAuth();}
+
+  // Detect password recovery BEFORE getUser() — check URL hash first
+  const hashParams=new URLSearchParams(window.location.hash.slice(1));
+  if(hashParams.get('type')==='recovery'){
+    window.history.replaceState({},'',window.location.pathname);
+    showAuth();showTab('new-password');
+    document.getElementById('auth-tab').style.display='none';
+    // Still register listener for state changes after update
+    sb.auth.onAuthStateChange((event,session)=>{
+      if(event==='SIGNED_OUT'||!session){currentUser=null;currentProfile=null;allVacations=[];showAuth();}
+    });
+    return;
+  }
+
+  // Register listener BEFORE getUser() to catch PASSWORD_RECOVERY event
+  let passwordRecovery=false;
   sb.auth.onAuthStateChange((event,session)=>{
-    if(event==='PASSWORD_RECOVERY'){showAuth();showTab('new-password');document.getElementById('auth-tab').style.display='none';return;}
+    if(event==='PASSWORD_RECOVERY'){
+      passwordRecovery=true;
+      showAuth();showTab('new-password');
+      document.getElementById('auth-tab').style.display='none';
+      return;
+    }
     if(event==='SIGNED_OUT'||!session){currentUser=null;currentProfile=null;allVacations=[];showAuth();}
   });
+
+  const{data:{user}}=await sb.auth.getUser();
+  if(passwordRecovery)return;
+  if(user){currentUser=user;await loadProfile();showApp();}
+  else{await sb.auth.signOut();showAuth();}
+
   // Handle Stripe payment return
   const params=new URLSearchParams(window.location.search);
   if(params.get('payment')==='success'){
