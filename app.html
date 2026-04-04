@@ -315,6 +315,15 @@ select.form-input option{background:var(--card);color:var(--text);}
 .btn-notif-later{width:100%;background:none;border:none;color:var(--text-sub);font-size:13px;cursor:pointer;font-family:inherit;padding:8px;transition:color 0.2s ease;}
 .btn-notif-later:hover{color:var(--text);}
 
+/* ===== RESET PASSWORD ===== */
+.reset-back-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-sub);background:none;border:none;cursor:pointer;font-family:inherit;padding:0 0 14px;transition:color 0.2s ease;}
+.reset-back-link:hover{color:var(--text);}
+.reset-success{text-align:center;padding:8px 0;}
+.reset-success-icon{font-size:44px;margin-bottom:14px;}
+.reset-success-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.reset-success-msg{font-size:13px;color:var(--text-sub);line-height:1.6;margin-bottom:6px;}
+.reset-success-email{font-weight:600;color:var(--blue);}
+
 /* ===== TRIAL POPUP ===== */
 .trial-popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:600;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity 0.3s ease;}
 .trial-popup-overlay.open{opacity:1;pointer-events:all;}
@@ -361,8 +370,32 @@ select.form-input option{background:var(--card);color:var(--text);}
     <div id="auth-success" class="auth-success"></div>
     <div id="tab-login">
       <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="login-email" placeholder="agent@email.fr"></div>
-      <div class="form-group"><label class="form-label">Mot de passe</label><input type="password" class="form-input" id="login-password" placeholder="••••••••"></div>
-      <button class="btn-auth" onclick="login()">Se connecter</button>
+      <div class="form-group">
+        <label class="form-label">Mot de passe</label>
+        <input type="password" class="form-input" id="login-password" placeholder="••••••••">
+        <button class="reset-back-link" style="padding:6px 0 0;float:right" onclick="showForgotPassword()">Mot de passe oublié ?</button>
+      </div>
+      <button class="btn-auth" style="margin-top:10px" onclick="login()">Se connecter</button>
+    </div>
+    <div id="tab-forgot" style="display:none">
+      <button class="reset-back-link" onclick="showTab('login')">← Retour à la connexion</button>
+      <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="forgot-email" placeholder="agent@email.fr"></div>
+      <button class="btn-auth" onclick="sendResetEmail()">Envoyer le lien de réinitialisation</button>
+    </div>
+    <div id="tab-forgot-sent" style="display:none">
+      <div class="reset-success">
+        <div class="reset-success-icon">📧</div>
+        <div class="reset-success-title">Email envoyé !</div>
+        <div class="reset-success-msg">Un lien de réinitialisation a été envoyé à<br><span class="reset-success-email" id="forgot-sent-email"></span></div>
+        <div class="reset-success-msg" style="margin-top:8px">Vérifiez votre boîte mail et cliquez sur le lien.</div>
+        <button class="btn-auth" style="margin-top:20px" onclick="showTab('login')">← Retour à la connexion</button>
+        <div style="font-size:11px;color:var(--text-sub);margin-top:12px;padding:10px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">Vous n'avez pas reçu l'email ? Vérifiez vos spams.</div>
+      </div>
+    </div>
+    <div id="tab-new-password" style="display:none">
+      <div class="form-group"><label class="form-label">Nouveau mot de passe</label><input type="password" class="form-input" id="new-password" placeholder="8 caractères minimum"></div>
+      <div class="form-group"><label class="form-label">Confirmer le mot de passe</label><input type="password" class="form-input" id="confirm-password" placeholder="••••••••"></div>
+      <button class="btn-auth" onclick="updatePassword()">Mettre à jour mon mot de passe</button>
     </div>
     <div id="tab-register" style="display:none">
       <div class="form-group"><label class="form-label">Prénom</label><input type="text" class="form-input" id="reg-prenom" placeholder="Mustapha"></div>
@@ -1255,6 +1288,7 @@ async function init(){
   if(user){currentUser=user;await loadProfile();showApp();}
   else{await sb.auth.signOut();showAuth();}
   sb.auth.onAuthStateChange((event,session)=>{
+    if(event==='PASSWORD_RECOVERY'){showAuth();showTab('new-password');document.getElementById('auth-tab').style.display='none';return;}
     if(event==='SIGNED_OUT'||!session){currentUser=null;currentProfile=null;allVacations=[];showAuth();}
   });
   // Handle Stripe payment return
@@ -1309,26 +1343,26 @@ async function closeTrialExpiredEssentiel(){
   updateHomeHeader();
 }
 
+const AUTH_TABS=['tab-login','tab-register','tab-confirm','tab-forgot','tab-forgot-sent','tab-new-password'];
+
+function showTab(name){
+  AUTH_TABS.forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('tab-'+name).style.display='block';
+  document.getElementById('auth-error').style.display='none';
+  document.getElementById('auth-success').style.display='none';
+}
+
 function switchTab(t){
-  document.querySelectorAll('.auth-tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab-login').style.display=t==='login'?'block':'none';
-  document.getElementById('tab-register').style.display=t==='register'?'block':'none';
-  document.getElementById('tab-confirm').style.display='none';
-  document.querySelectorAll('.auth-tab-btn')[t==='login'?0:1].classList.add('active');
+  AUTH_TABS.forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('tab-'+t).style.display='block';
+  document.querySelectorAll('.auth-tab-btn').forEach((b,i)=>b.classList.toggle('active',i===(t==='login'?0:1)));
   document.getElementById('auth-tab').style.display='flex';
   document.getElementById('auth-error').style.display='none';
   document.getElementById('auth-success').style.display='none';
 }
 
-function showLoginAfterConfirm(){
-  document.getElementById('tab-confirm').style.display='none';
-  document.getElementById('tab-login').style.display='block';
-  document.getElementById('tab-register').style.display='none';
-  document.getElementById('auth-tab').style.display='flex';
-  document.querySelectorAll('.auth-tab-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
-  document.getElementById('auth-error').style.display='none';
-  document.getElementById('auth-success').style.display='none';
-}
+function showLoginAfterConfirm(){switchTab('login');}
+function showForgotPassword(){showTab('forgot');document.getElementById('auth-tab').style.display='none';}
 
 async function login(){
   const email=document.getElementById('login-email').value.trim();
@@ -1368,6 +1402,31 @@ async function register(){
 }
 
 function showErr(msg){const e=document.getElementById('auth-error');e.textContent=msg;e.style.display='block';document.getElementById('auth-success').style.display='none';}
+
+// ===== RESET PASSWORD =====
+async function sendResetEmail(){
+  const email=document.getElementById('forgot-email').value.trim();
+  if(!email){showErr('Entrez votre adresse email');return;}
+  const{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:'https://secupro.vercel.app/app.html?reset=true'});
+  if(error){showErr(error.message);return;}
+  document.getElementById('forgot-sent-email').textContent=email;
+  showTab('forgot-sent');
+  document.getElementById('auth-tab').style.display='none';
+}
+
+async function updatePassword(){
+  const pwd=document.getElementById('new-password').value;
+  const confirm=document.getElementById('confirm-password').value;
+  if(!pwd||pwd.length<8){showErr('Mot de passe : 8 caractères minimum');return;}
+  if(pwd!==confirm){showErr('Les mots de passe ne correspondent pas');return;}
+  const{error}=await sb.auth.updateUser({password:pwd});
+  if(error){showErr(error.message);return;}
+  showToast('Mot de passe mis à jour !');
+  document.getElementById('new-password').value='';
+  document.getElementById('confirm-password').value='';
+  switchTab('login');
+  document.getElementById('auth-tab').style.display='flex';
+}
 
 // ===== SERVICE WORKER =====
 async function registerSW(){
