@@ -21,7 +21,12 @@ export default async function handler(req, res) {
   if (!priceId || !userId) return res.status(400).json({ error: 'priceId and userId are required' });
   if (!PRICE_PLAN_MAP[priceId]) return res.status(400).json({ error: 'Invalid priceId' });
 
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  const stripeKey = process.env.STRIPE_SECRET_KEY;
+  if (!stripeKey || !stripeKey.startsWith('sk_')) {
+    console.error('STRIPE_SECRET_KEY is missing or invalid (got:', stripeKey?.slice(0, 10), ')');
+    return res.status(500).json({ error: 'Server misconfiguration: invalid Stripe key' });
+  }
+  const stripe = new Stripe(stripeKey);
   const plan = PRICE_PLAN_MAP[priceId];
 
   try {
