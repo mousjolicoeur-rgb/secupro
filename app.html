@@ -298,6 +298,27 @@ select.form-input option{background:var(--card);color:var(--text);}
 .btn-lire-plus{background:var(--blue-light);color:var(--blue);border:1px solid rgba(59,130,246,0.25);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s ease;}
 .btn-lire-plus:hover{background:rgba(59,130,246,0.25);}
 .actu-glass-wrap{background:rgba(255,255,255,0.03);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius);padding:14px;margin-bottom:10px;}
+
+/* ===== TRIAL POPUP ===== */
+.trial-popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:600;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity 0.3s ease;}
+.trial-popup-overlay.open{opacity:1;pointer-events:all;}
+.trial-popup-card{background:var(--card);border-radius:20px;width:100%;max-width:380px;overflow:hidden;transform:scale(0.9) translateY(20px);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);border:1px solid var(--border);}
+.trial-popup-overlay.open .trial-popup-card{transform:scale(1) translateY(0);}
+.trial-popup-header{background:var(--gradient);padding:28px 24px 22px;text-align:center;}
+.trial-popup-icon{font-size:48px;line-height:1;margin-bottom:10px;}
+.trial-popup-title{font-size:19px;font-weight:700;color:white;margin-bottom:5px;}
+.trial-popup-subtitle{font-size:13px;color:rgba(255,255,255,0.8);line-height:1.4;}
+.trial-popup-body{padding:20px 24px 24px;}
+.trial-progress-wrap{margin:14px 0 18px;}
+.trial-progress-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text-sub);margin-bottom:7px;}
+.trial-progress-bar{height:9px;background:var(--bg);border-radius:99px;overflow:hidden;border:1px solid var(--border);}
+.trial-progress-fill{height:100%;background:var(--gradient);border-radius:99px;transition:width 0.7s ease;}
+.trial-days-left{font-size:16px;font-weight:700;color:var(--text);text-align:center;margin-bottom:5px;}
+.trial-days-sub{font-size:12px;color:var(--text-sub);text-align:center;margin-bottom:18px;line-height:1.5;}
+.btn-trial-cta{width:100%;background:var(--gradient);color:white;border:none;border-radius:var(--radius);padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(37,99,235,0.35);transition:all 0.2s ease;margin-bottom:8px;}
+.btn-trial-cta:active{transform:scale(0.98);}
+.btn-trial-secondary{width:100%;background:none;border:none;color:var(--text-sub);font-size:13px;cursor:pointer;font-family:inherit;padding:8px;transition:color 0.2s ease;}
+.btn-trial-secondary:hover{color:var(--text);}
 </style>
 </head>
 <body>
@@ -1233,7 +1254,43 @@ async function init(){
 }
 
 function showAuth(){document.getElementById('loading').style.display='none';document.getElementById('auth-wrap').style.display='flex';document.getElementById('app-wrap').style.display='none';}
-function showApp(){document.getElementById('loading').style.display='none';document.getElementById('auth-wrap').style.display='none';document.getElementById('app-wrap').style.display='block';updateHomeHeader();loadAllData();}
+function showApp(){document.getElementById('loading').style.display='none';document.getElementById('auth-wrap').style.display='none';document.getElementById('app-wrap').style.display='block';updateHomeHeader();loadAllData();showTrialPopup();}
+
+function showTrialPopup(){
+  if(!currentProfile)return;
+  const plan=currentProfile.plan||'essentiel';
+  if(plan!=='trial')return;
+  const ends=new Date(currentProfile.trial_ends_at);
+  const now=new Date();
+  const expired=ends<now;
+  document.getElementById('trial-state-active').style.display=expired?'none':'block';
+  document.getElementById('trial-state-expired').style.display=expired?'block':'none';
+  if(!expired){
+    const totalMs=7*24*60*60*1000;
+    const elapsed=now-(ends-totalMs);
+    const daysLeft=Math.max(1,Math.ceil((ends-now)/(1000*60*60*24)));
+    const pct=Math.min(100,Math.round((elapsed/totalMs)*100));
+    document.getElementById('trial-progress-fill').style.width=pct+'%';
+    document.getElementById('trial-days-left-text').textContent=`Il vous reste ${daysLeft} jour${daysLeft!==1?'s':''} d'essai gratuit`;
+  }
+  document.getElementById('trial-popup').classList.add('open');
+}
+
+function closeTrialPopup(){document.getElementById('trial-popup').classList.remove('open');}
+
+function openPlanModalFromTrialBanner(){
+  const effective=(currentProfile?.plan==='trial')?'premium':(currentProfile?.plan||'essentiel');
+  document.getElementById('plan-modal-sub').textContent='';
+  renderPlanCards(effective,'plan-modal-cards');
+  document.getElementById('plan-upgrade-modal').classList.add('open');
+}
+
+async function closeTrialExpiredEssentiel(){
+  closeTrialPopup();
+  await sb.from('profiles').update({plan:'essentiel'}).eq('id',currentUser.id);
+  currentProfile.plan='essentiel';
+  updateHomeHeader();
+}
 
 function switchTab(t){
   document.querySelectorAll('.auth-tab-btn').forEach(b=>b.classList.remove('active'));
@@ -1910,6 +1967,41 @@ function addChatMsg(role,text){
 </script>
 </body>
 </html>
+
+<!-- ===== TRIAL POPUP ===== -->
+<div class="trial-popup-overlay" id="trial-popup">
+  <div class="trial-popup-card">
+    <div id="trial-state-active">
+      <div class="trial-popup-header">
+        <div class="trial-popup-icon">🎁</div>
+        <div class="trial-popup-title">Essai gratuit en cours</div>
+        <div class="trial-popup-subtitle" id="trial-header-sub">Accès complet à toutes les fonctionnalités</div>
+      </div>
+      <div class="trial-popup-body">
+        <div class="trial-progress-wrap">
+          <div class="trial-progress-label"><span>Jour 1</span><span id="trial-progress-end-label">Jour 7</span></div>
+          <div class="trial-progress-bar"><div class="trial-progress-fill" id="trial-progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="trial-days-left" id="trial-days-left-text"></div>
+        <div class="trial-days-sub">Profitez de toutes les fonctionnalités Pro pendant votre essai</div>
+        <button class="btn-trial-cta" onclick="closeTrialPopup()">Continuer</button>
+        <button class="btn-trial-secondary" onclick="closeTrialPopup();openPlanModalFromTrialBanner()">Choisir un plan</button>
+      </div>
+    </div>
+    <div id="trial-state-expired" style="display:none">
+      <div class="trial-popup-header">
+        <div class="trial-popup-icon">⏰</div>
+        <div class="trial-popup-title">Votre essai gratuit est terminé</div>
+        <div class="trial-popup-subtitle">Votre période d'essai de 7 jours a expiré</div>
+      </div>
+      <div class="trial-popup-body">
+        <div class="trial-days-sub" style="margin-bottom:20px;font-size:14px">Pour continuer à utiliser les fonctionnalités IA, choisissez un plan.</div>
+        <button class="btn-trial-cta" onclick="closeTrialPopup();openPlanModalFromTrialBanner()">Choisir un plan</button>
+        <button class="btn-trial-secondary" onclick="closeTrialExpiredEssentiel()">Continuer en mode Essentiel</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ===== PLAN UPGRADE MODAL ===== -->
 <div class="plan-modal-overlay" id="plan-upgrade-modal">
