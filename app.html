@@ -413,7 +413,11 @@ select.form-input option{background:var(--card);color:var(--text);}
           <div style="background:var(--border);border-radius:99px;height:5px;overflow:hidden"><div id="trial-bar" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#F59E0B,#FCD34D);transition:width 0.8s ease"></div></div>
         </div>
         <div style="height:1px;background:var(--border);margin:10px 0"></div>
-        <button class="btn-primary" style="margin-bottom:0" onclick="showToast('Bientôt disponible — paiement Stripe en cours')">Gérer mon abonnement</button>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn-primary" style="margin-bottom:0;background:linear-gradient(135deg,#3B82F6,#2563EB)" onclick="startCheckout('essentiel',this)">📋 Passer à Essentiel — 9,99€/mois</button>
+          <button class="btn-primary" style="margin-bottom:0;background:linear-gradient(135deg,#7C3AED,#A78BFA)" onclick="startCheckout('pro',this)">⭐ Passer à Pro — 19,99€/mois</button>
+          <button class="btn-primary" style="margin-bottom:0;background:linear-gradient(135deg,#F59E0B,#FCD34D);color:#1E293B" onclick="startCheckout('premium',this)">🏆 Passer à Premium — 24,99€/mois</button>
+        </div>
       </div>
       <button class="btn-danger" onclick="logout()">Se déconnecter</button>
     </div>
@@ -1171,6 +1175,17 @@ async function init(){
   sb.auth.onAuthStateChange((event,session)=>{
     if(event==='SIGNED_OUT'||!session){currentUser=null;currentProfile=null;allVacations=[];showAuth();}
   });
+  // Handle Stripe payment return
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('payment')==='success'){
+    // reload profile to get updated plan from webhook
+    if(currentUser){await loadProfile();updateHomeHeader();}
+    showToast('🎉 Abonnement activé ! Bienvenue sur SecuPRO.');
+    window.history.replaceState({},'',window.location.pathname);
+  } else if(params.get('payment')==='cancel'){
+    showToast('Paiement annulé.');
+    window.history.replaceState({},'',window.location.pathname);
+  }
 }
 
 function showAuth(){document.getElementById('loading').style.display='none';document.getElementById('auth-wrap').style.display='flex';document.getElementById('app-wrap').style.display='none';}
@@ -1229,8 +1244,14 @@ const PLAN_FEATURES={
   pro:['Import PDF du planning','Import email du planning','Analyse bulletin de paie','SecuIA — Assistant IA illimité'],
   premium:['Tout le plan Pro inclus','Alertes paie avancées DSP2','Accès prioritaire aux nouvelles features']
 };
-const PLAN_PRICES={pro:'19,99€/mois',premium:'24,99€/mois'};
-const PLAN_ICONS={pro:'⭐',premium:'🏆'};
+const PLAN_PRICES={essentiel:'9,99€/mois',pro:'19,99€/mois',premium:'24,99€/mois'};
+const PLAN_ICONS={essentiel:'📋',pro:'⭐',premium:'🏆'};
+const PRICE_IDS={
+  essentiel:'price_1TIIyL2MgRlKiK2HV8OIvkwV',
+  pro:'price_1TIIz92MgRlKiK2HuZhM02Id',
+  premium:'price_1TIJ012MgRlKiK2HLsnto1el',
+};
+let currentCheckoutPlan=null;
 
 async function checkPlan(){
   if(!currentProfile)return'essentiel';
@@ -1261,11 +1282,34 @@ async function requirePlan(minPlan){
   const feats=PLAN_FEATURES[minPlan]||[];
   document.getElementById('plan-modal-features').innerHTML=feats.map(f=>`<div class="plan-feature-item"><div class="plan-feature-check">✓</div><span>${f}</span></div>`).join('');
   document.getElementById('plan-modal-btn').textContent=`Choisir le plan ${minPlan.charAt(0).toUpperCase()+minPlan.slice(1)} — ${PLAN_PRICES[minPlan]||''}`;
+  currentCheckoutPlan=minPlan;
   modal.classList.add('open');
   return false;
 }
 
 function closePlanModal(){document.getElementById('plan-upgrade-modal').classList.remove('open');}
+
+async function startCheckout(plan,triggerBtn){
+  const priceId=PRICE_IDS[plan];
+  if(!priceId){showToast('Plan invalide');return;}
+  if(!currentUser){showToast('Connectez-vous d\'abord');return;}
+  const btn=triggerBtn||document.getElementById('plan-modal-btn');
+  const origText=btn?btn.textContent:'';
+  if(btn){btn.textContent='Chargement...';btn.disabled=true;}
+  try{
+    const r=await fetch('/api/create-checkout',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({priceId,userId:currentUser.id,userEmail:currentUser.email})
+    });
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    window.location.href=d.url;
+  }catch(e){
+    showToast('Erreur: '+e.message);
+    if(btn){btn.textContent=origText;btn.disabled=false;}
+  }
+}
 
 async function updateProfilPlan(){
   const plan=await checkPlan();
@@ -1762,7 +1806,7 @@ function addChatMsg(role,text){
     <div class="plan-modal-title" id="plan-modal-title">Passez au plan Pro</div>
     <div class="plan-modal-sub" id="plan-modal-sub">Cette fonctionnalité est réservée aux abonnés Pro.</div>
     <div class="plan-feature-list" id="plan-modal-features"></div>
-    <button class="btn-plan-upgrade" id="plan-modal-btn" onclick="closePlanModal()">Choisir ce plan</button>
+    <button class="btn-plan-upgrade" id="plan-modal-btn" onclick="startCheckout(currentCheckoutPlan)">Choisir ce plan</button>
     <button class="btn-plan-close" onclick="closePlanModal()">Pas maintenant</button>
   </div>
 </div>
