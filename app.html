@@ -229,18 +229,33 @@ select.form-input option{background:var(--card);color:var(--text);}
 /* ===== PLAN UPGRADE MODAL ===== */
 .plan-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s ease;}
 .plan-modal-overlay.open{opacity:1;pointer-events:all;}
-.plan-modal-sheet{background:var(--card);border-radius:24px 24px 0 0;padding:24px;width:100%;max-width:430px;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);border-top:1px solid var(--border);}
+.plan-modal-sheet{background:var(--card);border-radius:24px 24px 0 0;padding:20px 20px 32px;width:100%;max-width:430px;max-height:90dvh;overflow-y:auto;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);border-top:1px solid var(--border);}
 .plan-modal-overlay.open .plan-modal-sheet{transform:translateY(0);}
-.plan-modal-icon{width:56px;height:56px;border-radius:16px;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 14px;box-shadow:0 6px 20px rgba(37,99,235,0.4);}
-.plan-modal-title{font-size:19px;font-weight:700;color:var(--text);text-align:center;margin-bottom:6px;}
-.plan-modal-sub{font-size:13px;color:var(--text-sub);text-align:center;margin-bottom:20px;line-height:1.5;}
-.plan-feature-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
-.plan-feature-item{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-muted);}
-.plan-feature-check{width:22px;height:22px;border-radius:50%;background:var(--green-light);border:1px solid rgba(34,197,94,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
-.btn-plan-upgrade{width:100%;background:var(--gradient);color:white;border:none;border-radius:var(--radius);padding:15px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;box-shadow:0 4px 20px rgba(37,99,235,0.45);transition:all 0.3s ease;}
-.btn-plan-upgrade:hover{opacity:0.9;transform:translateY(-1px);}
-.btn-plan-close{width:100%;background:none;border:none;color:var(--text-sub);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;transition:color 0.3s ease;}
+.plan-modal-title{font-size:18px;font-weight:700;color:var(--text);text-align:center;margin-bottom:4px;}
+.plan-modal-sub{font-size:13px;color:var(--text-sub);text-align:center;margin-bottom:16px;line-height:1.5;}
+.btn-plan-close{width:100%;background:none;border:none;color:var(--text-sub);font-size:13px;cursor:pointer;padding:10px;font-family:inherit;transition:color 0.3s ease;margin-top:4px;}
 .btn-plan-close:hover{color:var(--text);}
+/* Plan cards grid */
+.plan-cards-wrap{display:flex;flex-direction:column;gap:10px;}
+.plan-card{background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:14px;position:relative;transition:border-color 0.25s ease;}
+.plan-card.recommended{border-color:rgba(167,139,250,0.6);background:rgba(167,139,250,0.04);}
+.plan-card-top-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;padding:3px 12px;border-radius:99px;white-space:nowrap;letter-spacing:0.03em;}
+.plan-card-top-badge.rec{background:linear-gradient(135deg,#7C3AED,#A78BFA);color:white;}
+.plan-card-top-badge.vip{background:linear-gradient(135deg,#F59E0B,#FCD34D);color:#1E293B;}
+.plan-card-header-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;}
+.plan-card-name{font-size:15px;font-weight:700;color:var(--text);}
+.plan-card-price{font-size:17px;font-weight:700;color:var(--text);}
+.plan-card-price span{font-size:11px;font-weight:400;color:var(--text-sub);}
+.plan-card-features{list-style:none;display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.plan-card-feature{font-size:12px;color:var(--text-muted);display:flex;align-items:flex-start;gap:7px;line-height:1.4;}
+.plan-card-feature::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;font-size:11px;margin-top:1px;}
+.btn-plan-select{width:100%;border:none;border-radius:var(--radius);padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.25s ease;}
+.btn-plan-select:hover:not(:disabled){opacity:0.88;transform:translateY(-1px);}
+.btn-plan-select:disabled{cursor:default;transform:none!important;opacity:1;}
+.btn-plan-select.current{background:var(--border);color:var(--text-sub);}
+.btn-plan-select.essentiel{background:linear-gradient(135deg,#3B82F6,#2563EB);color:white;box-shadow:0 3px 12px rgba(37,99,235,0.35);}
+.btn-plan-select.pro{background:linear-gradient(135deg,#7C3AED,#A78BFA);color:white;box-shadow:0 3px 12px rgba(124,58,237,0.35);}
+.btn-plan-select.premium{background:linear-gradient(135deg,#F59E0B,#FCD34D);color:#1E293B;box-shadow:0 3px 12px rgba(245,158,11,0.3);}
 /* badge trial */
 .badge-trial{background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(251,191,36,0.15));color:#F59E0B;border:1px solid rgba(245,158,11,0.35);padding:4px 10px;border-radius:8px;font-size:12px;font-weight:700;}
 
@@ -413,11 +428,7 @@ select.form-input option{background:var(--card);color:var(--text);}
           <div style="background:var(--border);border-radius:99px;height:5px;overflow:hidden"><div id="trial-bar" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#F59E0B,#FCD34D);transition:width 0.8s ease"></div></div>
         </div>
         <div style="height:1px;background:var(--border);margin:10px 0"></div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <button class="btn-primary" style="margin-bottom:0;background:linear-gradient(135deg,#3B82F6,#2563EB)" onclick="startCheckout('essentiel',this)">📋 Passer à Essentiel — 9,99€/mois</button>
-          <button class="btn-primary" style="margin-bottom:0;background:linear-gradient(135deg,#7C3AED,#A78BFA)" onclick="startCheckout('pro',this)">⭐ Passer à Pro — 19,99€/mois</button>
-          <button class="btn-primary" style="margin-bottom:0;background:linear-gradient(135deg,#F59E0B,#FCD34D);color:#1E293B" onclick="startCheckout('premium',this)">🏆 Passer à Premium — 24,99€/mois</button>
-        </div>
+        <div id="profil-plan-cards"></div>
       </div>
       <button class="btn-danger" onclick="logout()">Se déconnecter</button>
     </div>
@@ -1241,17 +1252,16 @@ async function loadProfile(){
 /* ===== PLAN GATING ===== */
 const PLAN_HIERARCHY={essentiel:1,pro:2,premium:3};
 const PLAN_FEATURES={
-  pro:['Import PDF du planning','Import email du planning','Analyse bulletin de paie','SecuIA — Assistant IA illimité'],
-  premium:['Tout le plan Pro inclus','Alertes paie avancées DSP2','Accès prioritaire aux nouvelles features']
+  essentiel:['Planning manuel illimité','Suivi salaire & budget','3 employeurs max','Alertes CNAPS','SecuDroit — vos droits','Actu Sécu'],
+  pro:['Tout Essentiel inclus','Import PDF planning IA','Import email planning IA','Analyse bulletin de paie IA','SecuIA 24h/24','Employeurs illimités'],
+  premium:['Tout Pro inclus','Alerte paie DSP2','Notifications push + email','Multi-banques','Support prioritaire'],
 };
 const PLAN_PRICES={essentiel:'9,99€/mois',pro:'19,99€/mois',premium:'24,99€/mois'};
-const PLAN_ICONS={essentiel:'📋',pro:'⭐',premium:'🏆'};
 const PRICE_IDS={
   essentiel:'price_1TIIyL2MgRlKiK2HV8OIvkwV',
   pro:'price_1TIIz92MgRlKiK2HuZhM02Id',
   premium:'price_1TIJ012MgRlKiK2HLsnto1el',
 };
-let currentCheckoutPlan=null;
 
 async function checkPlan(){
   if(!currentProfile)return'essentiel';
@@ -1259,7 +1269,6 @@ async function checkPlan(){
   if(plan==='trial'){
     const ends=new Date(currentProfile.trial_ends_at);
     if(ends<new Date()){
-      // trial expired → downgrade to essentiel
       await sb.from('profiles').update({plan:'essentiel'}).eq('id',currentUser.id);
       currentProfile.plan='essentiel';
       plan='essentiel';
@@ -1268,22 +1277,37 @@ async function checkPlan(){
   return plan;
 }
 
+function renderPlanCards(activePlan,containerId){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  // trial has full premium access
+  const effectiveActive=(activePlan==='trial')?'premium':activePlan;
+  const plans=[
+    {key:'essentiel',label:'Essentiel',price:'9,99€',topBadge:null},
+    {key:'pro',label:'Pro',price:'19,99€',topBadge:{text:'⭐ Recommandé',cls:'rec'}},
+    {key:'premium',label:'Premium',price:'24,99€',topBadge:{text:'🏆 VIP',cls:'vip'}},
+  ];
+  el.innerHTML='<div class="plan-cards-wrap">'+plans.map(p=>{
+    const isCurrent=effectiveActive===p.key;
+    const feats=(PLAN_FEATURES[p.key]||[]).map(f=>`<li class="plan-card-feature">${f}</li>`).join('');
+    const btn=isCurrent
+      ?`<button class="btn-plan-select current" disabled>Plan actuel</button>`
+      :`<button class="btn-plan-select ${p.key}" onclick="startCheckout('${p.key}',this)">Choisir ce plan</button>`;
+    const badge=p.topBadge?`<div class="plan-card-top-badge ${p.topBadge.cls}">${p.topBadge.text}</div>`:'';
+    return`<div class="plan-card${p.key==='pro'?' recommended':''}">${badge}
+      <div class="plan-card-header-row"><span class="plan-card-name">${p.label}</span><span class="plan-card-price">${p.price}<span>/mois</span></span></div>
+      <ul class="plan-card-features">${feats}</ul>${btn}</div>`;
+  }).join('')+'</div>';
+}
+
 async function requirePlan(minPlan){
   const plan=await checkPlan();
   const effective=(plan==='trial')?'premium':plan;
-  const minLevel=PLAN_HIERARCHY[minPlan]||1;
-  const userLevel=PLAN_HIERARCHY[effective]||1;
-  if(userLevel>=minLevel)return true;
-  // show upgrade modal
-  const modal=document.getElementById('plan-upgrade-modal');
-  document.getElementById('plan-modal-icon').textContent=PLAN_ICONS[minPlan]||'⭐';
-  document.getElementById('plan-modal-title').textContent=`Passez au plan ${minPlan.charAt(0).toUpperCase()+minPlan.slice(1)}`;
-  document.getElementById('plan-modal-sub').textContent=`Cette fonctionnalité est réservée aux abonnés ${minPlan.charAt(0).toUpperCase()+minPlan.slice(1)} (${PLAN_PRICES[minPlan]||''}).`;
-  const feats=PLAN_FEATURES[minPlan]||[];
-  document.getElementById('plan-modal-features').innerHTML=feats.map(f=>`<div class="plan-feature-item"><div class="plan-feature-check">✓</div><span>${f}</span></div>`).join('');
-  document.getElementById('plan-modal-btn').textContent=`Choisir le plan ${minPlan.charAt(0).toUpperCase()+minPlan.slice(1)} — ${PLAN_PRICES[minPlan]||''}`;
-  currentCheckoutPlan=minPlan;
-  modal.classList.add('open');
+  if((PLAN_HIERARCHY[effective]||1)>=(PLAN_HIERARCHY[minPlan]||1))return true;
+  const cap=minPlan.charAt(0).toUpperCase()+minPlan.slice(1);
+  document.getElementById('plan-modal-sub').textContent=`Cette fonctionnalité nécessite le plan ${cap} ou supérieur.`;
+  renderPlanCards(effective,'plan-modal-cards');
+  document.getElementById('plan-upgrade-modal').classList.add('open');
   return false;
 }
 
@@ -1293,7 +1317,7 @@ async function startCheckout(plan,triggerBtn){
   const priceId=PRICE_IDS[plan];
   if(!priceId){showToast('Plan invalide');return;}
   if(!currentUser){showToast('Connectez-vous d\'abord');return;}
-  const btn=triggerBtn||document.getElementById('plan-modal-btn');
+  const btn=triggerBtn||null;
   const origText=btn?btn.textContent:'';
   if(btn){btn.textContent='Chargement...';btn.disabled=true;}
   try{
@@ -1323,8 +1347,7 @@ async function updateProfilPlan(){
     const daysLeft=Math.max(0,Math.ceil((ends-new Date())/(1000*60*60*24)));
     planLabel.textContent='Essai gratuit 7 jours';
     planSub.textContent=`Accès complet Premium — expire dans ${daysLeft} jour${daysLeft!==1?'s':''}`;
-    planBadge.textContent='Trial';
-    planBadge.className='badge-trial';
+    planBadge.textContent='Trial';planBadge.className='badge-trial';
     trialWrap.style.display='block';
     document.getElementById('trial-days-label').textContent=`${daysLeft} jour${daysLeft!==1?'s':''} restant${daysLeft!==1?'s':''}`;
     document.getElementById('trial-bar').style.width=`${(daysLeft/7)*100}%`;
@@ -1338,6 +1361,7 @@ async function updateProfilPlan(){
     planLabel.textContent='Essentiel';planSub.textContent='9,99€/mois · Fonctionnalités de base';
     planBadge.textContent='Essentiel';planBadge.className='badge badge-blue';trialWrap.style.display='none';
   }
+  renderPlanCards(plan,'profil-plan-cards');
 }
 
 function updateHomeHeader(){
@@ -1802,11 +1826,10 @@ function addChatMsg(role,text){
 <!-- ===== PLAN UPGRADE MODAL ===== -->
 <div class="plan-modal-overlay" id="plan-upgrade-modal">
   <div class="plan-modal-sheet">
-    <div class="plan-modal-icon" id="plan-modal-icon">⭐</div>
-    <div class="plan-modal-title" id="plan-modal-title">Passez au plan Pro</div>
-    <div class="plan-modal-sub" id="plan-modal-sub">Cette fonctionnalité est réservée aux abonnés Pro.</div>
-    <div class="plan-feature-list" id="plan-modal-features"></div>
-    <button class="btn-plan-upgrade" id="plan-modal-btn" onclick="startCheckout(currentCheckoutPlan)">Choisir ce plan</button>
+    <div class="modal-handle"></div>
+    <div class="plan-modal-title">Choisissez votre plan</div>
+    <div class="plan-modal-sub" id="plan-modal-sub"></div>
+    <div id="plan-modal-cards"></div>
     <button class="btn-plan-close" onclick="closePlanModal()">Pas maintenant</button>
   </div>
 </div>
