@@ -226,6 +226,24 @@ select.form-input option{background:var(--card);color:var(--text);}
 .sd-art-body{font-size:12px;color:var(--text-muted);line-height:1.7;}
 .sd-highlight{background:rgba(251,191,36,0.25);border-radius:2px;padding:0 2px;color:#FCD34D;}
 
+/* ===== PLAN UPGRADE MODAL ===== */
+.plan-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s ease;}
+.plan-modal-overlay.open{opacity:1;pointer-events:all;}
+.plan-modal-sheet{background:var(--card);border-radius:24px 24px 0 0;padding:24px;width:100%;max-width:430px;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);border-top:1px solid var(--border);}
+.plan-modal-overlay.open .plan-modal-sheet{transform:translateY(0);}
+.plan-modal-icon{width:56px;height:56px;border-radius:16px;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 14px;box-shadow:0 6px 20px rgba(37,99,235,0.4);}
+.plan-modal-title{font-size:19px;font-weight:700;color:var(--text);text-align:center;margin-bottom:6px;}
+.plan-modal-sub{font-size:13px;color:var(--text-sub);text-align:center;margin-bottom:20px;line-height:1.5;}
+.plan-feature-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.plan-feature-item{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-muted);}
+.plan-feature-check{width:22px;height:22px;border-radius:50%;background:var(--green-light);border:1px solid rgba(34,197,94,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.btn-plan-upgrade{width:100%;background:var(--gradient);color:white;border:none;border-radius:var(--radius);padding:15px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;box-shadow:0 4px 20px rgba(37,99,235,0.45);transition:all 0.3s ease;}
+.btn-plan-upgrade:hover{opacity:0.9;transform:translateY(-1px);}
+.btn-plan-close{width:100%;background:none;border:none;color:var(--text-sub);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;transition:color 0.3s ease;}
+.btn-plan-close:hover{color:var(--text);}
+/* badge trial */
+.badge-trial{background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(251,191,36,0.15));color:#F59E0B;border:1px solid rgba(245,158,11,0.35);padding:4px 10px;border-radius:8px;font-size:12px;font-weight:700;}
+
 /* ===== ACTU SECU ===== */
 .actu-hero{background:var(--gradient);border-radius:var(--radius-xl);padding:18px 20px;color:white;margin-bottom:14px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(37,99,235,0.35);}
 .actu-hero::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.07);}
@@ -381,21 +399,21 @@ select.form-input option{background:var(--card);color:var(--text);}
         <div class="profil-row" style="border-bottom:none"><div style="font-size:18px;width:28px;text-align:center">🏙️</div><div><div style="font-size:12px;color:var(--text-sub)">Ville</div><div style="font-size:14px;font-weight:500;color:var(--text)" id="profil-ville">Non renseignée</div></div></div>
       </div>
       <div class="section-label">Abonnement</div>
-      <div class="card" style="display:flex;flex-direction:column;gap:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><div style="font-size:14px;font-weight:600;color:var(--text)">Essentiel</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">9,99€/mois · 7 jours gratuits</div></div>
-          <span class="badge badge-blue">Essentiel</span>
+      <div class="card" id="plan-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div>
+            <div style="font-size:14px;font-weight:600;color:var(--text)" id="plan-label">Chargement...</div>
+            <div style="font-size:12px;color:var(--text-sub);margin-top:2px" id="plan-sublabel"></div>
+          </div>
+          <span id="plan-badge" class="badge badge-blue">...</span>
         </div>
-        <div style="height:1px;background:var(--border)"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><div style="font-size:14px;font-weight:600;color:var(--text)">Pro</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">19,99€/mois · 7 jours gratuits</div></div>
-          <span class="badge badge-violet">⭐ Pro</span>
+        <div id="trial-bar-wrap" style="display:none">
+          <div style="height:1px;background:var(--border);margin-bottom:10px"></div>
+          <div style="font-size:12px;color:var(--text-sub);margin-bottom:6px" id="trial-days-label"></div>
+          <div style="background:var(--border);border-radius:99px;height:5px;overflow:hidden"><div id="trial-bar" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#F59E0B,#FCD34D);transition:width 0.8s ease"></div></div>
         </div>
-        <div style="height:1px;background:var(--border)"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><div style="font-size:14px;font-weight:600;color:var(--text)">Premium</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">24,99€/mois · 7 jours gratuits</div></div>
-          <span class="badge badge-orange">🏆 VIP</span>
-        </div>
+        <div style="height:1px;background:var(--border);margin:10px 0"></div>
+        <button class="btn-primary" style="margin-bottom:0" onclick="showToast('Bientôt disponible — paiement Stripe en cours')">Gérer mon abonnement</button>
       </div>
       <button class="btn-danger" onclick="logout()">Se déconnecter</button>
     </div>
@@ -1186,7 +1204,7 @@ async function register(){
   const{data,error}=await sb.auth.signUp({email,password:pwd});
   if(error){showErr(error.message);return;}
   if(data.user){
-    await sb.from('profiles').insert({id:data.user.id,prenom,nom,email});
+    await sb.from('profiles').insert({id:data.user.id,prenom,nom,email,plan:'trial',trial_ends_at:new Date(Date.now()+7*24*60*60*1000).toISOString()});
     const s=document.getElementById('auth-success');
     s.textContent='Compte créé ! Vérifiez votre email puis connectez-vous.';
     s.style.display='block';
@@ -1205,6 +1223,79 @@ async function loadProfile(){
   currentProfile=data;
 }
 
+/* ===== PLAN GATING ===== */
+const PLAN_HIERARCHY={essentiel:1,pro:2,premium:3};
+const PLAN_FEATURES={
+  pro:['Import PDF du planning','Import email du planning','Analyse bulletin de paie','SecuIA — Assistant IA illimité'],
+  premium:['Tout le plan Pro inclus','Alertes paie avancées DSP2','Accès prioritaire aux nouvelles features']
+};
+const PLAN_PRICES={pro:'19,99€/mois',premium:'24,99€/mois'};
+const PLAN_ICONS={pro:'⭐',premium:'🏆'};
+
+async function checkPlan(){
+  if(!currentProfile)return'essentiel';
+  let plan=currentProfile.plan||'essentiel';
+  if(plan==='trial'){
+    const ends=new Date(currentProfile.trial_ends_at);
+    if(ends<new Date()){
+      // trial expired → downgrade to essentiel
+      await sb.from('profiles').update({plan:'essentiel'}).eq('id',currentUser.id);
+      currentProfile.plan='essentiel';
+      plan='essentiel';
+    }
+  }
+  return plan;
+}
+
+async function requirePlan(minPlan){
+  const plan=await checkPlan();
+  const effective=(plan==='trial')?'premium':plan;
+  const minLevel=PLAN_HIERARCHY[minPlan]||1;
+  const userLevel=PLAN_HIERARCHY[effective]||1;
+  if(userLevel>=minLevel)return true;
+  // show upgrade modal
+  const modal=document.getElementById('plan-upgrade-modal');
+  document.getElementById('plan-modal-icon').textContent=PLAN_ICONS[minPlan]||'⭐';
+  document.getElementById('plan-modal-title').textContent=`Passez au plan ${minPlan.charAt(0).toUpperCase()+minPlan.slice(1)}`;
+  document.getElementById('plan-modal-sub').textContent=`Cette fonctionnalité est réservée aux abonnés ${minPlan.charAt(0).toUpperCase()+minPlan.slice(1)} (${PLAN_PRICES[minPlan]||''}).`;
+  const feats=PLAN_FEATURES[minPlan]||[];
+  document.getElementById('plan-modal-features').innerHTML=feats.map(f=>`<div class="plan-feature-item"><div class="plan-feature-check">✓</div><span>${f}</span></div>`).join('');
+  document.getElementById('plan-modal-btn').textContent=`Choisir le plan ${minPlan.charAt(0).toUpperCase()+minPlan.slice(1)} — ${PLAN_PRICES[minPlan]||''}`;
+  modal.classList.add('open');
+  return false;
+}
+
+function closePlanModal(){document.getElementById('plan-upgrade-modal').classList.remove('open');}
+
+async function updateProfilPlan(){
+  const plan=await checkPlan();
+  const planLabel=document.getElementById('plan-label');
+  const planSub=document.getElementById('plan-sublabel');
+  const planBadge=document.getElementById('plan-badge');
+  const trialWrap=document.getElementById('trial-bar-wrap');
+  if(!planLabel)return;
+  if(plan==='trial'){
+    const ends=new Date(currentProfile.trial_ends_at);
+    const daysLeft=Math.max(0,Math.ceil((ends-new Date())/(1000*60*60*24)));
+    planLabel.textContent='Essai gratuit 7 jours';
+    planSub.textContent=`Accès complet Premium — expire dans ${daysLeft} jour${daysLeft!==1?'s':''}`;
+    planBadge.textContent='Trial';
+    planBadge.className='badge-trial';
+    trialWrap.style.display='block';
+    document.getElementById('trial-days-label').textContent=`${daysLeft} jour${daysLeft!==1?'s':''} restant${daysLeft!==1?'s':''}`;
+    document.getElementById('trial-bar').style.width=`${(daysLeft/7)*100}%`;
+  } else if(plan==='premium'){
+    planLabel.textContent='Premium';planSub.textContent='24,99€/mois · Accès complet';
+    planBadge.textContent='🏆 VIP';planBadge.className='badge badge-orange';trialWrap.style.display='none';
+  } else if(plan==='pro'){
+    planLabel.textContent='Pro';planSub.textContent='19,99€/mois · Fonctionnalités avancées';
+    planBadge.textContent='⭐ Pro';planBadge.className='badge badge-violet';trialWrap.style.display='none';
+  } else {
+    planLabel.textContent='Essentiel';planSub.textContent='9,99€/mois · Fonctionnalités de base';
+    planBadge.textContent='Essentiel';planBadge.className='badge badge-blue';trialWrap.style.display='none';
+  }
+}
+
 function updateHomeHeader(){
   const now=new Date();
   const j=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
@@ -1220,6 +1311,7 @@ function updateHomeHeader(){
     document.getElementById('profil-email').textContent=currentProfile.email||currentUser.email;
     if(currentProfile.ville)document.getElementById('profil-ville').textContent=currentProfile.ville;
   }
+  updateProfilPlan();
 }
 
 async function loadAllData(){await Promise.all([loadVacations(),loadFiches(),loadDocuments()]);}
@@ -1397,6 +1489,7 @@ function showToast(msg){
 async function analyzeBulletinPaie(file){
   if(!file)return;
   if(!currentUser){showToast('⚠️ Connectez-vous');return;}
+  if(!await requirePlan('pro')){document.getElementById('bpa-input').value='';return;}
   const analyzing=document.getElementById('bpa-analyzing');
   const resultDiv=document.getElementById('bpa-result');
   analyzing.style.display='block';
@@ -1514,6 +1607,7 @@ document.getElementById('chat-input').addEventListener('keypress', function(e) {
 document.getElementById('chat-send').addEventListener('click', sendMessage);
 
 async function sendMessage() {
+  if(!await requirePlan('pro'))return;
   const input = document.getElementById('chat-input');
   const msg = input.value.trim();
   if (!msg) return;
@@ -1626,6 +1720,7 @@ document.addEventListener('DOMContentLoaded',function(){
   if(btn)btn.addEventListener('click',sendMessage);
 });
 async function sendMessage(){
+  if(!await requirePlan('pro'))return;
   var input=document.getElementById('chat-input');
   var msg=input.value.trim();
   if(!msg)return;
@@ -1660,6 +1755,18 @@ function addChatMsg(role,text){
 </body>
 </html>
 
+<!-- ===== PLAN UPGRADE MODAL ===== -->
+<div class="plan-modal-overlay" id="plan-upgrade-modal">
+  <div class="plan-modal-sheet">
+    <div class="plan-modal-icon" id="plan-modal-icon">⭐</div>
+    <div class="plan-modal-title" id="plan-modal-title">Passez au plan Pro</div>
+    <div class="plan-modal-sub" id="plan-modal-sub">Cette fonctionnalité est réservée aux abonnés Pro.</div>
+    <div class="plan-feature-list" id="plan-modal-features"></div>
+    <button class="btn-plan-upgrade" id="plan-modal-btn" onclick="closePlanModal()">Choisir ce plan</button>
+    <button class="btn-plan-close" onclick="closePlanModal()">Pas maintenant</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-import-mail" onclick="closeIfOverlay(event,'modal-import-mail')">
   <div class="modal-sheet" style="max-height:90dvh">
     <div class="modal-handle"></div>
@@ -1683,7 +1790,7 @@ function addChatMsg(role,text){
 
 <script>
 let detectedVacations=[];
-function openImportMail(){document.getElementById('modal-import-mail').classList.add('open');document.getElementById('import-step-1').style.display='block';document.getElementById('import-step-2').style.display='none';document.getElementById('planning-text').value='';}
+async function openImportMail(){if(!await requirePlan('pro'))return;document.getElementById('modal-import-mail').classList.add('open');document.getElementById('import-step-1').style.display='block';document.getElementById('import-step-2').style.display='none';document.getElementById('planning-text').value='';}
 function retourStep1(){document.getElementById('import-step-1').style.display='block';document.getElementById('import-step-2').style.display='none';}
 async function analyserPlanning(){
   const texte=document.getElementById('planning-text').value.trim();
@@ -1776,7 +1883,8 @@ async function confirmerVacations(){
 <script>
 let pdfDetectedVacations=[];
 
-function openImportPDF(){
+async function openImportPDF(){
+  if(!await requirePlan('pro'))return;
   document.getElementById('modal-import-pdf').classList.add('open');
   retourPDFStep1();
 }
