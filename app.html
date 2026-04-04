@@ -100,6 +100,20 @@ select.form-input option{background:var(--card);color:var(--text);}
 /* ===== VACATION ITEMS ===== */
 .vacation-item{background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:8px;box-shadow:var(--shadow-card);display:flex;align-items:center;gap:12px;border:1px solid var(--border);transition:all 0.2s ease;}
 .vacation-item:hover{border-color:rgba(59,130,246,0.3);transform:translateX(2px);}
+.vacation-item.vac-conflict{background:rgba(239,68,68,0.07);border-color:rgba(239,68,68,0.3);}
+.vacation-item.vac-alert{background:rgba(245,158,11,0.07);border-color:rgba(245,158,11,0.3);}
+.employer-pill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:5px;font-size:9px;font-weight:700;color:white;flex-shrink:0;white-space:nowrap;}
+.alert-tag{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;white-space:nowrap;}
+.alert-tag.ctag-conflict{background:rgba(239,68,68,0.15);color:var(--red);border:1px solid rgba(239,68,68,0.3);}
+.alert-tag.ctag-warn{background:rgba(245,158,11,0.15);color:var(--orange);border:1px solid rgba(245,158,11,0.3);}
+.conflict-summary{border-radius:10px;padding:11px 14px;margin-bottom:10px;font-size:13px;font-weight:600;}
+.cs-error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:var(--red);}
+.cs-warn{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);color:var(--orange);}
+.cs-ok{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:var(--green);}
+.pdf-file-row{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;}
+.pdf-file-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;}
+.employer-filters-wrap{margin-bottom:4px;display:none;}
+.employer-filters-wrap .filter-tab.emp-active{background:var(--card);border-color:var(--blue);color:var(--blue);}
 .vacation-date-box{background:var(--blue-light);border-radius:10px;width:44px;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(59,130,246,0.25);}
 .vd-day{font-size:18px;font-weight:700;color:var(--blue);line-height:1;}
 .vd-month{font-size:9px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.05em;}
@@ -348,11 +362,14 @@ select.form-input option{background:var(--card);color:var(--text);}
       </div>
     </div>
     <div class="content">
-      <div class="filter-tabs">
+      <div class="filter-tabs" id="planning-date-filters">
         <div class="filter-tab active" onclick="setFilter(this,'all')">Tous</div>
         <div class="filter-tab" onclick="setFilter(this,'today')">Aujourd'hui</div>
         <div class="filter-tab" onclick="setFilter(this,'week')">Cette semaine</div>
         <div class="filter-tab" onclick="setFilter(this,'month')">Ce mois</div>
+      </div>
+      <div class="employer-filters-wrap" id="employer-filters-wrap">
+        <div class="filter-tabs" id="employer-filter-tabs"></div>
       </div>
       <div id="vacations-list"><div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Aucun vacation</div></div></div>
     </div>
@@ -1387,8 +1404,8 @@ async function loadAllData(){await Promise.all([loadVacations(),loadFiches(),loa
 async function loadVacations(){
   if(!currentUser)return;
   const{data}=await sb.from('vacations').select('*').eq('user_id',currentUser.id).order('date',{ascending:true});
-  allVacations=data||[];
-  renderVacations(allVacations);renderNextVacation();updateHeures();
+  allVacations=detectConflicts(data||[]);
+  renderVacations(allVacations);renderNextVacation();updateHeures();renderEmployerFilters();
 }
 
 function renderVacations(list){
@@ -1401,7 +1418,19 @@ function renderVacations(list){
     const s=sm[v.statut]||sm.confirmed;
     const db=v.heure_debut?v.heure_debut.slice(0,5):'--';
     const fi=v.heure_fin?v.heure_fin.slice(0,5):'--';
-    return `<div class="vacation-item"><div class="vacation-date-box"><div class="vd-day">${d.getDate()}</div><div class="vd-month">${mo[d.getMonth()]}</div></div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.site||'Site'}</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">${db} → ${fi} · ${v.employeur||''}</div></div><span class="badge ${s.c}">${s.l}</span></div>`;
+    const ec=getEmployerColor(v.employeur);
+    const empBadge=v.employeur?`<span class="employer-pill" style="background:${ec}">${v.employeur}</span>`:'';
+    const al=v._alerts||[];
+    const isConf=al.includes('conflict')||al.includes('weekly_overtime');
+    const isWarn=!isConf&&al.length>0;
+    let cls='vacation-item'+(isConf?' vac-conflict':isWarn?' vac-alert':'');
+    const tags=[]
+      .concat(al.includes('conflict')?['<span class="alert-tag ctag-conflict">⚠️ Conflit</span>']:[])
+      .concat(al.includes('weekly_overtime')?['<span class="alert-tag ctag-conflict">⚠️ >48h</span>']:[])
+      .concat(al.includes('short_rest')?['<span class="alert-tag ctag-warn">⚠️ Repos&lt;11h</span>']:[])
+      .concat(al.includes('long_shift')?['<span class="alert-tag ctag-warn">⚠️ >12h</span>']:[])
+      .concat(al.includes('long_week')?['<span class="alert-tag ctag-warn">⚠️ >6j</span>']:[]).join('');
+    return`<div class="${cls}"><div class="vacation-date-box"><div class="vd-day">${d.getDate()}</div><div class="vd-month">${mo[d.getMonth()]}</div></div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.site||'Site'}</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap">${db} → ${fi}${empBadge?' · ':' '}${empBadge}</div>${tags?`<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">${tags}</div>`:''}</div><span class="badge ${s.c}">${s.l}</span></div>`;
   }).join('');
 }
 
@@ -1431,16 +1460,38 @@ function updateHeures(){
   document.getElementById('paie-bar').style.width=p+'%';
 }
 
+let currentDateFilter='all';
+let currentEmployerFilter=null;
+
+function applyFilters(){
+  const now=new Date();const ts=now.toISOString().split('T')[0];const we=new Date(now);we.setDate(now.getDate()+7);
+  let list=allVacations;
+  if(currentDateFilter==='today')list=list.filter(v=>v.date===ts);
+  else if(currentDateFilter==='week')list=list.filter(v=>v.date>=ts&&v.date<=we.toISOString().split('T')[0]);
+  else if(currentDateFilter==='month')list=list.filter(v=>v.date&&v.date.startsWith(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')));
+  if(currentEmployerFilter)list=list.filter(v=>(v.employeur||'')===currentEmployerFilter);
+  renderVacations(list);
+}
+
 function setFilter(el,type){
-  document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  const now=new Date();
-  const ts=now.toISOString().split('T')[0];
-  const we=new Date(now);we.setDate(now.getDate()+7);
-  if(type==='all')renderVacations(allVacations);
-  else if(type==='today')renderVacations(allVacations.filter(v=>v.date===ts));
-  else if(type==='week')renderVacations(allVacations.filter(v=>v.date>=ts&&v.date<=we.toISOString().split('T')[0]));
-  else if(type==='month')renderVacations(allVacations.filter(v=>v.date&&v.date.startsWith(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'))));
+  document.querySelectorAll('#planning-date-filters .filter-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');currentDateFilter=type;applyFilters();
+}
+
+function setEmployerFilter(el,emp){
+  document.querySelectorAll('#employer-filter-tabs .filter-tab').forEach(t=>t.classList.remove('emp-active'));
+  el.classList.add('emp-active');currentEmployerFilter=emp;applyFilters();
+}
+
+function renderEmployerFilters(){
+  const employers=[...new Set(allVacations.map(v=>v.employeur||'').filter(Boolean))];
+  const wrap=document.getElementById('employer-filters-wrap');
+  const tabs=document.getElementById('employer-filter-tabs');
+  if(!wrap||!tabs)return;
+  if(employers.length<2){wrap.style.display='none';currentEmployerFilter=null;return;}
+  wrap.style.display='block';
+  tabs.innerHTML=`<div class="filter-tab emp-active" onclick="setEmployerFilter(this,null)">Tous</div>`+
+    employers.map(e=>`<div class="filter-tab" onclick="setEmployerFilter(this,'${e.replace(/'/g,"\\'")}')"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${getEmployerColor(e)};margin-right:5px"></span>${e}</div>`).join('');
 }
 
 async function addVacation(){
@@ -1899,48 +1950,54 @@ async function confirmerVacations(){
 }
 </script>
 
-<input type="file" id="pdf-file-input" accept=".pdf" style="display:none" onchange="handlePDFFile(this)">
+<input type="file" id="pdf-file-input" accept=".pdf" multiple style="display:none" onchange="handleMultiPDFSelect(this)">
 
 <div class="modal-overlay" id="modal-import-pdf" onclick="closeIfOverlay(event,'modal-import-pdf')">
-  <div class="modal-sheet" style="max-height:90dvh">
+  <div class="modal-sheet" style="max-height:92dvh">
     <div class="modal-handle"></div>
-    <div class="modal-title">📄 Importer un planning PDF</div>
+    <div class="modal-title">📄 Import multi-planning PDF</div>
 
+    <!-- Étape 1 : Sélection fichiers + employeurs -->
     <div id="pdf-step-1">
-      <div style="font-size:13px;color:var(--text-sub);margin-bottom:16px;line-height:1.5">Sélectionnez votre planning PDF — l'IA extrait automatiquement toutes vos vacations.</div>
-      <div onclick="document.getElementById('pdf-file-input').click()" style="border:2px dashed var(--border);border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;transition:all 0.3s ease;background:rgba(59,130,246,0.03)" id="pdf-dropzone">
-        <div style="font-size:36px;margin-bottom:10px">📄</div>
-        <div style="font-size:14px;font-weight:600;color:var(--text)">Appuyez pour sélectionner</div>
-        <div style="font-size:12px;color:var(--text-sub);margin-top:4px">Planning PDF, Comète, tout format accepté</div>
+      <div style="font-size:13px;color:var(--text-sub);margin-bottom:14px;line-height:1.5">Jusqu'à 5 PDFs (un par employeur). L'IA fusionne les plannings et détecte les conflits automatiquement.</div>
+      <div onclick="document.getElementById('pdf-file-input').click()" style="border:2px dashed var(--border);border-radius:14px;padding:24px 20px;text-align:center;cursor:pointer;transition:all 0.3s ease;background:rgba(59,130,246,0.03)" id="pdf-dropzone">
+        <div style="font-size:32px;margin-bottom:8px">📄</div>
+        <div style="font-size:14px;font-weight:600;color:var(--text)" id="pdf-dropzone-label">Appuyez pour sélectionner</div>
+        <div style="font-size:12px;color:var(--text-sub);margin-top:3px">Jusqu'à 5 PDFs · Comète, Word, scan…</div>
       </div>
-      <div style="background:var(--blue-light);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:12px;color:var(--blue)">
-        💡 Fonctionne avec tous les formats de planning PDF — Comète SQL, Word converti, scan...
-      </div>
+      <div id="pdf-files-list" style="margin-top:10px;display:none"></div>
+      <button class="btn-primary" id="btn-pdf-analyze" onclick="analyzeAllPDFs()" style="margin-top:10px;display:none">🤖 Analyser tous les plannings</button>
+      <div style="background:var(--blue-light);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:10px 14px;margin-top:10px;font-size:12px;color:var(--blue)">💡 Renseignez l'employeur pour chaque PDF — les conflits entre sociétés seront détectés.</div>
     </div>
 
+    <!-- Étape Chargement -->
     <div id="pdf-step-loading" style="display:none;text-align:center;padding:32px 0">
       <div style="font-size:36px;margin-bottom:12px">🤖</div>
-      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">Analyse en cours...</div>
-      <div style="font-size:13px;color:var(--text-sub)" id="pdf-loading-text">Lecture du PDF...</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">Analyse en cours…</div>
+      <div style="font-size:13px;color:var(--text-sub)" id="pdf-loading-text">Traitement du PDF 1/1…</div>
       <div style="width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;margin:16px auto 0"></div>
     </div>
 
+    <!-- Étape 2 : Résultats fusionnés + conflits -->
     <div id="pdf-step-2" style="display:none">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-        <div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>
-        <div style="font-size:14px;font-weight:600;color:var(--text)" id="pdf-detected-count">0 vacations détectées</div>
+      <div id="pdf-conflict-summary"></div>
+      <div id="pdf-alert-detail"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0"></div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)" id="pdf-detected-count"></div>
       </div>
-      <div id="pdf-detected-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:300px;overflow-y:auto"></div>
-      <button class="btn-primary" id="btn-pdf-confirmer" onclick="confirmerPDFVacations()">✅ Confirmer et ajouter au planning</button>
-      <button style="width:100%;background:none;border:none;color:var(--blue);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;margin-top:4px" onclick="retourPDFStep1()">← Choisir un autre fichier</button>
+      <div id="pdf-detected-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;max-height:340px;overflow-y:auto"></div>
+      <button class="btn-primary" id="btn-pdf-confirmer" onclick="confirmerMultiPDFVacations()">✅ Confirmer et ajouter au planning</button>
+      <button style="width:100%;background:none;border:none;color:var(--blue);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;margin-top:4px" onclick="retourPDFStep1()">← Choisir d'autres fichiers</button>
     </div>
 
+    <!-- Étape Erreur -->
     <div id="pdf-step-error" style="display:none">
       <div style="background:var(--red-light);border-radius:10px;padding:14px;text-align:center;margin-bottom:12px">
         <div style="font-size:24px;margin-bottom:6px">😕</div>
         <div style="font-size:13px;color:var(--red);font-weight:500" id="pdf-error-text">Impossible de lire ce PDF</div>
       </div>
-      <button class="btn-primary" onclick="retourPDFStep1()">Réessayer avec un autre fichier</button>
+      <button class="btn-primary" onclick="retourPDFStep1()">Réessayer</button>
     </div>
 
     <button style="width:100%;background:none;border:none;color:var(--text-sub);font-size:13px;cursor:pointer;padding:8px;font-family:inherit;margin-top:4px;transition:color 0.3s ease" onclick="closeModal('modal-import-pdf')">Annuler</button>
@@ -1948,7 +2005,81 @@ async function confirmerVacations(){
 </div>
 
 <script>
-let pdfDetectedVacations=[];
+// ===== EMPLOYER COLORS =====
+const EMPLOYER_COLORS=['#3B82F6','#8B5CF6','#EC4899','#F59E0B','#10B981'];
+const _empColorMap={};let _empColorIdx=0;
+function getEmployerColor(name){
+  if(!name)return'#94A3B8';
+  if(!_empColorMap[name]){_empColorMap[name]=EMPLOYER_COLORS[_empColorIdx%EMPLOYER_COLORS.length];_empColorIdx++;}
+  return _empColorMap[name];
+}
+
+// ===== CONFLICT DETECTION =====
+function detectConflicts(vacations){
+  const H=3600000;
+  const enrich=vacations.map(v=>{
+    let _s=null,_e=null,_dur=0;
+    if(v.date&&v.heure_debut){_s=new Date(v.date+'T'+v.heure_debut.slice(0,5)+':00');}
+    if(v.date&&v.heure_fin){_e=new Date(v.date+'T'+v.heure_fin.slice(0,5)+':00');if(_s&&_e<=_s)_e=new Date(_e.getTime()+24*H);}
+    if(_s&&_e)_dur=(_e-_s)/H;
+    return{...v,_s,_e,_dur,_alerts:[]};
+  });
+  // 1. Chevauchement (employeurs différents)
+  for(let i=0;i<enrich.length;i++){
+    for(let j=i+1;j<enrich.length;j++){
+      const a=enrich[i],b=enrich[j];
+      if(!a._s||!a._e||!b._s||!b._e)continue;
+      const se=(a.employeur||'').trim(),sb2=(b.employeur||'').trim();
+      if(se&&se===sb2)continue;
+      if(a._s<b._e&&b._s<a._e){
+        if(!a._alerts.includes('conflict'))a._alerts.push('conflict');
+        if(!b._alerts.includes('conflict'))b._alerts.push('conflict');
+      }
+    }
+  }
+  // 2. Repos quotidien < 11h
+  const sorted=[...enrich].filter(v=>v._s).sort((a,b)=>a._s-b._s);
+  for(let i=1;i<sorted.length;i++){
+    const prev=sorted[i-1],curr=sorted[i];
+    if(!prev._e||!curr._s)continue;
+    const rh=(curr._s-prev._e)/H;
+    if(rh>=0&&rh<11){
+      if(!prev._alerts.includes('short_rest'))prev._alerts.push('short_rest');
+      if(!curr._alerts.includes('short_rest'))curr._alerts.push('short_rest');
+    }
+  }
+  // 3. Vacation > 12h
+  enrich.forEach(v=>{if(v._dur>12&&!v._alerts.includes('long_shift'))v._alerts.push('long_shift');});
+  // 4. > 6 jours consécutifs
+  const workDays=[...new Set(enrich.map(v=>v.date).filter(Boolean))].sort();
+  let streak=workDays.length?[workDays[0]]:[];
+  for(let i=1;i<=workDays.length;i++){
+    if(i<workDays.length){
+      const diff=Math.round((new Date(workDays[i]+'T12:00:00')-new Date(workDays[i-1]+'T12:00:00'))/(24*H));
+      if(diff===1){streak.push(workDays[i]);continue;}
+    }
+    if(streak.length>6)streak.forEach(d=>enrich.filter(v=>v.date===d).forEach(v=>{if(!v._alerts.includes('long_week'))v._alerts.push('long_week');}));
+    if(i<workDays.length)streak=[workDays[i]];
+  }
+  // 5. > 48h/semaine (semaines lundi-dimanche)
+  const byWeek={};
+  enrich.forEach(v=>{
+    if(!v.date)return;
+    const d=new Date(v.date+'T12:00:00');
+    const dow=d.getDay();const daysToMon=dow===0?6:dow-1;
+    const mon=new Date(d);mon.setDate(d.getDate()-daysToMon);
+    const key=mon.toISOString().split('T')[0];
+    if(!byWeek[key])byWeek[key]=[];byWeek[key].push(v);
+  });
+  Object.values(byWeek).forEach(wv=>{
+    if(wv.reduce((s,v)=>s+(v._dur||0),0)>48)wv.forEach(v=>{if(!v._alerts.includes('weekly_overtime'))v._alerts.push('weekly_overtime');});
+  });
+  return enrich;
+}
+
+// ===== MULTI-PDF IMPORT =====
+let multiPDFFiles=[];
+let allDetectedVacations=[];
 
 async function openImportPDF(){
   if(!await requirePlan('pro'))return;
@@ -1961,9 +2092,138 @@ function retourPDFStep1(){
   document.getElementById('pdf-step-loading').style.display='none';
   document.getElementById('pdf-step-2').style.display='none';
   document.getElementById('pdf-step-error').style.display='none';
+  multiPDFFiles=[];allDetectedVacations=[];
   document.getElementById('pdf-file-input').value='';
+  document.getElementById('pdf-files-list').style.display='none';
+  document.getElementById('btn-pdf-analyze').style.display='none';
+  document.getElementById('pdf-dropzone-label').textContent='Appuyez pour sélectionner';
 }
 
+function handleMultiPDFSelect(input){
+  const files=Array.from(input.files||[]).slice(0,5);
+  if(!files.length)return;
+  if(files.some(f=>f.type!=='application/pdf')){showToast('⚠️ Sélectionnez uniquement des PDF');return;}
+  multiPDFFiles=files.map(f=>({file:f,employeur:''}));
+  renderPDFFileList();
+  document.getElementById('pdf-files-list').style.display='block';
+  document.getElementById('btn-pdf-analyze').style.display='block';
+  document.getElementById('pdf-dropzone-label').textContent=files.length>1?`${files.length} fichiers sélectionnés`:'1 fichier sélectionné';
+}
+
+function renderPDFFileList(){
+  document.getElementById('pdf-files-list').innerHTML=multiPDFFiles.map((pf,i)=>`
+    <div class="pdf-file-row">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:18px;flex-shrink:0">📄</span>
+        <div class="pdf-file-name">${pf.file.name}</div>
+        <button onclick="multiPDFFiles.splice(${i},1);renderPDFFileList();if(!multiPDFFiles.length){document.getElementById('pdf-files-list').style.display='none';document.getElementById('btn-pdf-analyze').style.display='none';}" style="background:none;border:none;color:var(--text-sub);font-size:18px;cursor:pointer;padding:0 2px;flex-shrink:0">×</button>
+      </div>
+      <label style="font-size:10px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:4px">Employeur</label>
+      <input type="text" class="form-input" placeholder="Ex: Securitas, Prosegur…" style="font-size:13px;padding:9px 12px" value="${pf.employeur}" oninput="multiPDFFiles[${i}].employeur=this.value">
+    </div>`).join('');
+}
+
+async function analyzeAllPDFs(){
+  if(!multiPDFFiles.length)return;
+  document.getElementById('pdf-step-1').style.display='none';
+  document.getElementById('pdf-step-loading').style.display='block';
+  const today=new Date().toISOString().split('T')[0];
+  let merged=[];
+  for(let i=0;i<multiPDFFiles.length;i++){
+    const{file,employeur}=multiPDFFiles[i];
+    document.getElementById('pdf-loading-text').textContent=`PDF ${i+1}/${multiPDFFiles.length} — ${file.name}`;
+    try{
+      const base64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});
+      const empCtx=employeur?`\nCet planning appartient à l'employeur "${employeur}". Utilise ce nom dans tous les champs "employeur".`:'';
+      const prompt=`Tu es un assistant qui extrait les vacations d'un planning de sécurité en France.\nDate d'aujourd'hui: ${today}${empCtx}\nExtrait TOUTES les vacations. Retourne UNIQUEMENT un JSON valide sans markdown:\n{"vacations":[{"date":"YYYY-MM-DD","site":"nom du site","heure_debut":"HH:MM","heure_fin":"HH:MM","employeur":"${employeur||'société si mentionnée sinon vide'}"}]}\nRègles: si l'année manque utilise l'année courante/suivante; si heure manque mets ""; inclus TOUTES les vacations.`;
+      const r=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:[{type:'document',source:{type:'base64',media_type:'application/pdf',data:base64}},{type:'text',text:prompt}]}]})});
+      const d=await r.json();
+      if(d.error)throw new Error(d.error.message);
+      const clean=d.content[0].text.trim().replace(/```json|```/g,'').trim();
+      const parsed=JSON.parse(clean);
+      merged=merged.concat((parsed.vacations||[]).map(v=>({...v,employeur:employeur||v.employeur||''})));
+    }catch(e){console.warn('PDF '+(i+1)+' erreur:',e.message);}
+  }
+  if(!merged.length){
+    document.getElementById('pdf-step-loading').style.display='none';
+    document.getElementById('pdf-step-error').style.display='block';
+    document.getElementById('pdf-error-text').textContent='Aucune vacation détectée';
+    return;
+  }
+  merged.sort((a,b)=>(a.date||'')<(b.date||'')?-1:1);
+  allDetectedVacations=detectConflicts(merged);
+  afficherMultiPDFResultats();
+}
+
+function afficherMultiPDFResultats(){
+  document.getElementById('pdf-step-loading').style.display='none';
+  document.getElementById('pdf-step-2').style.display='block';
+  const total=allDetectedVacations.length;
+  const nConflict=allDetectedVacations.filter(v=>v._alerts.includes('conflict')||v._alerts.includes('weekly_overtime')).length;
+  const nWarn=allDetectedVacations.filter(v=>v._alerts.some(a=>['short_rest','long_shift','long_week'].includes(a))).length;
+  // Résumé
+  document.getElementById('pdf-detected-count').textContent=`${total} vacation${total>1?'s':''} importée${total>1?'s':''} · ${nConflict} conflit${nConflict>1?'s':''} · ${nWarn} alerte${nWarn>1?'s':''}`;
+  // Bandeau
+  const sumEl=document.getElementById('pdf-conflict-summary');
+  if(nConflict>0)sumEl.innerHTML=`<div class="conflict-summary cs-error">⚠️ ${nConflict} conflit${nConflict>1?'s':''} détecté${nConflict>1?'s':''}${nWarn?' · '+nWarn+' alerte'+(nWarn>1?'s':'')+' légale'+(nWarn>1?'s':''):''}</div>`;
+  else if(nWarn>0)sumEl.innerHTML=`<div class="conflict-summary cs-warn">⚠️ ${nWarn} alerte${nWarn>1?'s':''} légale${nWarn>1?'s':''}</div>`;
+  else sumEl.innerHTML=`<div class="conflict-summary cs-ok">✅ Aucun conflit — planning compatible</div>`;
+  // Détail alertes
+  const typeLabels={conflict:'Chevauchement de vacations',weekly_overtime:'Dépassement 48h/semaine',short_rest:'Repos quotidien < 11h',long_shift:'Vacation > 12h',long_week:'Plus de 6 jours consécutifs'};
+  const found=Object.entries(typeLabels).filter(([k])=>allDetectedVacations.some(v=>v._alerts.includes(k)));
+  document.getElementById('pdf-alert-detail').innerHTML=found.length?`<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 14px;margin-bottom:10px;font-size:12px"><div style="font-weight:700;color:var(--text-sub);margin-bottom:5px;font-size:10px;text-transform:uppercase;letter-spacing:0.05em">Détail</div>${found.map(([,l])=>`<div style="padding:2px 0;color:var(--text-muted)">· ${l}</div>`).join('')}</div>`:'';
+  // Liste vacations
+  const mo=['JAN','FÉV','MAR','AVR','MAI','JUN','JUL','AOÛ','SEP','OCT','NOV','DÉC'];
+  document.getElementById('pdf-detected-list').innerHTML=allDetectedVacations.map((v,i)=>{
+    const d=new Date(v.date+'T00:00:00');
+    const ec=getEmployerColor(v.employeur);
+    const empBadge=v.employeur?`<span style="background:${ec};color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px">${v.employeur}</span>`:'';
+    const al=v._alerts||[];
+    const isConf=al.includes('conflict')||al.includes('weekly_overtime');
+    const isWarn=!isConf&&al.length>0;
+    const bg=isConf?'rgba(239,68,68,0.08)':isWarn?'rgba(245,158,11,0.08)':'var(--bg)';
+    const bdr=isConf?'rgba(239,68,68,0.25)':isWarn?'rgba(245,158,11,0.25)':'var(--border)';
+    const tags=[]
+      .concat(al.includes('conflict')?['<span class="alert-tag ctag-conflict">⚠️ Conflit</span>']:[])
+      .concat(al.includes('weekly_overtime')?['<span class="alert-tag ctag-conflict">⚠️ >48h/sem</span>']:[])
+      .concat(al.includes('short_rest')?['<span class="alert-tag ctag-warn">⚠️ Repos&lt;11h</span>']:[])
+      .concat(al.includes('long_shift')?['<span class="alert-tag ctag-warn">⚠️ >12h</span>']:[])
+      .concat(al.includes('long_week')?['<span class="alert-tag ctag-warn">⚠️ >6j</span>']:[]).join('');
+    return`<div style="background:${bg};border-radius:10px;padding:12px;display:flex;align-items:flex-start;gap:12px;border:1px solid ${bdr}">
+      <div style="background:var(--blue-light);border-radius:8px;width:40px;height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">
+        <div style="font-size:16px;font-weight:700;color:var(--blue);line-height:1">${d.getDate()}</div>
+        <div style="font-size:8px;font-weight:600;color:var(--blue);text-transform:uppercase">${mo[d.getMonth()]}</div>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px">${v.site||'Site non précisé'}</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:${tags?'4':'0'}px">
+          <span style="font-size:11px;color:var(--text-sub)">${v.heure_debut||'--'} → ${v.heure_fin||'--'}</span>${empBadge}
+        </div>
+        ${tags?`<div style="display:flex;gap:4px;flex-wrap:wrap">${tags}</div>`:''}
+      </div>
+      <button onclick="allDetectedVacations.splice(${i},1);afficherMultiPDFResultats();" style="background:none;border:none;color:var(--text-sub);font-size:18px;cursor:pointer;padding:0 4px;flex-shrink:0">×</button>
+    </div>`;
+  }).join('');
+}
+
+async function confirmerMultiPDFVacations(){
+  if(!allDetectedVacations.length||!currentUser)return;
+  const btn=document.getElementById('btn-pdf-confirmer');
+  btn.textContent='⏳ Ajout en cours…';btn.disabled=true;
+  const rows=allDetectedVacations.map(v=>({user_id:currentUser.id,site:v.site||'',date:v.date,heure_debut:v.heure_debut||null,heure_fin:v.heure_fin||null,employeur:v.employeur||'',statut:'confirmed'}));
+  const{error}=await sb.from('vacations').insert(rows);
+  if(error){showToast('❌ Erreur lors de l\'ajout');btn.textContent='✅ Confirmer et ajouter';btn.disabled=false;return;}
+  closeModal('modal-import-pdf');
+  showToast(`✅ ${rows.length} vacation${rows.length>1?'s':''} ajouté${rows.length>1?'s':''} !`);
+  await loadVacations();
+}
+
+// kept for legacy compat
+async function confirmerPDFVacations(){await confirmerMultiPDFVacations();}
+
+function afficherPDFResultats(){afficherMultiPDFResultats();}
+
+// ===== ANCIEN handlePDFFile — kept for legacy references =====
 async function handlePDFFile(input){
   if(!input.files||!input.files[0])return;
   const file=input.files[0];
