@@ -299,6 +299,22 @@ select.form-input option{background:var(--card);color:var(--text);}
 .btn-lire-plus:hover{background:rgba(59,130,246,0.25);}
 .actu-glass-wrap{background:rgba(255,255,255,0.03);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius);padding:14px;margin-bottom:10px;}
 
+/* ===== NOTIF PERMISSION POPUP ===== */
+#notif-permission-popup{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:430px;z-index:700;background:var(--card);border-top:1px solid var(--border);border-radius:24px 24px 0 0;padding:0 0 32px;box-shadow:0 -8px 40px rgba(0,0,0,0.5);transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);}
+#notif-permission-popup.show{transform:translateX(-50%) translateY(0);}
+.notif-popup-header{background:var(--gradient);border-radius:24px 24px 0 0;padding:22px 24px 18px;display:flex;align-items:center;gap:14px;}
+.notif-popup-logo{width:48px;height:48px;border-radius:13px;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.notif-popup-title{font-size:16px;font-weight:700;color:white;margin-bottom:3px;}
+.notif-popup-sub{font-size:12px;color:rgba(255,255,255,0.8);line-height:1.4;}
+.notif-popup-body{padding:18px 24px 0;}
+.notif-popup-features{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+.notif-feature{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-sub);background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:9px 12px;}
+.notif-feature span:first-child{font-size:17px;flex-shrink:0;}
+.btn-notif-allow{width:100%;background:var(--gradient);color:white;border:none;border-radius:var(--radius);padding:13px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(37,99,235,0.35);transition:all 0.2s ease;margin-bottom:8px;}
+.btn-notif-allow:active{transform:scale(0.98);}
+.btn-notif-later{width:100%;background:none;border:none;color:var(--text-sub);font-size:13px;cursor:pointer;font-family:inherit;padding:8px;transition:color 0.2s ease;}
+.btn-notif-later:hover{color:var(--text);}
+
 /* ===== TRIAL POPUP ===== */
 .trial-popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:600;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity 0.3s ease;}
 .trial-popup-overlay.open{opacity:1;pointer-events:all;}
@@ -1233,6 +1249,7 @@ function showDemoApp(){
 
 async function init(){
   if(DEMO_MODE){showDemoApp();return;}
+  registerSW();
   currentUser=null;currentProfile=null;allVacations=[];
   const{data:{user}}=await sb.auth.getUser();
   if(user){currentUser=user;await loadProfile();showApp();}
@@ -1254,7 +1271,7 @@ async function init(){
 }
 
 function showAuth(){document.getElementById('loading').style.display='none';document.getElementById('auth-wrap').style.display='flex';document.getElementById('app-wrap').style.display='none';}
-function showApp(){document.getElementById('loading').style.display='none';document.getElementById('auth-wrap').style.display='none';document.getElementById('app-wrap').style.display='block';updateHomeHeader();loadAllData();showTrialPopup();}
+function showApp(){document.getElementById('loading').style.display='none';document.getElementById('auth-wrap').style.display='none';document.getElementById('app-wrap').style.display='block';updateHomeHeader();loadAllData();showTrialPopup();showNotifPermissionPrompt();}
 
 function showTrialPopup(){
   if(!currentProfile)return;
@@ -1351,6 +1368,76 @@ async function register(){
 }
 
 function showErr(msg){const e=document.getElementById('auth-error');e.textContent=msg;e.style.display='block';document.getElementById('auth-success').style.display='none';}
+
+// ===== SERVICE WORKER =====
+async function registerSW(){
+  if(!('serviceWorker' in navigator))return;
+  try{await navigator.serviceWorker.register('/sw.js');}catch(e){console.warn('SW:',e);}
+}
+
+// ===== NOTIFICATIONS =====
+function showNotifPermissionPrompt(){
+  if(!('Notification' in window))return;
+  if(Notification.permission!=='default')return;
+  if(localStorage.getItem('notif_dismissed'))return;
+  setTimeout(()=>document.getElementById('notif-permission-popup').classList.add('show'),2500);
+}
+
+function dismissNotifPopup(){
+  document.getElementById('notif-permission-popup').classList.remove('show');
+  localStorage.setItem('notif_dismissed','1');
+}
+
+async function requestNotifPermission(){
+  document.getElementById('notif-permission-popup').classList.remove('show');
+  const perm=await Notification.requestPermission();
+  if(perm==='granted'){
+    showToast('🔔 Notifications activées !');
+    if(currentUser)await sb.from('profiles').update({push_subscription:{enabled:true,updated_at:new Date().toISOString()}}).eq('id',currentUser.id);
+  }
+}
+
+async function sendLocalNotif(title,body){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  if('serviceWorker' in navigator){
+    const reg=await navigator.serviceWorker.getRegistration();
+    if(reg){reg.showNotification(title,{body,icon:'/icons/icon-192.png',badge:'/icons/icon-192.png',vibrate:[150,50,150]});return;}
+  }
+  new Notification(title,{body});
+}
+
+function scheduleVacationNotifs(vacations){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  const tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);tomorrow.setHours(0,0,0,0);
+  const tEnd=new Date(tomorrow);tEnd.setHours(23,59,59,999);
+  vacations.filter(v=>{const d=new Date(v.date+'T00:00:00');return d>=tomorrow&&d<=tEnd;}).forEach(v=>{
+    if(!v.heure_debut)return;
+    const start=new Date(v.date+'T'+v.heure_debut);
+    const delay=start.getTime()-60*60*1000-Date.now();
+    if(delay>0&&delay<24*60*60*1000){
+      setTimeout(()=>sendLocalNotif('🛡️ Vacation demain',`Site ${v.site} · ${v.heure_debut.slice(0,5)} → ${(v.heure_fin||'').slice(0,5)}`),delay);
+    }
+  });
+}
+
+function scheduleDocNotifs(docs){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  const today=new Date();today.setHours(0,0,0,0);
+  const shown=new Set();
+  docs.forEach(d=>{
+    if(!d.date_expiration||shown.has(d.id))return;
+    const exp=new Date(d.date_expiration);exp.setHours(0,0,0,0);
+    const diff=Math.round((exp-today)/86400000);
+    if(diff>=0&&diff<=90){shown.add(d.id);sendLocalNotif('⚠️ Document expire bientôt',`${d.nom} expire dans ${diff} jour${diff!==1?'s':''} — Pensez au renouvellement`);}
+  });
+}
+
+function notifyImportConflicts(nConflict,vacations){
+  if(!('Notification' in window)||Notification.permission!=='granted'||nConflict===0)return;
+  const c=vacations.find(v=>v._alerts.includes('conflict'));
+  const dateStr=c?new Date(c.date+'T00:00:00').toLocaleDateString('fr-FR'):'';
+  sendLocalNotif('🔴 Conflit détecté',`Chevauchement${dateStr?' le '+dateStr:''} — Vérifiez votre planning`);
+}
 
 async function logout(){await sb.auth.signOut();currentUser=null;currentProfile=null;allVacations=[];showAuth();}
 
@@ -1500,6 +1587,7 @@ async function loadVacations(){
   const{data}=await sb.from('vacations').select('*').eq('user_id',currentUser.id).order('date',{ascending:true});
   allVacations=detectConflicts(data||[]);
   renderVacations(allVacations);renderNextVacation();updateHeures();renderEmployerFilters();
+  scheduleVacationNotifs(allVacations);
 }
 
 function renderVacations(list){
@@ -1643,6 +1731,7 @@ async function loadDocuments(){
     return `<div class="doc-card" style="cursor:${d.file_path?'pointer':'default'}" onclick="${d.file_path?`openDoc('${d.file_path}')`:''}" ><div style="width:48px;height:48px;border-radius:12px;background:var(--blue-light);border:1px solid rgba(59,130,246,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${icons[d.type]||'📋'}</div><div style="flex:1"><div style="font-size:15px;font-weight:600;color:var(--text)">${d.nom}</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">${d.numero||''}</div>${et?`<div style="font-size:11px;margin-top:4px;font-weight:500;color:${col}">${et}</div>`:''}<div style="display:flex;gap:6px;margin-top:8px" onclick="event.stopPropagation()"><button onclick="handleDelete('${d.id}','${d.file_path||''}')" style="background:var(--red-light);color:var(--red);border:1px solid rgba(239,68,68,0.25);border-radius:8px;font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;font-family:inherit">🗑️</button></div></div><span class="badge ${ec}">${el2}</span></div>`;
   }).join('');
   al.innerHTML=alertMsg?`<div class="alert-banner">${alertMsg}</div>`:'';
+  scheduleDocNotifs(docs);
 }
 
 async function handleUpload(file){
@@ -1968,6 +2057,26 @@ function addChatMsg(role,text){
 </body>
 </html>
 
+<!-- ===== NOTIF PERMISSION POPUP ===== -->
+<div id="notif-permission-popup">
+  <div class="notif-popup-header">
+    <div class="notif-popup-logo">🔔</div>
+    <div>
+      <div class="notif-popup-title">Activez les notifications</div>
+      <div class="notif-popup-sub">Ne ratez aucun événement important</div>
+    </div>
+  </div>
+  <div class="notif-popup-body">
+    <div class="notif-popup-features">
+      <div class="notif-feature"><span>🛡️</span><span>Rappel 1h avant chaque vacation</span></div>
+      <div class="notif-feature"><span>⚠️</span><span>Alerte avant expiration CNAPS / documents</span></div>
+      <div class="notif-feature"><span>🔴</span><span>Alerte conflit de planning à l'import</span></div>
+    </div>
+    <button class="btn-notif-allow" onclick="requestNotifPermission()">🔔 Activer les notifications</button>
+    <button class="btn-notif-later" onclick="dismissNotifPopup()">Plus tard</button>
+  </div>
+</div>
+
 <!-- ===== TRIAL POPUP ===== -->
 <div class="trial-popup-overlay" id="trial-popup">
   <div class="trial-popup-card">
@@ -2290,6 +2399,7 @@ function afficherMultiPDFResultats(){
   const total=allDetectedVacations.length;
   const nConflict=allDetectedVacations.filter(v=>v._alerts.includes('conflict')||v._alerts.includes('weekly_overtime')).length;
   const nWarn=allDetectedVacations.filter(v=>v._alerts.some(a=>['short_rest','long_shift','long_week'].includes(a))).length;
+  notifyImportConflicts(nConflict,allDetectedVacations);
   // Résumé
   document.getElementById('pdf-detected-count').textContent=`${total} vacation${total>1?'s':''} importée${total>1?'s':''} · ${nConflict} conflit${nConflict>1?'s':''} · ${nWarn} alerte${nWarn>1?'s':''}`;
   // Bandeau
