@@ -3,10 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="SecuPRO — L'appli indispensable des agents de sécurité. Planning, salaire, CNAPS, assistant IA. Dès 9,99€/mois. 7 jours gratuits.">
-<meta property="og:title" content="SecuPRO — L'appli des agents de sécurité">
-<meta property="og:description" content="Planning PDF, alerte paie banque, assistant juridique IA. Fait par un agent, pour les agents.">
-<title>SecuPRO — L'appli des agents de sécurité</title>
+<title>SecuPRO — L'application n°1 des agents de sécurité privée en France</title>
+<meta name="description" content="SecuPRO — L'application n°1 des agents de sécurité privée en France. Import planning PDF par IA, suivi salaire, alertes CNAPS, assistant juridique IA. Dès 9,99€/mois. 7 jours gratuits.">
+<meta name="keywords" content="agent de sécurité, application sécurité privée, planning sécurité, CNAPS, convention collective sécurité, import planning PDF, assistant juridique sécurité, SecuPRO, SSIAP, CQP APS, carte professionnelle, heures supplémentaires sécurité">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://secupro.vercel.app">
+<meta property="og:title" content="SecuPRO — L'appli qui gère votre vie d'agent de sécurité">
+<meta property="og:description" content="Import planning PDF par IA, détection de conflits multi-employeurs, alerte paie en banque, assistant juridique 24h/24. Fait par un agent, pour les agents.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://secupro.vercel.app">
+<meta property="og:image" content="https://secupro.vercel.app/og-image.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="SecuPRO">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SecuPRO — L'appli des agents de sécurité privée">
+<meta name="twitter:description" content="Import planning PDF par IA, alertes CNAPS, assistant juridique 24h/24. Dès 9,99€/mois.">
+<meta name="twitter:image" content="https://secupro.vercel.app/og-image.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -160,7 +172,57 @@ footer a:hover{color:white;}
 .reveal{opacity:0;transform:translateY(28px);transition:all 0.5s ease;}
 .reveal.visible{opacity:1;transform:translateY(0);}
 </style>
-<<!-- Facebook Pixel Code -->
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "SecuPRO",
+  "url": "https://secupro.vercel.app",
+  "description": "L'application n°1 des agents de sécurité privée en France. Import planning PDF par IA, suivi salaire, alertes CNAPS, assistant juridique IA.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web, Android, iOS",
+  "inLanguage": "fr-FR",
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Essentiel",
+      "price": "9.99",
+      "priceCurrency": "EUR",
+      "priceSpecification": {"@type": "RecurringCharge", "billingDuration": "P1M"},
+      "eligibleRegion": {"@type": "Country", "name": "France"}
+    },
+    {
+      "@type": "Offer",
+      "name": "Pro",
+      "price": "19.99",
+      "priceCurrency": "EUR",
+      "priceSpecification": {"@type": "RecurringCharge", "billingDuration": "P1M"}
+    },
+    {
+      "@type": "Offer",
+      "name": "Premium",
+      "price": "24.99",
+      "priceCurrency": "EUR",
+      "priceSpecification": {"@type": "RecurringCharge", "billingDuration": "P1M"}
+    }
+  ],
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "5",
+    "reviewCount": "3",
+    "bestRating": "5",
+    "worstRating": "1"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "SecuPRO",
+    "url": "https://secupro.vercel.app"
+  }
+}
+</script>
+
+<!-- Facebook Pixel Code -->
 <script>
 !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
@@ -171,11 +233,11 @@ fbq('init', '2235641066843857');
 fbq('track', 'PageView');
 </script>
 <noscript>
-  <img height="1" width="1" style="display:none"
+  <img height="1" width="1" style="display:none" alt=""
   src="https://www.facebook.com/tr?id=2235641066843857&ev=PageView&noscript=1"/>
 </noscript>
 <!-- End Facebook Pixel Code -->
- /head>
+</head>
 <body>
 
 <nav>
@@ -192,8 +254,9 @@ fbq('track', 'PageView');
   <a href="https://secupro.vercel.app/app.html" class="nav-cta" target="_blank">Essai gratuit 7 jours</a>
 </nav>
 
+<main>
 <!-- HERO -->
-<div class="hero">
+<header class="hero" role="banner">
   <div class="hero-bg-circle"></div>
   <div class="hero-bg-circle"></div>
   <div class="hero-badge"><div class="hero-badge-dot"></div>Fait par un agent, pour les agents</div>
@@ -209,10 +272,10 @@ fbq('track', 'PageView');
     <div><div class="hero-stat-num">9,99€</div><div class="hero-stat-label">Par mois seulement</div></div>
     <div><div class="hero-stat-num">0€</div><div class="hero-stat-label">Pour commencer</div></div>
   </div>
-</div>
+</header>
 
 <!-- FEATURES -->
-<div class="section-bg" id="features">
+<section class="section-bg" id="features" aria-label="Fonctionnalités">
 <div class="section reveal">
   <div class="section-tag">Fonctionnalités</div>
   <h2 class="section-title">Tout ce qu'il vous faut,<br>enfin réuni</h2>
@@ -258,10 +321,10 @@ fbq('track', 'PageView');
     </div>
   </div>
 </div>
-</div>
+</section>
 
 <!-- PEPITE -->
-<div class="pepite">
+<section class="pepite" aria-label="Alerte paie en banque">
   <div class="pepite-inner">
     <div class="reveal">
       <div class="pepite-tag">✨ La pépite de l'app</div>
@@ -299,10 +362,10 @@ fbq('track', 'PageView');
       </div>
     </div>
   </div>
-</div>
+</section>
 
 <!-- TESTIMONIALS -->
-<div class="section-bg" id="temoignages">
+<section class="section-bg" id="temoignages" aria-label="Témoignages">
 <div class="section reveal">
   <div class="section-tag">Témoignages</div>
   <h2 class="section-title">Ce que disent les agents</h2>
@@ -324,10 +387,11 @@ fbq('track', 'PageView');
     </div>
   </div>
 </div>
-</div>
+</section>
 
 <!-- PRICING -->
-<div class="section reveal" id="tarifs" style="text-align:center">
+<section id="tarifs" aria-label="Tarifs">
+<div class="section reveal" style="text-align:center">
   <div class="section-tag">Tarifs</div>
   <h2 class="section-title">Simple et transparent</h2>
   <p class="section-sub" style="margin:0 auto">7 jours gratuits sur tous les plans. Sans carte bancaire.</p>
@@ -393,10 +457,29 @@ fbq('track', 'PageView');
 
     </div>
   </div>
+</section>
+
+<!-- POURQUOI SECUPRO -->
+<section class="section-bg" aria-label="Pourquoi SecuPRO ?">
+<div class="section reveal">
+  <div class="section-tag">Pourquoi SecuPRO ?</div>
+  <h2 class="section-title">Conçu par un agent de sécurité,<br>pour les agents</h2>
+  <div style="max-width:760px;margin:24px auto 0;text-align:left">
+    <p style="font-size:16px;color:var(--gray-600);line-height:1.85;margin-bottom:20px">
+      Être <strong>agent de sécurité privée</strong> en France, c'est gérer plusieurs employeurs, des plannings complexes, et une <strong>convention collective</strong> méconnue (IDCC 1351). Carte <strong>CNAPS</strong>, <strong>SSIAP</strong>, <strong>CQP APS</strong> — les obligations réglementaires s'accumulent, et aucun outil n'était conçu pour y répondre. SecuPRO comble ce vide.
+    </p>
+    <p style="font-size:16px;color:var(--gray-600);line-height:1.85;margin-bottom:20px">
+      Import automatique de vos plannings PDF (Comète SQL, Word, scan), suivi précis des <strong>heures supplémentaires</strong> et du <strong>travail de nuit</strong>, analyse IA de votre bulletin de paie, alertes d'expiration de <strong>carte professionnelle</strong> 90 jours avant — tout est pensé pour la réalité du terrain. En cas de multi-employeurs, SecuPRO fusionne vos plannings et <strong>détecte automatiquement les conflits</strong> d'horaires et les dépassements légaux.
+    </p>
+    <p style="font-size:16px;color:var(--gray-600);line-height:1.85">
+      Que vous soyez agent de surveillance, <strong>SSIAP 1, 2 ou 3</strong>, agent cynophile, rondier ou chef de poste dans la <strong>sécurité privée en France</strong>, SecuPRO vous libère de l'administratif pour vous concentrer sur ce qui compte : votre mission.
+    </p>
+  </div>
 </div>
+</section>
 
 <!-- FAQ -->
-<div class="section-bg" id="faq">
+<section class="section-bg" id="faq" aria-label="Questions fréquentes">
 <div class="section reveal" style="text-align:center">
   <div class="section-tag">FAQ</div>
   <h2 class="section-title">Questions fréquentes</h2>
@@ -423,17 +506,18 @@ fbq('track', 'PageView');
     </div>
   </div>
 </div>
-</div>
+</section>
 
 <!-- CTA FINAL -->
-<div class="cta-final">
+<section class="cta-final" aria-label="Appel à l'action">
   <h2>Prêt à simplifier<br>votre quotidien ?</h2>
   <p>Rejoignez les agents de sécurité qui gèrent leur vie pro avec SecuPRO.</p>
   <div>
     <a href="https://secupro.vercel.app/app.html" class="cta-download" target="_blank">📱 Ouvrir SecuPRO</a>
   </div>
   <div class="cta-note">Fonctionne sur Android & iPhone · Installation en 30 secondes · 7 jours gratuits</div>
-</div>
+</section>
+</main>
 
 <footer>
   <div style="margin-bottom:14px">🛡️ <strong style="color:rgba(255,255,255,0.8)">SecuPRO</strong> — L'appli des agents de sécurité</div>
