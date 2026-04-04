@@ -55,6 +55,12 @@ select.form-input option{background:var(--card);color:var(--text);}
 .btn-auth:active{transform:scale(0.98);}
 .auth-error{background:var(--red-light);color:var(--red);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:10px 12px;font-size:12px;margin-bottom:12px;display:none;}
 .auth-success{background:var(--green-light);color:var(--green);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:10px 12px;font-size:12px;margin-bottom:12px;display:none;}
+.confirm-screen{text-align:center;padding:8px 0;}
+.confirm-icon{font-size:52px;margin-bottom:16px;line-height:1;}
+.confirm-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:10px;}
+.confirm-msg{font-size:14px;color:var(--text-sub);line-height:1.6;margin-bottom:6px;}
+.confirm-email{font-weight:600;color:var(--blue);}
+.confirm-hint{font-size:11px;color:var(--text-sub);margin-top:16px;padding:10px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--border);}
 
 /* ===== APP SHELL ===== */
 .app-wrap{display:none;}
@@ -310,7 +316,7 @@ select.form-input option{background:var(--card);color:var(--text);}
     <div class="auth-sub">L'appli des agents de sécurité</div>
   </div>
   <div class="auth-form">
-    <div class="auth-tab">
+    <div class="auth-tab" id="auth-tab">
       <button class="auth-tab-btn active" onclick="switchTab('login')">Connexion</button>
       <button class="auth-tab-btn" onclick="switchTab('register')">Inscription</button>
     </div>
@@ -327,6 +333,16 @@ select.form-input option{background:var(--card);color:var(--text);}
       <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="reg-email" placeholder="agent@email.fr"></div>
       <div class="form-group"><label class="form-label">Mot de passe</label><input type="password" class="form-input" id="reg-password" placeholder="8 caractères minimum"></div>
       <button class="btn-auth" onclick="register()">Créer mon compte</button>
+    </div>
+    <div id="tab-confirm" style="display:none">
+      <div class="confirm-screen">
+        <div class="confirm-icon">📧</div>
+        <div class="confirm-title">Vérifiez votre boîte mail !</div>
+        <div class="confirm-msg">Un email de confirmation a été envoyé à<br><span class="confirm-email" id="confirm-email-display"></span></div>
+        <div class="confirm-msg">Cliquez sur le lien dans l'email pour activer votre compte.</div>
+        <button class="btn-auth" style="margin-top:20px" onclick="showLoginAfterConfirm()">J'ai confirmé mon email → Se connecter</button>
+        <div class="confirm-hint">Vous n'avez pas reçu l'email ? Vérifiez vos spams ou réessayez dans quelques minutes.</div>
+      </div>
     </div>
   </div>
 </div>
@@ -1223,7 +1239,19 @@ function switchTab(t){
   document.querySelectorAll('.auth-tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-login').style.display=t==='login'?'block':'none';
   document.getElementById('tab-register').style.display=t==='register'?'block':'none';
+  document.getElementById('tab-confirm').style.display='none';
   document.querySelectorAll('.auth-tab-btn')[t==='login'?0:1].classList.add('active');
+  document.getElementById('auth-tab').style.display='flex';
+  document.getElementById('auth-error').style.display='none';
+  document.getElementById('auth-success').style.display='none';
+}
+
+function showLoginAfterConfirm(){
+  document.getElementById('tab-confirm').style.display='none';
+  document.getElementById('tab-login').style.display='block';
+  document.getElementById('tab-register').style.display='none';
+  document.getElementById('auth-tab').style.display='flex';
+  document.querySelectorAll('.auth-tab-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
   document.getElementById('auth-error').style.display='none';
   document.getElementById('auth-success').style.display='none';
 }
@@ -1233,7 +1261,14 @@ async function login(){
   const pwd=document.getElementById('login-password').value;
   if(!email||!pwd){showErr('Remplissez tous les champs');return;}
   const{data,error}=await sb.auth.signInWithPassword({email,password:pwd});
-  if(error){showErr('Email ou mot de passe incorrect');return;}
+  if(error){
+    if(error.message&&error.message.toLowerCase().includes('email not confirmed')){
+      showErr('⚠️ Veuillez d\'abord confirmer votre email. Vérifiez votre boîte mail.');
+    } else {
+      showErr('Email ou mot de passe incorrect');
+    }
+    return;
+  }
   currentUser=data.user;await loadProfile();showApp();
 }
 
@@ -1248,11 +1283,13 @@ async function register(){
   if(error){showErr(error.message);return;}
   if(data.user){
     await sb.from('profiles').insert({id:data.user.id,prenom,nom,email,plan:'trial',trial_ends_at:new Date(Date.now()+7*24*60*60*1000).toISOString()});
-    const s=document.getElementById('auth-success');
-    s.textContent='Compte créé ! Vérifiez votre email puis connectez-vous.';
-    s.style.display='block';
+    document.getElementById('confirm-email-display').textContent=email;
+    document.getElementById('tab-login').style.display='none';
+    document.getElementById('tab-register').style.display='none';
+    document.getElementById('tab-confirm').style.display='block';
+    document.getElementById('auth-tab').style.display='none';
     document.getElementById('auth-error').style.display='none';
-    switchTab('login');
+    document.getElementById('auth-success').style.display='none';
   }
 }
 
