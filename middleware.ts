@@ -1,13 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-  const maintenance = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
-  if (!maintenance) return NextResponse.next();
-
   const url = request.nextUrl;
 
-  // Secret bypass: allow access with ?preview=true
-  if (url.searchParams.get("preview") === "true") {
+  // Maintenance forcée (par défaut) — bypass secret avec ?admin=true
+  if (url.searchParams.get("admin") === "true") {
     return NextResponse.next();
   }
 

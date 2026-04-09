@@ -3,7 +3,7 @@ export default function MaintenancePage() {
     <div className="min-h-screen bg-[#050A12] text-white font-sans flex items-center justify-center p-6">
       <div className="w-full max-w-2xl text-center">
         <div className="mb-10">
-          <div className="text-[#00D1FF] text-5xl font-black tracking-tighter">
+          <div className="text-[#00D1FF] text-5xl font-black tracking-tighter animate-pulse">
             SECUPRO <span className="text-white">PRO</span>
           </div>
           <div className="mt-3 text-[10px] font-black uppercase tracking-[0.45em] text-slate-500">
