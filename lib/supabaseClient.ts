@@ -1,5 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 
+/**
+ * Client navigateur / composants "use client" : clé **anon** uniquement.
+ * Ne pas utiliser SUPABASE_SERVICE_ROLE_KEY ici (exposition + bypass RLS dangereux).
+ */
 const url =
   process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://placeholder.local.supabase.co";
 const anon =

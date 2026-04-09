@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createRapport } from "@/services/rapportService";
+import { sendMissionSignal } from "@/services/signalService";
 import {
   hasCompletedAgentLead,
   getEntrepriseId,
+  getAgentDisplayName,
   LS_ENTREPRISE_NOM,
 } from "@/lib/agentSession";
 
@@ -61,15 +62,17 @@ export default function MissionPage() {
           return;
         }
 
-        const { error } = await createRapport(
-          "ALERTE URGENCE",
-          "Bouton panique activé par l'agent",
-          pos.coords.latitude,
-          pos.coords.longitude,
-          id
-        );
+        const agentName = getAgentDisplayName() || "Agent";
+        const result = await sendMissionSignal({
+          type: "ALERTE URGENCE",
+          description: "Bouton panique activé par l'agent",
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          entreprise_id: id,
+          agent_name: agentName,
+        });
 
-        if (error) {
+        if (!result.ok) {
           if (!getEntrepriseId()) {
             router.replace("/agent/activate");
             return;
@@ -78,9 +81,8 @@ export default function MissionPage() {
             router.replace("/");
             return;
           }
-          console.error("[Mission] createRapport:", error);
           alert(
-            "Impossible d’envoyer l’alerte (base de données). Vérifiez la connexion ou les droits RLS sur la table rapports."
+            `Erreur d’envoi du signal (Supabase):\n\n${result.message}`
           );
           return;
         }
