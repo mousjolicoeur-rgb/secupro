@@ -3,7 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { insertAgentLead } from "@/services/agentLeadService";
-import { markAgentLeadComplete, setAgentDisplayName } from "@/lib/agentSession";
+import {
+  markAgentLeadComplete,
+  setAgentDisplayName,
+  upsertAgentProfile,
+} from "@/lib/agentSession";
 
 export default function AgentLanding() {
   const router = useRouter();
@@ -46,6 +50,7 @@ export default function AgentLanding() {
     }
 
     setAgentDisplayName(name);
+    upsertAgentProfile({ email, company });
     markAgentLeadComplete();
     router.push("/agent/activate");
   };

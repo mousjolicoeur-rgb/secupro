@@ -13,6 +13,7 @@ import {
   User,
 } from "lucide-react";
 import { getAgentDisplayName, hasCompletedAgentLead } from "@/lib/agentSession";
+import AgentTopBar from "@/components/AgentTopBar";
 
 export default function AgentActivatePage() {
   const router = useRouter();
@@ -44,7 +45,12 @@ export default function AgentActivatePage() {
     onClick: () => void;
     accent?: "cyan" | "green";
   }> = [
-    { label: "Profil", Icon: User, onClick: () => {}, accent: "cyan" },
+    {
+      label: "Profil",
+      Icon: User,
+      onClick: () => router.push("/agent/profil"),
+      accent: "cyan",
+    },
     { label: "Plannings", Icon: Calendar, onClick: () => {}, accent: "cyan" },
     { label: "Paie", Icon: Banknote, onClick: () => {}, accent: "cyan" },
     { label: "Documents", Icon: FileText, onClick: () => {}, accent: "cyan" },
@@ -69,25 +75,11 @@ export default function AgentActivatePage() {
 
       <div className="relative mx-auto w-full max-w-5xl px-5 py-6 md:px-8 md:py-10">
         {/* Top bar */}
-        <div className="flex items-center justify-between gap-4 rounded-3xl border border-cyan-400/15 bg-white/[0.04] backdrop-blur-xl px-5 py-4 shadow-[0_0_40px_rgba(34,211,238,0.06)]">
-          <div className="min-w-0">
-            <div className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-500">
-              SECUPRO / AGENT HUB
-            </div>
-            <div className="mt-1 text-lg font-black tracking-tight text-white truncate">
-              {agentName}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_14px_rgba(52,211,153,0.7)]" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-200">
-                STATUT: EN SERVICE
-              </span>
-            </div>
-          </div>
-        </div>
+        <AgentTopBar
+          title="SECUPRO / AGENT HUB"
+          agentName={agentName}
+          rightStatus
+        />
 
         {/* Menu grid */}
         <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
