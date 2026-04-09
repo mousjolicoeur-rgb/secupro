@@ -1,14 +1,14 @@
 /**
- * Envoi d’alerte mission → table `rapports`.
+ * Envoi d’alerte mission → table `public.rapports`.
  *
- * IMPORTANT (client / navigateur) :
- * - Utilise uniquement `createClient` avec NEXT_PUBLIC_SUPABASE_ANON_KEY
- *   via `@/lib/supabaseClient`.
- * - Ne jamais importer ou utiliser SUPABASE_SERVICE_ROLE_KEY ici : réservé
- *   aux routes API serveur uniquement.
+ * Colonnes attendues (à aligner sur ta table Supabase) :
+ * `type`, `description`, `latitude`, `longitude`, `entreprise_id`, `agent_name`
+ * (+ `id` / `created_at` générés côté DB si besoin).
+ *
+ * Client : ANON uniquement via `supabaseRapportsInsert` (en-têtes dédiés insert).
  */
 
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseRapportsInsert } from "@/lib/supabaseClient";
 import type { PostgrestError } from "@supabase/supabase-js";
 
 export type MissionSignalPayload = {
@@ -20,11 +20,19 @@ export type MissionSignalPayload = {
   agent_name: string;
 };
 
+/** Une seule ligne d’insert — aucune clé en trop pour éviter PGRST204. */
+export type RapportInsertRow = {
+  type: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  entreprise_id: string;
+  agent_name: string;
+};
+
 export type SendMissionSignalResult = {
   ok: boolean;
-  /** Texte lisible pour l’UI (message Supabase + détails). */
   message: string;
-  /** Erreur PostgREST si présente. */
   postgrestError: PostgrestError | null;
 };
 
@@ -36,30 +44,44 @@ function formatPostgrestError(err: PostgrestError): string {
   return parts.join("\n");
 }
 
-/**
- * Insert une ligne dans `rapports` avec la clé anon (même client que l’app agent).
- */
+function buildRapportRow(payload: MissionSignalPayload): RapportInsertRow {
+  const lat = Number(payload.latitude);
+  const lng = Number(payload.longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    throw new Error("Invalid latitude or longitude");
+  }
+  return {
+    type: String(payload.type).trim(),
+    description: String(payload.description).trim(),
+    latitude: lat,
+    longitude: lng,
+    entreprise_id: String(payload.entreprise_id).trim(),
+    agent_name: String(payload.agent_name || "Agent").trim() || "Agent",
+  };
+}
+
 export async function sendMissionSignal(
   payload: MissionSignalPayload
 ): Promise<SendMissionSignalResult> {
-  const row = {
-    type: payload.type,
-    description: payload.description,
-    latitude: payload.latitude,
-    longitude: payload.longitude,
-    entreprise_id: payload.entreprise_id,
-    agent_name: payload.agent_name.trim() || "Agent",
-  };
+  let reportData: RapportInsertRow;
+  try {
+    reportData = buildRapportRow(payload);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[signalService] Invalid payload:", payload, e);
+    return { ok: false, message: msg, postgrestError: null };
+  }
+
+  console.log("Sending data:", reportData);
 
   try {
-    const { error } = await supabase.from("rapports").insert(row);
+    const { error } = await supabaseRapportsInsert
+      .from("rapports")
+      .insert(reportData);
 
     if (error) {
       console.error("[signalService] Supabase insert failed:", error);
-      console.error("[signalService] Payload sent (no secrets):", {
-        ...row,
-        entreprise_id: row.entreprise_id ? `${row.entreprise_id.slice(0, 8)}…` : "",
-      });
+      console.error("[signalService] Last payload keys:", Object.keys(reportData));
       return {
         ok: false,
         message: formatPostgrestError(error),

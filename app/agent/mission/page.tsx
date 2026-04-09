@@ -63,14 +63,16 @@ export default function MissionPage() {
         }
 
         const agentName = getAgentDisplayName() || "Agent";
-        const result = await sendMissionSignal({
-          type: "ALERTE URGENCE",
+        const reportData = {
+          type: "ALERTE URGENCE" as const,
           description: "Bouton panique activé par l'agent",
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
           entreprise_id: id,
           agent_name: agentName,
-        });
+        };
+        console.log("Sending data:", reportData);
+        const result = await sendMissionSignal(reportData);
 
         if (!result.ok) {
           if (!getEntrepriseId()) {

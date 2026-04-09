@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Client navigateur / composants "use client" : clé **anon** uniquement.
@@ -20,4 +20,37 @@ if (
   }
 }
 
-export const supabase = createClient(url, anon);
+const browserAuth = {
+  persistSession: true,
+  autoRefreshToken: true,
+  detectSessionInUrl: true,
+};
+
+/** Schéma explicite — aligné sur les tables créées dans Supabase (public). */
+const dbPublic = { schema: "public" as const };
+
+export const supabase: SupabaseClient = createClient(url, anon, {
+  auth: browserAuth,
+  db: dbPublic,
+});
+
+/**
+ * Même URL + ANON_KEY, en-têtes supplémentaires pour les INSERT sur `rapports`
+ * (éviter cache intermédiaire / forcer PostgREST à traiter le corps comme prévu).
+ * Pas de persistance auth séparée : évite deux clients qui écrivent le même storage.
+ */
+export const supabaseRapportsInsert: SupabaseClient = createClient(url, anon, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+  },
+  db: dbPublic,
+  global: {
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Prefer: "params=single-object",
+    },
+  },
+});

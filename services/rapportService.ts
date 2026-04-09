@@ -3,7 +3,8 @@ import { sendMissionSignal } from "@/services/signalService";
 
 /**
  * @deprecated Préférez `sendMissionSignal` depuis `@/services/signalService`.
- * Conservé pour compatibilité : utilise le client anon et le nom agent en session.
+ * Objet inséré (via signalService) : { type, description, latitude, longitude,
+ * entreprise_id, agent_name } — uniquement ces champs, client `supabaseRapportsInsert`.
  */
 export async function createRapport(
   type: string,

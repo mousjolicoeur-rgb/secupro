@@ -1,0 +1,4 @@
+-- Si PostgREST renvoie encore PGRST204 après avoir ajouté une colonne :
+-- dans Supabase SQL Editor, exécuter une fois :
+-- notify pgrst, 'reload schema';
+-- (ou via Dashboard : Settings → API → recharger / attendre la propagation)
