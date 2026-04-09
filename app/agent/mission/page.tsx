@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { sendMissionSignal } from "@/services/signalService";
 import {
   hasCompletedAgentLead,
-  getEntrepriseId,
   getAgentDisplayName,
   LS_ENTREPRISE_NOM,
 } from "@/lib/agentSession";
@@ -18,11 +17,6 @@ export default function MissionPage() {
   useEffect(() => {
     if (!hasCompletedAgentLead()) {
       router.replace("/");
-      return;
-    }
-    const eid = getEntrepriseId();
-    if (!eid) {
-      router.replace("/agent/activate");
       return;
     }
     setNom(localStorage.getItem(LS_ENTREPRISE_NOM) || "Inconnue");
@@ -40,11 +34,6 @@ export default function MissionPage() {
   }
 
   const alerterPC = () => {
-    const eid = getEntrepriseId();
-    if (!eid) {
-      router.replace("/agent/activate");
-      return;
-    }
     if (!hasCompletedAgentLead()) {
       router.replace("/");
       return;
@@ -56,12 +45,6 @@ export default function MissionPage() {
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        const id = getEntrepriseId();
-        if (!id) {
-          router.replace("/agent/activate");
-          return;
-        }
-
         const nameFromSession = getAgentDisplayName() || "Agent";
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
@@ -82,10 +65,6 @@ export default function MissionPage() {
         });
 
         if (!result.ok) {
-          if (!getEntrepriseId()) {
-            router.replace("/agent/activate");
-            return;
-          }
           if (!hasCompletedAgentLead()) {
             router.replace("/");
             return;
