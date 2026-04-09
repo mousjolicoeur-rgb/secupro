@@ -1,6 +1,5 @@
-import { redirect } from 'next/navigation';
+import AgentActivation from "@/components/AgentActivation";
 
-export default function RootPage() {
-  // On envoie tout le monde directement vers la page d'accueil de l'agent
-  redirect('/agent');
+export default function HomePage() {
+  return <AgentActivation />;
 }
