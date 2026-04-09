@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import dynamic from 'next/dynamic';
 
 // 🛰️ IMPORT DU RADAR (SÉCURISÉ)
@@ -19,21 +19,57 @@ export default function Dashboard() {
   const ENT_ID = "05054cca-d92c-4a14-a66b-08aef3835cc7";
 
   const loadData = async () => {
-    const { data: r } = await supabase.from("rapports").select("*").eq("entreprise_id", ENT_ID).order("created_at", { ascending: false });
-    const { data: p } = await supabase.from("planning").select("*").eq("entreprise_id", ENT_ID).eq("statut", "ATTENTE");
-    
-    // ✅ LOGIQUE 2 : Récupération du nombre de leads
-    const { count } = await supabase.from("agents_gratuits").select('*', { count: 'exact', head: true });
-    
+    const { data: r } = await supabase
+      .from("rapports")
+      .select("*")
+      .eq("entreprise_id", ENT_ID)
+      .order("created_at", { ascending: false });
+    const { data: p } = await supabase
+      .from("planning")
+      .select("*")
+      .eq("entreprise_id", ENT_ID)
+      .eq("statut", "ATTENTE");
+
+    const { data: countData, error: countErr } = await supabase.rpc(
+      "agent_leads_count"
+    );
+    if (!countErr && countData != null) {
+      const n = Number(countData);
+      if (!Number.isNaN(n)) setLeadsCount(n);
+    }
+
     if (r) setReports(r);
     if (p) setPlanning(p);
-    if (count !== null) setLeadsCount(count); // ✅ LOGIQUE 3 : Mise à jour du compteur
   };
 
   useEffect(() => {
     loadData();
-    const sub = supabase.channel("realtime-qg").on("postgres_changes", { event: "*", schema: "public", table: "rapports" }, loadData).subscribe();
-    return () => { supabase.removeChannel(sub); };
+
+    // Realtime : tout INSERT/UPDATE/DELETE sur `rapports` pour cette entreprise → recharge la liste
+    // (nécessite Realtime activé sur la table `rapports` dans Supabase + RLS lecture OK pour anon)
+    const channel = supabase
+      .channel(`rapports-entreprise-${ENT_ID}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "rapports",
+          filter: `entreprise_id=eq.${ENT_ID}`,
+        },
+        () => {
+          loadData();
+        }
+      )
+      .subscribe((status, err) => {
+        if (status === "CHANNEL_ERROR" && err) {
+          console.error("[Dashboard] Realtime rapports:", err);
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // FILTRAGE DU TABLEAU

@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createRapport } from '@/services/rapportService';
 
 export default function MissionPage() {
+  const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [nom, setNom] = useState('');
   const [id, setId] = useState('');
@@ -24,18 +26,21 @@ export default function MissionPage() {
   }
 
   const alerterPC = async () => {
-    // Double sécurité au cas où
     if (typeof window === 'undefined' || !navigator.geolocation) return;
-    
+
     navigator.geolocation.getCurrentPosition(async (pos) => {
-      await createRapport(
-        "ALERTE URGENCE", 
-        "Bouton panique activé par l'agent", 
-        pos.coords.latitude, 
-        pos.coords.longitude, 
+      const { error } = await createRapport(
+        'ALERTE URGENCE',
+        "Bouton panique activé par l'agent",
+        pos.coords.latitude,
+        pos.coords.longitude,
         id
       );
-      alert("SIGNAL ENVOYÉ AU PC SÉCURITÉ !");
+      if (error) {
+        alert("Erreur d'envoi du signal. Réessayez.");
+        return;
+      }
+      router.push('/dashboard');
     });
   };
 

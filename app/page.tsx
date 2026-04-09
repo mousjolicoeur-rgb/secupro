@@ -1,5 +1,5 @@
-import AgentActivation from "@/components/AgentActivation";
+import AgentLanding from "@/components/AgentLanding";
 
 export default function HomePage() {
-  return <AgentActivation />;
+  return <AgentLanding />;
 }

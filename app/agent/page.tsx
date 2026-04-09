@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Ancienne URL /agent → racine (l’activation est sur /) */
+/** Legacy /agent → code entry lives at /agent/activate */
 export default function AgentPage() {
-  redirect("/");
+  redirect("/agent/activate");
 }

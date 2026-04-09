@@ -16,7 +16,13 @@ export default function AgentActivation() {
   }, []);
 
   if (!isMounted) {
-    return null;
+    return (
+      <div className="min-h-screen bg-[#0A1F2F] flex items-center justify-center">
+        <p className="text-[#00D1FF] animate-pulse text-sm font-bold tracking-widest uppercase">
+          Loading…
+        </p>
+      </div>
+    );
   }
 
   const handleActivation = async () => {
@@ -30,7 +36,7 @@ export default function AgentActivation() {
       localStorage.setItem("entreprise_nom", entreprise.nom);
       router.push("/agent/mission");
     } else {
-      setError("Code invalide. Contactez votre PC Sécurité.");
+      setError("Invalid code. Contact your security control center.");
     }
     setLoading(false);
   };
@@ -42,15 +48,15 @@ export default function AgentActivation() {
           <h1 className="text-[#00D1FF] text-4xl font-black tracking-tighter mb-2">
             SECUPRO <span className="text-white">PRO</span>
           </h1>
-          <p className="text-gray-500 text-xs uppercase tracking-[0.3em]">
-            Activation de mission
+          <p className="text-gray-400 text-sm font-medium leading-relaxed">
+            Enter your company code to start the mission.
           </p>
         </div>
 
         <div className="space-y-4">
           <input
             type="text"
-            placeholder="CODE ENTREPRISE (ex: BOSS)"
+            placeholder="COMPANY CODE (e.g. BOSS)"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl text-white font-mono text-xl tracking-widest focus:border-[#00D1FF] outline-none transition-all uppercase text-center"
@@ -67,7 +73,15 @@ export default function AgentActivation() {
             disabled={loading || !code}
             className="w-full py-5 bg-[#00D1FF] text-[#0A1F2F] font-black rounded-2xl uppercase tracking-widest shadow-[0_0_30px_rgba(0,209,255,0.3)] disabled:opacity-50 transition-all active:scale-95"
           >
-            {loading ? "VÉRIFICATION..." : "DÉMARRER LA MISSION"}
+            {loading ? "Checking…" : "Start mission"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            className="w-full py-3 text-slate-500 text-[10px] font-black uppercase tracking-widest hover:text-slate-400 transition-colors"
+          >
+            ← Back to registration
           </button>
         </div>
 
