@@ -5,18 +5,20 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 
-export default function HomePage() {
+export default function RegisterPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const login = async (e: React.FormEvent) => {
+  const register = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const { error: err } = await supabase.auth.signInWithPassword({
+    setSuccess("");
+    const { data, error: err } = await supabase.auth.signUp({
       email: email.trim(),
       password,
     });
@@ -25,7 +27,13 @@ export default function HomePage() {
       setError(err.message);
       return;
     }
-    router.push("/agent/code");
+
+    if (data.session) {
+      router.push("/agent/code");
+      return;
+    }
+
+    setSuccess("Compte créé. Vérifie ton email pour confirmer, puis connecte-toi.");
   };
 
   return (
@@ -35,12 +43,10 @@ export default function HomePage() {
           <h1 className="text-[#00D1FF] text-4xl font-black tracking-tighter">
             SECUPRO <span className="text-white">PRO</span>
           </h1>
-          <p className="mt-2 text-slate-400 text-sm">
-            Portail Agent — Connexion / Inscription
-          </p>
+          <p className="mt-2 text-slate-400 text-sm">Création de compte Agent</p>
         </div>
 
-        <form onSubmit={login} className="space-y-4">
+        <form onSubmit={register} className="space-y-4">
           <div>
             <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">
               Email
@@ -63,7 +69,7 @@ export default function HomePage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
+              autoComplete="new-password"
               className="w-full bg-black/40 border border-white/10 p-4 rounded-2xl text-white placeholder:text-slate-600 focus:border-[#00D1FF] outline-none transition-all"
               placeholder="••••••••"
             />
@@ -72,25 +78,29 @@ export default function HomePage() {
           {error ? (
             <p className="text-red-400 text-sm font-bold">{error}</p>
           ) : null}
+          {success ? (
+            <p className="text-emerald-300 text-sm font-bold">{success}</p>
+          ) : null}
 
           <button
             type="submit"
             disabled={loading || !email.trim() || !password}
             className="w-full py-5 bg-[#00D1FF] text-[#050A12] font-black rounded-2xl uppercase tracking-widest shadow-[0_0_30px_rgba(0,209,255,0.25)] disabled:opacity-50 transition-all active:scale-95"
           >
-            {loading ? "Connexion…" : "Se connecter"}
+            {loading ? "Création…" : "Créer mon compte"}
           </button>
         </form>
 
         <div className="mt-6 text-center">
           <Link
-            href="/register"
-            className="text-cyan-200 text-xs font-black uppercase tracking-widest hover:text-cyan-100"
+            href="/"
+            className="text-slate-300 text-xs font-black uppercase tracking-widest hover:text-slate-200"
           >
-            S&apos;inscrire
+            ← Retour connexion
           </Link>
         </div>
       </div>
     </div>
   );
 }
+

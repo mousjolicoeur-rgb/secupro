@@ -6,10 +6,10 @@ import { ArrowLeft, Camera, Trash2 } from "lucide-react";
 import AgentAvatar from "@/components/AgentAvatar";
 import {
   getAgentProfile,
-  hasCompletedAgentLead,
   upsertAgentProfile,
   clearAgentAvatar,
 } from "@/lib/agentSession";
+import { isAuthenticatedClient } from "@/lib/authClient";
 
 export default function AgentProfilPage() {
   const router = useRouter();
@@ -22,20 +22,23 @@ export default function AgentProfilPage() {
   const [jobFunction, setJobFunction] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (!hasCompletedAgentLead()) {
-      router.replace("/");
-      return;
-    }
-    const p = getAgentProfile();
-    setFullName(p.fullName);
-    setAddress(p.address);
-    setPhone(p.phone);
-    setEmail(p.email);
-    setCompany(p.company);
-    setJobFunction(p.jobFunction);
-    setReady(true);
+    (async () => {
+      if (!(await isAuthenticatedClient())) {
+        router.replace("/");
+        return;
+      }
+      const p = getAgentProfile();
+      setFullName(p.fullName);
+      setAddress(p.address);
+      setPhone(p.phone);
+      setEmail(p.email);
+      setCompany(p.company);
+      setJobFunction(p.jobFunction);
+      setReady(true);
+    })();
   }, [router]);
 
   const canSave = useMemo(() => {
@@ -45,6 +48,7 @@ export default function AgentProfilPage() {
   const save = async () => {
     setSaving(true);
     setError("");
+    setSuccess(false);
     try {
       upsertAgentProfile({
         fullName,
@@ -55,6 +59,8 @@ export default function AgentProfilPage() {
         jobFunction,
       });
       setSaving(false);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 2000);
     } catch (e) {
       setSaving(false);
       setError(e instanceof Error ? e.message : "Failed to save");
@@ -162,6 +168,9 @@ export default function AgentProfilPage() {
           {error ? (
             <p className="mt-5 text-red-400 text-sm font-bold">{error}</p>
           ) : null}
+          {success ? (
+            <p className="mt-5 text-emerald-300 text-sm font-black">Succès</p>
+          ) : null}
 
           <div className="mt-7 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
             <div className="text-[10px] uppercase tracking-[0.25em] text-slate-600">
@@ -173,7 +182,7 @@ export default function AgentProfilPage() {
               onClick={save}
               className="w-full sm:w-auto rounded-2xl bg-[#00D1FF] text-[#050A12] px-6 py-4 text-xs font-black uppercase tracking-widest shadow-[0_0_35px_rgba(0,209,255,0.18)] disabled:opacity-50"
             >
-              {saving ? "Enregistrement…" : "Enregistrer"}
+              {saving ? "ENREGISTREMENT…" : "ENREGISTRER"}
             </button>
           </div>
         </div>

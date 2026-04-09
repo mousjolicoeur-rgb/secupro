@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { sendMissionSignal } from "@/services/signalService";
 import AgentTopBar from "@/components/AgentTopBar";
 import {
-  hasCompletedAgentLead,
   getAgentDisplayName,
+  getEntrepriseId,
   LS_ENTREPRISE_NOM,
 } from "@/lib/agentSession";
+import { isAuthenticatedClient } from "@/lib/authClient";
 
 export default function MissionPage() {
   const router = useRouter();
@@ -16,12 +17,18 @@ export default function MissionPage() {
   const [nom, setNom] = useState("");
 
   useEffect(() => {
-    if (!hasCompletedAgentLead()) {
-      router.replace("/");
-      return;
-    }
-    setNom(localStorage.getItem(LS_ENTREPRISE_NOM) || "Inconnue");
-    setReady(true);
+    (async () => {
+      if (!(await isAuthenticatedClient())) {
+        router.replace("/");
+        return;
+      }
+      if (!getEntrepriseId()) {
+        router.replace("/agent/code");
+        return;
+      }
+      setNom(localStorage.getItem(LS_ENTREPRISE_NOM) || "Inconnue");
+      setReady(true);
+    })();
   }, [router]);
 
   if (!ready) {
@@ -35,8 +42,8 @@ export default function MissionPage() {
   }
 
   const alerterPC = () => {
-    if (!hasCompletedAgentLead()) {
-      router.replace("/");
+    if (!getEntrepriseId()) {
+      router.replace("/agent/code");
       return;
     }
     if (typeof window === "undefined" || !navigator.geolocation) {
@@ -66,7 +73,8 @@ export default function MissionPage() {
         });
 
         if (!result.ok) {
-          if (!hasCompletedAgentLead()) {
+          // Si l’utilisateur n’est plus authentifié, on renvoie au portail
+          if (!(await isAuthenticatedClient())) {
             router.replace("/");
             return;
           }

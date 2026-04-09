@@ -6,7 +6,6 @@ import { checkActivationCode } from "@/services/entrepriseService";
 import {
   LS_ENTREPRISE_ID,
   LS_ENTREPRISE_NOM,
-  clearAgentLeadFlags,
 } from "@/lib/agentSession";
 
 export default function AgentActivation() {
@@ -84,12 +83,12 @@ export default function AgentActivation() {
           <button
             type="button"
             onClick={() => {
-              clearAgentLeadFlags();
-              router.push("/");
+              // Retour au hub (reste authentifié)
+              router.push("/agent/activate");
             }}
             className="w-full py-3 text-slate-500 text-[10px] font-black uppercase tracking-widest hover:text-slate-400 transition-colors"
           >
-            ← Back to registration
+            ← Retour au hub
           </button>
         </div>
 

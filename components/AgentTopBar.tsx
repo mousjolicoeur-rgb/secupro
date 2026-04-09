@@ -11,13 +11,31 @@ export default function AgentTopBar(props: {
   theme?: "nocturne" | "normal";
   onToggleTheme?: () => void;
 }) {
+  const isNormal = props.theme === "normal";
   return (
-    <div className="flex items-center justify-between gap-4 rounded-3xl border border-cyan-400/15 bg-white/[0.04] backdrop-blur-xl px-5 py-4 shadow-[0_0_40px_rgba(34,211,238,0.06)]">
+    <div
+      className={[
+        "flex items-center justify-between gap-4 rounded-3xl border backdrop-blur-xl px-5 py-4",
+        isNormal
+          ? "border-slate-200 bg-white/80 shadow-sm"
+          : "border-cyan-400/15 bg-white/[0.04] shadow-[0_0_40px_rgba(34,211,238,0.06)]",
+      ].join(" ")}
+    >
       <div className="min-w-0">
-        <div className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-500">
+        <div
+          className={[
+            "text-[10px] font-black uppercase tracking-[0.35em]",
+            isNormal ? "text-slate-500" : "text-slate-500",
+          ].join(" ")}
+        >
           {props.title}
         </div>
-        <div className="mt-1 text-lg font-black tracking-tight text-white truncate">
+        <div
+          className={[
+            "mt-1 text-lg font-black tracking-tight truncate",
+            isNormal ? "text-slate-800" : "text-white",
+          ].join(" ")}
+        >
           {props.agentName}
         </div>
         {props.subtitle ? (
@@ -32,7 +50,12 @@ export default function AgentTopBar(props: {
           <button
             type="button"
             onClick={props.onToggleTheme}
-            className="inline-flex items-center justify-center h-10 w-10 rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] transition-colors"
+            className={[
+              "inline-flex items-center justify-center h-10 w-10 rounded-2xl border transition-colors",
+              isNormal
+                ? "border-slate-200 bg-white hover:bg-slate-50"
+                : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]",
+            ].join(" ")}
             aria-label="Toggle visual mode"
             title="Visual Mode"
           >
