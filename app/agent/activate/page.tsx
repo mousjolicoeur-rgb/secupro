@@ -14,11 +14,13 @@ import {
 } from "lucide-react";
 import { getAgentDisplayName, hasCompletedAgentLead } from "@/lib/agentSession";
 import AgentTopBar from "@/components/AgentTopBar";
+import { getTheme, onThemeChange, toggleTheme } from "@/lib/theme";
 
 export default function AgentActivatePage() {
   const router = useRouter();
   const [allowed, setAllowed] = useState(false);
   const [agentName, setAgentName] = useState<string>("");
+  const [theme, setTheme] = useState<"nocturne" | "normal">("nocturne");
 
   useEffect(() => {
     if (!hasCompletedAgentLead()) {
@@ -26,7 +28,10 @@ export default function AgentActivatePage() {
       return;
     }
     setAgentName(getAgentDisplayName() || "Agent");
+    setTheme(getTheme());
+    const unsub = onThemeChange(() => setTheme(getTheme()));
     setAllowed(true);
+    return unsub;
   }, [router]);
 
   if (!allowed) {
@@ -66,7 +71,14 @@ export default function AgentActivatePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#050A12] text-white font-sans">
+    <div
+      className={[
+        "min-h-screen font-sans",
+        theme === "normal"
+          ? "bg-[#F4F7FA] text-[#0B1220]"
+          : "bg-[#050A12] text-white",
+      ].join(" ")}
+    >
       {/* Background glow */}
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute -top-32 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-cyan-500/10 blur-3xl" />
@@ -79,6 +91,11 @@ export default function AgentActivatePage() {
           title="SECUPRO / AGENT HUB"
           agentName={agentName}
           rightStatus
+          theme={theme}
+          onToggleTheme={() => {
+            const next = toggleTheme();
+            setTheme(next);
+          }}
         />
 
         {/* Menu grid */}
@@ -92,6 +109,10 @@ export default function AgentActivatePage() {
               accent === "green" ? "bg-emerald-400/15" : "bg-cyan-400/10";
             const iconColor =
               accent === "green" ? "text-emerald-200" : "text-cyan-200";
+            const cardBase =
+              theme === "normal"
+                ? "bg-white/80 text-[#0B1220] border-black/10 hover:bg-white"
+                : "bg-white/[0.035] text-white border-cyan-400/15 hover:bg-white/[0.05]";
 
             return (
               <button
@@ -99,9 +120,10 @@ export default function AgentActivatePage() {
                 type="button"
                 onClick={onClick}
                 className={[
-                  "group relative rounded-3xl border bg-white/[0.035] backdrop-blur-xl",
+                  "group relative rounded-3xl border backdrop-blur-xl",
+                  cardBase,
                   "px-4 py-5 md:px-5 md:py-6 text-left transition-all",
-                  "active:scale-[0.99] hover:bg-white/[0.05]",
+                  "active:scale-[0.99]",
                   glow,
                 ].join(" ")}
               >

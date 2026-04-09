@@ -39,12 +39,8 @@ export default function AgentProfilPage() {
   }, [router]);
 
   const canSave = useMemo(() => {
-    return (
-      fullName.trim() &&
-      email.trim() &&
-      company.trim()
-    );
-  }, [fullName, email, company]);
+    return true;
+  }, []);
 
   const save = async () => {
     setSaving(true);
@@ -173,11 +169,11 @@ export default function AgentProfilPage() {
             </div>
             <button
               type="button"
-              disabled={!canSave || saving}
+              disabled={saving}
               onClick={save}
               className="w-full sm:w-auto rounded-2xl bg-[#00D1FF] text-[#050A12] px-6 py-4 text-xs font-black uppercase tracking-widest shadow-[0_0_35px_rgba(0,209,255,0.18)] disabled:opacity-50"
             >
-              {saving ? "Saving…" : "Save profile"}
+              {saving ? "Enregistrement…" : "Enregistrer"}
             </button>
           </div>
         </div>

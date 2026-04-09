@@ -79,11 +79,13 @@ export function upsertAgentProfile(patch: Partial<AgentProfile>): void {
     localStorage.setItem(LS_AGENT_JOB, patch.jobFunction);
   if (patch.avatarDataUrl != null)
     localStorage.setItem(LS_AGENT_AVATAR_DATAURL, patch.avatarDataUrl);
+  window.dispatchEvent(new Event("secupro-profile-updated"));
 }
 
 export function clearAgentAvatar(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(LS_AGENT_AVATAR_DATAURL);
+  window.dispatchEvent(new Event("secupro-profile-updated"));
 }
 
 export function markAgentLeadComplete(): void {

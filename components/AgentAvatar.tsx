@@ -29,7 +29,14 @@ export default function AgentAvatar(props: {
       setName(next.fullName || "Agent");
     };
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    window.addEventListener("secupro-profile-updated", onStorage as EventListener);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener(
+        "secupro-profile-updated",
+        onStorage as EventListener
+      );
+    };
   }, []);
 
   const initials = useMemo(() => initialsFromName(name), [name]);
