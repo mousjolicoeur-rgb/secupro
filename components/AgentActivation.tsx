@@ -50,7 +50,7 @@ export default function AgentActivation() {
         <div className="space-y-4">
           <input
             type="text"
-            placeholder="CODE ENTREPRISE (EX: BOSS75)"
+            placeholder="CODE ENTREPRISE (ex: BOSS)"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl text-white font-mono text-xl tracking-widest focus:border-[#00D1FF] outline-none transition-all uppercase text-center"
