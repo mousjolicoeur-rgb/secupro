@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Moon, Sun } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import { getTheme, onThemeChange, toggleTheme } from "@/lib/theme";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -12,6 +14,13 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [theme, setTheme] = useState<"nocturne" | "normal">("nocturne");
+
+  useEffect(() => {
+    setTheme(getTheme());
+    const unsub = onThemeChange(() => setTheme(getTheme()));
+    return unsub;
+  }, []);
 
   const register = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,17 +37,53 @@ export default function RegisterPage() {
       return;
     }
 
-    if (data.session) {
-      router.push("/agent/code");
-      return;
-    }
+    // Always go back to login after registration (even if email confirm is off)
+    if (data.session) await supabase.auth.signOut();
+    router.push("/");
 
-    setSuccess("Compte créé. Vérifie ton email pour confirmer, puis connecte-toi.");
+    setSuccess(
+      "Compte créé. Connecte-toi avec tes identifiants (ou vérifie ton email si confirmation activée)."
+    );
   };
 
   return (
-    <div className="min-h-screen bg-[#050A12] text-white font-sans flex items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-3xl border border-cyan-400/15 bg-white/[0.04] backdrop-blur-xl p-8 shadow-[0_0_40px_rgba(34,211,238,0.06)]">
+    <div
+      className={[
+        "min-h-screen font-sans flex items-center justify-center p-6",
+        theme === "normal"
+          ? "bg-[#F8FAFC] text-[#1E293B]"
+          : "bg-[#050A12] text-white",
+      ].join(" ")}
+    >
+      <div
+        className={[
+          "w-full max-w-md rounded-3xl border p-8",
+          theme === "normal"
+            ? "border-slate-200 bg-white shadow-sm"
+            : "border-cyan-400/15 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_40px_rgba(34,211,238,0.06)]",
+        ].join(" ")}
+      >
+        <div className="flex items-center justify-end mb-3">
+          <button
+            type="button"
+            onClick={() => setTheme(toggleTheme())}
+            className={[
+              "inline-flex items-center justify-center h-10 w-10 rounded-2xl border transition-colors",
+              theme === "normal"
+                ? "border-slate-200 bg-white hover:bg-slate-50"
+                : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]",
+            ].join(" ")}
+            aria-label="Visual Mode"
+            title="Visual Mode"
+          >
+            {theme === "normal" ? (
+              <Moon className="h-5 w-5 text-slate-500" />
+            ) : (
+              <Sun className="h-5 w-5 text-slate-300" />
+            )}
+          </button>
+        </div>
+
         <div className="text-center mb-8">
           <h1 className="text-[#00D1FF] text-4xl font-black tracking-tighter">
             SECUPRO <span className="text-white">PRO</span>
@@ -56,7 +101,12 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
-              className="w-full bg-black/40 border border-white/10 p-4 rounded-2xl text-white placeholder:text-slate-600 focus:border-[#00D1FF] outline-none transition-all"
+              className={[
+                "w-full border p-4 rounded-2xl placeholder:text-slate-500 focus:border-[#00D1FF] outline-none transition-all",
+                theme === "normal"
+                  ? "bg-white border-slate-200 text-slate-800"
+                  : "bg-black/40 border-white/10 text-white placeholder:text-slate-600",
+              ].join(" ")}
               placeholder="agent@entreprise.com"
             />
           </div>
@@ -70,7 +120,12 @@ export default function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
-              className="w-full bg-black/40 border border-white/10 p-4 rounded-2xl text-white placeholder:text-slate-600 focus:border-[#00D1FF] outline-none transition-all"
+              className={[
+                "w-full border p-4 rounded-2xl placeholder:text-slate-500 focus:border-[#00D1FF] outline-none transition-all",
+                theme === "normal"
+                  ? "bg-white border-slate-200 text-slate-800"
+                  : "bg-black/40 border-white/10 text-white placeholder:text-slate-600",
+              ].join(" ")}
               placeholder="••••••••"
             />
           </div>
