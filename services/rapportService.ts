@@ -2,23 +2,19 @@ import { getAgentDisplayName } from "@/lib/agentSession";
 import { sendMissionSignal } from "@/services/signalService";
 
 /**
- * @deprecated Préférez `sendMissionSignal` depuis `@/services/signalService`.
- * Objet inséré (via signalService) : { type, description, latitude, longitude,
- * entreprise_id, agent_name } — uniquement ces champs, client `supabaseRapportsInsert`.
+ * @deprecated Utilisez `sendMissionSignal` ({ latitude, longitude, agent_name }).
+ * L’insert ne contient plus que : description, type, agent_name, latitude, longitude.
  */
 export async function createRapport(
-  type: string,
-  description: string,
+  _type: string,
+  _description: string,
   latitude: number,
   longitude: number,
-  entreprise_id: string
+  _entreprise_id: string
 ) {
   const result = await sendMissionSignal({
-    type,
-    description,
     latitude,
     longitude,
-    entreprise_id,
     agent_name: getAgentDisplayName() || "Agent terrain",
   });
 

@@ -62,17 +62,24 @@ export default function MissionPage() {
           return;
         }
 
-        const agentName = getAgentDisplayName() || "Agent";
-        const reportData = {
-          type: "ALERTE URGENCE" as const,
-          description: "Bouton panique activé par l'agent",
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-          entreprise_id: id,
-          agent_name: agentName,
-        };
+        const nameFromSession = getAgentDisplayName() || "Agent";
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const reportData = [
+          {
+            description: "Alerte manuelle",
+            type: "alarm",
+            agent_name: nameFromSession,
+            latitude: lat,
+            longitude: lng,
+          },
+        ];
         console.log("Sending data:", reportData);
-        const result = await sendMissionSignal(reportData);
+        const result = await sendMissionSignal({
+          latitude: lat,
+          longitude: lng,
+          agent_name: nameFromSession,
+        });
 
         if (!result.ok) {
           if (!getEntrepriseId()) {

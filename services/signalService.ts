@@ -1,34 +1,10 @@
 /**
- * Envoi d’alerte mission → table `public.rapports`.
- *
- * Colonnes attendues (à aligner sur ta table Supabase) :
- * `type`, `description`, `latitude`, `longitude`, `entreprise_id`, `agent_name`
- * (+ `id` / `created_at` générés côté DB si besoin).
- *
- * Client : ANON uniquement via `supabaseRapportsInsert` (en-têtes dédiés insert).
+ * Insert minimal dans `public.rapports` (clé anon, schéma `public` via supabaseClient).
+ * Une seule ligne, tableau `[{ ... }]` comme attendu par PostgREST.
  */
 
-import { supabaseRapportsInsert } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import type { PostgrestError } from "@supabase/supabase-js";
-
-export type MissionSignalPayload = {
-  type: string;
-  description: string;
-  latitude: number;
-  longitude: number;
-  entreprise_id: string;
-  agent_name: string;
-};
-
-/** Une seule ligne d’insert — aucune clé en trop pour éviter PGRST204. */
-export type RapportInsertRow = {
-  type: string;
-  description: string;
-  latitude: number;
-  longitude: number;
-  entreprise_id: string;
-  agent_name: string;
-};
 
 export type SendMissionSignalResult = {
   ok: boolean;
@@ -44,44 +20,39 @@ function formatPostgrestError(err: PostgrestError): string {
   return parts.join("\n");
 }
 
-function buildRapportRow(payload: MissionSignalPayload): RapportInsertRow {
-  const lat = Number(payload.latitude);
-  const lng = Number(payload.longitude);
+/**
+ * Payload minimal — uniquement les colonnes envoyées (pas d’entreprise_id ici).
+ */
+export async function sendMissionSignal(params: {
+  latitude: number;
+  longitude: number;
+  agent_name: string;
+}): Promise<SendMissionSignalResult> {
+  const lat = Number(params.latitude);
+  const lng = Number(params.longitude);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-    throw new Error("Invalid latitude or longitude");
-  }
-  return {
-    type: String(payload.type).trim(),
-    description: String(payload.description).trim(),
-    latitude: lat,
-    longitude: lng,
-    entreprise_id: String(payload.entreprise_id).trim(),
-    agent_name: String(payload.agent_name || "Agent").trim() || "Agent",
-  };
-}
-
-export async function sendMissionSignal(
-  payload: MissionSignalPayload
-): Promise<SendMissionSignalResult> {
-  let reportData: RapportInsertRow;
-  try {
-    reportData = buildRapportRow(payload);
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    console.error("[signalService] Invalid payload:", payload, e);
-    return { ok: false, message: msg, postgrestError: null };
+    return { ok: false, message: "Invalid latitude or longitude", postgrestError: null };
   }
 
-  console.log("Sending data:", reportData);
+  const nameFromSession = String(params.agent_name || "Agent").trim() || "Agent";
+
+  const row = [
+    {
+      description: "Alerte manuelle",
+      type: "alarm",
+      agent_name: nameFromSession,
+      latitude: lat,
+      longitude: lng,
+    },
+  ];
+
+  console.log("Sending data:", row);
 
   try {
-    const { error } = await supabaseRapportsInsert
-      .from("rapports")
-      .insert(reportData);
+    const { error } = await supabase.from("rapports").insert(row);
 
     if (error) {
       console.error("[signalService] Supabase insert failed:", error);
-      console.error("[signalService] Last payload keys:", Object.keys(reportData));
       return {
         ok: false,
         message: formatPostgrestError(error),
