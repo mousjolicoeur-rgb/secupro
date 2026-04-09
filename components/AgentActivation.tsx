@@ -3,6 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { checkActivationCode } from "@/services/entrepriseService";
+import {
+  LS_ENTREPRISE_ID,
+  LS_ENTREPRISE_NOM,
+  clearAgentLeadFlags,
+} from "@/lib/agentSession";
 
 export default function AgentActivation() {
   const [isMounted, setIsMounted] = useState(false);
@@ -32,8 +37,8 @@ export default function AgentActivation() {
     const entreprise = await checkActivationCode(code.toUpperCase());
 
     if (entreprise) {
-      localStorage.setItem("entreprise_id", entreprise.id);
-      localStorage.setItem("entreprise_nom", entreprise.nom);
+      localStorage.setItem(LS_ENTREPRISE_ID, entreprise.id);
+      localStorage.setItem(LS_ENTREPRISE_NOM, entreprise.nom);
       router.push("/agent/mission");
     } else {
       setError("Invalid code. Contact your security control center.");
@@ -78,7 +83,10 @@ export default function AgentActivation() {
 
           <button
             type="button"
-            onClick={() => router.push("/")}
+            onClick={() => {
+              clearAgentLeadFlags();
+              router.push("/");
+            }}
             className="w-full py-3 text-slate-500 text-[10px] font-black uppercase tracking-widest hover:text-slate-400 transition-colors"
           >
             ← Back to registration

@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { insertAgentLead } from "@/services/agentLeadService";
-
-export const AGENT_LEAD_SESSION_KEY = "secupro_agent_lead_submitted";
+import { markAgentLeadComplete } from "@/lib/agentSession";
 
 export default function AgentLanding() {
   const router = useRouter();
@@ -46,7 +45,7 @@ export default function AgentLanding() {
       return;
     }
 
-    sessionStorage.setItem(AGENT_LEAD_SESSION_KEY, "1");
+    markAgentLeadComplete();
     router.push("/agent/activate");
   };
 

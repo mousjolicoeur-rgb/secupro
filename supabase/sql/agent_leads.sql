@@ -21,7 +21,9 @@ create policy "agent_leads_insert_anon"
 -- No SELECT for anon/authenticated on rows: admin list uses service role API only.
 
 -- Safe total count for the operator dashboard (does not expose rows)
-create or replace function public.agent_leads_count()
+drop function if exists public.agent_leads_count();
+
+create or replace function public.get_agent_leads_count()
 returns bigint
 language sql
 security definer
@@ -30,5 +32,5 @@ as $$
   select count(*)::bigint from public.agent_leads;
 $$;
 
-revoke all on function public.agent_leads_count() from public;
-grant execute on function public.agent_leads_count() to anon, authenticated;
+revoke all on function public.get_agent_leads_count() from public;
+grant execute on function public.get_agent_leads_count() to anon, authenticated;

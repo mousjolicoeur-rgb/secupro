@@ -18,36 +18,48 @@ export default function Dashboard() {
   
   const ENT_ID = "05054cca-d92c-4a14-a66b-08aef3835cc7";
 
-  const loadData = async () => {
-    const { data: r } = await supabase
-      .from("rapports")
-      .select("*")
-      .eq("entreprise_id", ENT_ID)
-      .order("created_at", { ascending: false });
-    const { data: p } = await supabase
-      .from("planning")
-      .select("*")
-      .eq("entreprise_id", ENT_ID)
-      .eq("statut", "ATTENTE");
-
-    const { data: countData, error: countErr } = await supabase.rpc(
-      "agent_leads_count"
-    );
-    if (!countErr && countData != null) {
-      const n = Number(countData);
-      if (!Number.isNaN(n)) setLeadsCount(n);
+  const applyLeadsCountResult = (res: {
+    data: unknown;
+    error: { message: string } | null;
+  }) => {
+    if (res.error) {
+      console.warn("[Dashboard] get_agent_leads_count:", res.error.message);
+      return;
     }
+    if (res.data == null) return;
+    const n =
+      typeof res.data === "bigint" ? Number(res.data) : Number(res.data);
+    if (!Number.isNaN(n)) setLeadsCount(n);
+  };
 
-    if (r) setReports(r);
-    if (p) setPlanning(p);
+  const refreshLeadsCount = async () => {
+    applyLeadsCountResult(await supabase.rpc("get_agent_leads_count"));
+  };
+
+  const loadData = async () => {
+    const [rapportsRes, planningRes, leadsRpc] = await Promise.all([
+      supabase
+        .from("rapports")
+        .select("*")
+        .eq("entreprise_id", ENT_ID)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("planning")
+        .select("*")
+        .eq("entreprise_id", ENT_ID)
+        .eq("statut", "ATTENTE"),
+      supabase.rpc("get_agent_leads_count"),
+    ]);
+
+    applyLeadsCountResult(leadsRpc);
+    if (rapportsRes.data) setReports(rapportsRes.data);
+    if (planningRes.data) setPlanning(planningRes.data);
   };
 
   useEffect(() => {
-    loadData();
+    void loadData();
 
-    // Realtime : tout INSERT/UPDATE/DELETE sur `rapports` pour cette entreprise → recharge la liste
-    // (nécessite Realtime activé sur la table `rapports` dans Supabase + RLS lecture OK pour anon)
-    const channel = supabase
+    const channelRapports = supabase
       .channel(`rapports-entreprise-${ENT_ID}`)
       .on(
         "postgres_changes",
@@ -58,7 +70,7 @@ export default function Dashboard() {
           filter: `entreprise_id=eq.${ENT_ID}`,
         },
         () => {
-          loadData();
+          void loadData();
         }
       )
       .subscribe((status, err) => {
@@ -67,8 +79,24 @@ export default function Dashboard() {
         }
       });
 
+    const channelLeads = supabase
+      .channel("agent-leads-dashboard-count")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "agent_leads",
+        },
+        () => {
+          void refreshLeadsCount();
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(channelRapports);
+      supabase.removeChannel(channelLeads);
     };
   }, []);
 

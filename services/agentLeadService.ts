@@ -6,6 +6,7 @@ export type AgentLeadInput = {
   company: string;
 };
 
+/** Insert via le même client public (anon) que le reste de l’app agent. */
 export async function insertAgentLead(input: AgentLeadInput) {
   const name = input.name.trim();
   const email = input.email.trim().toLowerCase();
