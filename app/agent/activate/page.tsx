@@ -67,18 +67,18 @@ export default function AgentActivatePage() {
       onClick: () => router.push("/agent/profil"),
       accent: "cyan",
     },
-    { label: "Plannings", Icon: Calendar, onClick: () => {}, accent: "cyan" },
-    { label: "Paie", Icon: Banknote, onClick: () => {}, accent: "cyan" },
-    { label: "Documents", Icon: FileText, onClick: () => {}, accent: "cyan" },
-    { label: "Secu AI", Icon: Bot, onClick: () => {}, accent: "cyan" },
-    { label: "Actualités", Icon: Radio, onClick: () => {}, accent: "cyan" },
+    { label: "Plannings", Icon: Calendar, onClick: () => router.push("/agent/planning"), accent: "cyan" },
+    { label: "Paie", Icon: Banknote, onClick: () => router.push("/agent/paie"), accent: "cyan" },
+    { label: "Documents", Icon: FileText, onClick: () => router.push("/agent/docs"), accent: "cyan" },
+    { label: "Secu AI", Icon: Bot, onClick: () => router.push("/agent/droits"), accent: "cyan" },
+    { label: "Actualités", Icon: Radio, onClick: () => router.push("/agent/droits"), accent: "cyan" },
     {
       label: "Espace PRO",
       Icon: ShieldCheck,
       onClick: () => router.push("/agent/mission"),
       accent: "green",
     },
-    { label: "Support", Icon: LifeBuoy, onClick: () => {}, accent: "cyan" },
+    { label: "Support", Icon: LifeBuoy, onClick: () => router.push("/agent/droits"), accent: "cyan" },
   ];
 
   return (
