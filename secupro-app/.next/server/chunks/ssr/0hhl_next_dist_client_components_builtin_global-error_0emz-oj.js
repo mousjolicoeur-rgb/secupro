@@ -1,3 +1,0 @@
-module.exports=[10856,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(91726);a.n(d("[project]/secupro-app/node_modules/next/dist/client/components/builtin/global-error.js <module evaluation>"))},82487,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(91726);a.n(d("[project]/secupro-app/node_modules/next/dist/client/components/builtin/global-error.js"))},45210,a=>{"use strict";a.i(10856);var b=a.i(82487);a.n(b)},24963,a=>{a.n(a.i(45210))}];
-
-//# sourceMappingURL=0hhl_next_dist_client_components_builtin_global-error_0emz-oj.js.map
