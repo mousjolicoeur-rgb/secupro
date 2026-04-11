@@ -1,6 +1,175 @@
-import { redirect } from "next/navigation";
+import Link from "next/link";
+import {
+  Banknote,
+  Bot,
+  Calendar,
+  FileText,
+  LifeBuoy,
+  Map,
+  Newspaper,
+  ShieldCheck,
+  User,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-/** /agent/hub → le vrai Hub est à /agent/activate */
-export default function HubRedirectPage() {
-  redirect("/agent/activate");
+type Tile = {
+  href: string;
+  label: string;
+  sub: string;
+  Icon: LucideIcon;
+  accent: "cyan" | "emerald" | "violet" | "sky" | "amber" | "red" | "slate";
+  secuAiGlow?: boolean;
+  espaceProTitle?: boolean;
+};
+
+const TILES: Tile[] = [
+  { href: "/agent/profil",     label: "Profil",      sub: "Identité tactique",          Icon: User,        accent: "cyan" },
+  { href: "/agent/planning",   label: "Planning",    sub: "Vacations & créneaux",        Icon: Calendar,    accent: "cyan" },
+  { href: "/agent/paie",       label: "Paie",        sub: "Salaires & acomptes",         Icon: Banknote,    accent: "emerald" },
+  { href: "/agent/docs",       label: "Documents",   sub: "Carte CNAPS & diplômes",      Icon: FileText,    accent: "violet" },
+  { href: "/agent/secu-ai",    label: "Secu AI",     sub: "Assistant sécurité IA",       Icon: Bot,         accent: "sky", secuAiGlow: true },
+  { href: "/agent/actualites", label: "Actualités",  sub: "Infos & alertes secteur",     Icon: Newspaper,   accent: "amber" },
+  { href: "/agent/mission",    label: "Mission",     sub: "Bouton panique & alerte",     Icon: Map,         accent: "red" },
+  {
+    href: "/agent/espace-pro",
+    label: "Espace PRO",
+    sub: "Activation & certifications",
+    Icon: ShieldCheck,
+    accent: "violet",
+    espaceProTitle: true,
+  },
+  { href: "/agent/support",    label: "Support",     sub: "Aide & assistance",           Icon: LifeBuoy,    accent: "slate" },
+];
+
+const ACCENT_ICON: Record<string, string> = {
+  cyan:    "text-[#00d1ff] group-hover:drop-shadow-[0_0_12px_rgba(0,209,255,0.9)]",
+  emerald: "text-emerald-400 group-hover:drop-shadow-[0_0_10px_rgba(52,211,153,0.9)]",
+  violet:  "text-violet-400 group-hover:drop-shadow-[0_0_10px_rgba(167,139,250,0.9)]",
+  sky:     "text-sky-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.75)] group-hover:drop-shadow-[0_0_18px_rgba(56,189,248,1)]",
+  amber:   "text-amber-400 group-hover:drop-shadow-[0_0_10px_rgba(251,191,36,0.9)]",
+  red:     "text-red-400 group-hover:drop-shadow-[0_0_10px_rgba(248,113,113,0.9)]",
+  slate:   "text-slate-400 group-hover:text-[#00d1ff] group-hover:drop-shadow-[0_0_8px_rgba(0,209,255,0.6)]",
+};
+
+const ACCENT_BORDER: Record<string, string> = {
+  cyan:    "border-[#00d1ff]/25 hover:border-[#00d1ff]/55 hover:shadow-[0_0_32px_rgba(0,209,255,0.18)]",
+  emerald: "border-emerald-500/25 hover:border-emerald-400/55 hover:shadow-[0_0_28px_rgba(52,211,153,0.18)]",
+  violet:  "border-violet-500/25 hover:border-violet-400/55 hover:shadow-[0_0_28px_rgba(167,139,250,0.18)]",
+  sky:     "border-sky-500/40 shadow-[0_0_28px_rgba(56,189,248,0.25)] hover:shadow-[0_0_38px_rgba(56,189,248,0.4)]",
+  amber:   "border-amber-500/25 hover:border-amber-400/55 hover:shadow-[0_0_28px_rgba(251,191,36,0.18)]",
+  red:     "border-red-500/25 hover:border-red-400/55 hover:shadow-[0_0_28px_rgba(248,113,113,0.18)]",
+  slate:   "border-white/10 hover:border-[#00d1ff]/35 hover:shadow-[0_0_24px_rgba(0,209,255,0.12)]",
+};
+
+export default function AgentHubPage() {
+  return (
+    <div className="ow-layout-root min-h-screen font-sans">
+      <div className="ow-shell min-h-screen">
+        {/* Décor cockpit */}
+        <div className="ow-radar-rings">
+          <span />
+          <span />
+          <span />
+        </div>
+        <div className="ow-radar-sweep" />
+        <div className="ow-scanlines" />
+        <div className="ow-vignette" />
+
+        <div className="ow-content mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+          {/* Header cockpit */}
+          <header className="mb-10 ow-header-panel">
+            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-500">
+              SECUPRO — Interface Agent
+            </p>
+            <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl ow-title-accent">
+              HUB <span className="text-[#00d1ff]">AGENT</span>
+            </h1>
+            <div className="mt-3 flex items-center gap-2">
+              <span
+                className="inline-block h-2 w-2 rounded-full bg-[#39ff14] animate-pulse"
+                style={{ boxShadow: "0 0 8px rgba(57,255,20,0.85), 0 0 16px rgba(57,255,20,0.45)" }}
+              />
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+                Système opérationnel
+              </span>
+            </div>
+          </header>
+
+          {/* Grille des modules */}
+          <nav
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+            aria-label="Navigation modules agent"
+          >
+            {TILES.map(({ href, label, sub, Icon, accent, secuAiGlow, espaceProTitle }) => (
+              <Link
+                key={href}
+                href={href}
+                className={[
+                  "group relative flex flex-col overflow-hidden rounded-2xl border",
+                  "bg-gradient-to-br from-[rgba(28,42,58,0.95)] to-[rgba(12,22,34,0.92)]",
+                  "backdrop-blur-xl p-6 transition-all duration-300",
+                  ACCENT_BORDER[accent],
+                ].join(" ")}
+              >
+                {/* Liseré haut */}
+                <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00d1ff]/25 to-transparent" />
+
+                {/* Icône */}
+                <div
+                  className={[
+                    "mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-black/30",
+                    "transition-colors group-hover:border-[#00d1ff]/30 group-hover:bg-white/[0.06]",
+                    secuAiGlow ? "border-sky-500/40 shadow-[0_0_16px_rgba(56,189,248,0.3)]" : "",
+                  ].join(" ")}
+                >
+                  <Icon
+                    className={[
+                      "h-5 w-5 transition-all duration-300",
+                      ACCENT_ICON[accent],
+                    ].join(" ")}
+                  />
+                </div>
+
+                {/* Titre */}
+                {espaceProTitle ? (
+                  <span className="text-base font-black uppercase tracking-wide">
+                    <span className="text-red-400">ESPACE</span>{" "}
+                    <span className="text-white">PRO</span>
+                  </span>
+                ) : (
+                  <span className="text-base font-black uppercase tracking-wide text-white">
+                    {label}
+                  </span>
+                )}
+
+                {/* Sous-titre */}
+                <span className="mt-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500 transition-colors group-hover:text-slate-400">
+                  {sub}
+                </span>
+
+                {/* Flèche */}
+                <div className="absolute bottom-4 right-4 text-slate-700 transition-all duration-200 group-hover:text-[#00d1ff] group-hover:translate-x-0.5">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path
+                      d="M2 7h10M8 3l4 4-4 4"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </Link>
+            ))}
+          </nav>
+
+          <footer className="mt-12 text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-700">
+              © 2026 SECUPRO COMMAND SYSTEM
+            </p>
+          </footer>
+        </div>
+      </div>
+    </div>
+  );
 }

@@ -15,13 +15,20 @@ export default function AgentPage() {
   const router = useRouter(); // 🚀 Initialisation du routeur Next.js
 
   useEffect(() => {
-    // Le code est exécuté uniquement sur le navigateur
     setIsMounted(true);
-  }, []);
+    // Si déjà connecté, on saute la saisie du code
+    const id = localStorage.getItem('entreprise_id');
+    if (id) {
+      router.push('/agent/hub');
+    }
+  }, [router]);
 
-  // 🚨 Si Vercel essaie de lire la page sur son serveur, on cache tout !
   if (!isMounted) {
-    return null;
+    return (
+      <div className="min-h-screen bg-[#0A1F2F] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#00D1FF] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
   }
 
   const handleActivation = async () => {

@@ -1,0 +1,12 @@
+var R=require("../../../chunks/ssr/[turbopack]_runtime.js")("server/app/agent/droits/page.js")
+R.c("server/chunks/ssr/[root-of-the-server]__0pma6eg._.js")
+R.c("server/chunks/ssr/0hhl_next_dist_esm_build_templates_app-page_13t8n2y.js")
+R.c("server/chunks/ssr/[root-of-the-server]__0fdkvd2._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__0o9v~se._.js")
+R.c("server/chunks/ssr/0hhl_next_dist_client_components_04wmaa_._.js")
+R.c("server/chunks/ssr/0hhl_next_dist_client_components_builtin_forbidden_0e1ddvm.js")
+R.c("server/chunks/ssr/0hhl_next_dist_client_components_builtin_unauthorized_0ryv_c..js")
+R.c("server/chunks/ssr/0hhl_next_dist_client_components_builtin_global-error_0emz-oj.js")
+R.c("server/chunks/ssr/secupro-app__next-internal_server_app_agent_droits_page_actions_0e84rqw.js")
+R.m(46280)
+module.exports=R.m(46280).exports

@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git rebase:*)",
+      "Bash(git stash:*)",
+      "Bash(git push:*)",
+      "Bash(vercel ls:*)",
+      "Bash(vercel logs:*)",
+      "Bash(cat:*)",
+      "Bash(vercel --prod --force)",
+      "Bash(vercel --prod --force --scope mousjolicoeur-rgbs-projects)",
+      "Bash(node node_modules/typescript/bin/tsc --noEmit)",
+      "Bash(node_modules/.bin/next build:*)",
+      "Bash(ls /c/Users/musta/secupro/next.config*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git:*)",
+      "Bash(xargs grep:*)",
+      "Bash(xargs wc:*)",
+      "Bash(vercel:*)"
+    ]
+  }
+}
