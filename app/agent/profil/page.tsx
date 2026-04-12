@@ -11,6 +11,7 @@ import {
   FileText,
   HelpCircle,
   IdCard,
+  LogOut,
   Newspaper,
   ShieldCheck,
   Trash2,
@@ -213,14 +214,31 @@ export default function AgentProfilPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-3 bg-black/50 p-2 px-3 rounded-sm border border-[#39ff14]/20">
-              <div className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-sm bg-[#39ff14] opacity-40"></span>
-                <span className="relative inline-flex rounded-sm h-2.5 w-2.5 bg-[#39ff14] shadow-[0_0_8px_#39ff14]"></span>
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex items-center gap-3 bg-black/50 p-2 px-3 rounded-sm border border-[#39ff14]/20">
+                <div className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-sm bg-[#39ff14] opacity-40"></span>
+                  <span className="relative inline-flex rounded-sm h-2.5 w-2.5 bg-[#39ff14] shadow-[0_0_8px_#39ff14]"></span>
+                </div>
+                <span className="text-[10px] font-black tracking-[0.25em] text-[#39ff14] uppercase">
+                  Connecté
+                </span>
               </div>
-              <span className="text-[10px] font-black tracking-[0.25em] text-[#39ff14] uppercase">
-                Connecté
-              </span>
+              {/* Bouton déconnexion */}
+              <button
+                type="button"
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  router.replace("/");
+                }}
+                className="group flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest transition-colors duration-200"
+                style={{ color: "rgba(148,163,184,0.6)" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#f87171"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(148,163,184,0.6)"; }}
+              >
+                <LogOut size={10} />
+                Déconnexion
+              </button>
             </div>
 
             <button

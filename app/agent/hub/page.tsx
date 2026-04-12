@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Banknote,
   Bot,
@@ -11,6 +14,7 @@ import {
   User,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
 
 type Tile = {
   href: string;
@@ -33,7 +37,7 @@ const TILES: Tile[] = [
   {
     href: "/agent/espace-pro",
     label: "Espace PRO",
-    sub: "Activation & certifications",
+    sub: "Connexion",
     Icon: ShieldCheck,
     accent: "violet",
     espaceProTitle: true,
@@ -64,6 +68,13 @@ const ACCENT_BORDER: Record<string, string> = {
 };
 
 export default function AgentHubPage() {
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.replace("/");
+  };
+
   return (
     <div className="ow-layout-root min-h-screen font-sans">
       <div className="ow-shell min-h-screen">
@@ -76,6 +87,33 @@ export default function AgentHubPage() {
         <div className="ow-radar-sweep" />
         <div className="ow-scanlines" />
         <div className="ow-vignette" />
+
+        {/* ── EXIT fixe haut-droite ── */}
+        <button
+          type="button"
+          onClick={handleSignOut}
+          aria-label="Quitter le système"
+          className="fixed top-4 right-5 z-50 font-black uppercase tracking-widest transition-all duration-150 active:scale-95"
+          style={{
+            fontSize: "13px",
+            color: "#00ff00",
+            textShadow: "0 0 8px rgba(0,255,0,0.9), 0 0 18px rgba(0,255,0,0.5)",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            letterSpacing: "0.3em",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.textShadow =
+              "0 0 12px rgba(0,255,0,1), 0 0 28px rgba(0,255,0,0.7), 0 0 50px rgba(0,255,0,0.35)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.textShadow =
+              "0 0 8px rgba(0,255,0,0.9), 0 0 18px rgba(0,255,0,0.5)";
+          }}
+        >
+          EXIT
+        </button>
 
         <div className="ow-content mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
           {/* Header cockpit */}
@@ -134,9 +172,8 @@ export default function AgentHubPage() {
 
                 {/* Titre */}
                 {espaceProTitle ? (
-                  <span className="text-base font-black uppercase tracking-wide">
-                    <span className="text-red-400">ESPACE</span>{" "}
-                    <span className="text-white">PRO</span>
+                  <span className="text-base font-black uppercase tracking-wide text-white">
+                    ESPACE PRO
                   </span>
                 ) : (
                   <span className="text-base font-black uppercase tracking-wide text-white">

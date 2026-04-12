@@ -51,13 +51,13 @@ function num(n: number | null | undefined) {
 
 /** Returns true if OCR ran but most key fields are empty */
 function isPartialOcr(ex: OcrResult['extracted']): boolean {
-  const filled = [ex.mois, ex.salaire_net, ex.salaire_brut, ex.retenues, ex.heures_travaillees]
+  const filled = [ex.mois, ex.salaire_net, ex.retenues, ex.heures_travaillees]
     .filter((v) => v != null && v !== '').length;
   return filled < 2;
 }
 
 const EMTPY_FORM = {
-  mois: '', salaire_brut: '', salaire_net: '',
+  mois: '', salaire_net: '',
   acompte: '', retenues: '', heures_travaillees: '',
   conges_pris: '', conges_restant: '',
 };
@@ -165,7 +165,6 @@ export default function PaiePage() {
       const ex = result.extracted ?? {};
       setForm({
         mois: ex.mois ?? '',
-        salaire_brut: ex.salaire_brut != null ? String(ex.salaire_brut) : '',
         salaire_net: ex.salaire_net != null ? String(ex.salaire_net) : '',
         acompte: ex.acompte != null ? String(ex.acompte) : '',
         retenues: ex.retenues != null ? String(ex.retenues) : '',
@@ -191,7 +190,7 @@ export default function PaiePage() {
       const payload: Record<string, unknown> = {
         entreprise_id: entrepriseId,
         mois: form.mois,
-        salaire_brut: form.salaire_brut ? parseFloat(form.salaire_brut) : null,
+        salaire_brut: null,
         salaire_net: form.salaire_net ? parseFloat(form.salaire_net) : null,
         acompte: form.acompte ? parseFloat(form.acompte) : null,
         retenues: form.retenues ? parseFloat(form.retenues) : null,
@@ -547,30 +546,104 @@ export default function PaiePage() {
             {/* Editable fields (done, partial, or error) */}
             {showFields && (
               <>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { label: 'Mois *', key: 'mois', type: 'text', placeholder: 'Avril 2026', full: true },
-                    { label: 'Salaire brut (€)', key: 'salaire_brut', type: 'number', placeholder: '2194' },
-                    { label: 'Salaire net (€)', key: 'salaire_net', type: 'number', placeholder: '1847' },
-                    { label: 'Acompte (€)', key: 'acompte', type: 'number', placeholder: '0' },
-                    { label: 'Retenues (€)', key: 'retenues', type: 'number', placeholder: '347' },
-                    { label: 'Heures travaillées', key: 'heures_travaillees', type: 'number', placeholder: '151' },
-                    { label: 'Congés pris (j)', key: 'conges_pris', type: 'number', placeholder: '2' },
-                    { label: 'Congés restants (j)', key: 'conges_restant', type: 'number', placeholder: '18' },
-                  ].map((field) => (
-                    <div key={field.key} className={field.full ? 'col-span-2' : ''}>
+                <div className="space-y-3">
+                  {/* MOIS — pleine largeur */}
+                  <div>
+                    <label className="text-slate-500 text-[9px] uppercase tracking-widest font-bold block mb-1">
+                      Mois *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Avril 2026"
+                      value={form.mois}
+                      onChange={(e) => setForm({ ...form, mois: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-emerald-400 transition-colors"
+                    />
+                  </div>
+
+                  {/* Ligne 1 — Salaire net | Heures travaillées */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
                       <label className="text-slate-500 text-[9px] uppercase tracking-widest font-bold block mb-1">
-                        {field.label}
+                        Salaire net (€)
                       </label>
                       <input
-                        type={field.type}
-                        placeholder={field.placeholder}
-                        value={form[field.key as keyof typeof form]}
-                        onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+                        type="number"
+                        placeholder="1847"
+                        value={form.salaire_net}
+                        onChange={(e) => setForm({ ...form, salaire_net: e.target.value })}
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-emerald-400 transition-colors"
                       />
                     </div>
-                  ))}
+                    <div>
+                      <label className="text-slate-500 text-[9px] uppercase tracking-widest font-bold block mb-1">
+                        Heures travaillées
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="151"
+                        value={form.heures_travaillees}
+                        onChange={(e) => setForm({ ...form, heures_travaillees: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-emerald-400 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Ligne 2 — Acompte | Retenues */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-slate-500 text-[9px] uppercase tracking-widest font-bold block mb-1">
+                        Acompte (€)
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={form.acompte}
+                        onChange={(e) => setForm({ ...form, acompte: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-emerald-400 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-slate-500 text-[9px] uppercase tracking-widest font-bold block mb-1">
+                        Retenues (€)
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="347"
+                        value={form.retenues}
+                        onChange={(e) => setForm({ ...form, retenues: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-emerald-400 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Ligne 3 — Congés pris | Congés restants */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-slate-500 text-[9px] uppercase tracking-widest font-bold block mb-1">
+                        Congés pris (j)
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="2"
+                        value={form.conges_pris}
+                        onChange={(e) => setForm({ ...form, conges_pris: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-emerald-400 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-slate-500 text-[9px] uppercase tracking-widest font-bold block mb-1">
+                        Congés restants (j)
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="18"
+                        value={form.conges_restant}
+                        onChange={(e) => setForm({ ...form, conges_restant: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-emerald-400 transition-colors"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Save error */}
