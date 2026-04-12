@@ -3,9 +3,9 @@ import {
   Banknote,
   Bot,
   Calendar,
+  CalendarDays,
   FileText,
   LifeBuoy,
-  Map,
   Newspaper,
   ShieldCheck,
   User,
@@ -17,7 +17,7 @@ type Tile = {
   label: string;
   sub: string;
   Icon: LucideIcon;
-  accent: "cyan" | "emerald" | "violet" | "sky" | "amber" | "red" | "slate";
+  accent: "cyan" | "emerald" | "violet" | "sky" | "amber" | "red" | "slate" | "indigo";
   secuAiGlow?: boolean;
   espaceProTitle?: boolean;
 };
@@ -29,7 +29,7 @@ const TILES: Tile[] = [
   { href: "/agent/docs",       label: "Documents",   sub: "Carte CNAPS & diplômes",      Icon: FileText,    accent: "violet" },
   { href: "/agent/secu-ai",    label: "Secu AI",     sub: "Assistant sécurité IA",       Icon: Bot,         accent: "sky", secuAiGlow: true },
   { href: "/agent/actualites", label: "Actualités",  sub: "Infos & alertes secteur",     Icon: Newspaper,   accent: "amber" },
-  { href: "/agent/mission",    label: "Mission",     sub: "Bouton panique & alerte",     Icon: Map,         accent: "red" },
+  { href: "/agent/calendrier", label: "RDV-CALENDRIER", sub: "CALENDRIER ET RDV PRO",    Icon: CalendarDays, accent: "indigo" },
   {
     href: "/agent/espace-pro",
     label: "Espace PRO",
@@ -48,6 +48,7 @@ const ACCENT_ICON: Record<string, string> = {
   sky:     "text-sky-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.75)] group-hover:drop-shadow-[0_0_18px_rgba(56,189,248,1)]",
   amber:   "text-amber-400 group-hover:drop-shadow-[0_0_10px_rgba(251,191,36,0.9)]",
   red:     "text-red-400 group-hover:drop-shadow-[0_0_10px_rgba(248,113,113,0.9)]",
+  indigo:  "text-indigo-400 group-hover:drop-shadow-[0_0_12px_rgba(129,140,248,1)]",
   slate:   "text-slate-400 group-hover:text-[#00d1ff] group-hover:drop-shadow-[0_0_8px_rgba(0,209,255,0.6)]",
 };
 
@@ -58,6 +59,7 @@ const ACCENT_BORDER: Record<string, string> = {
   sky:     "border-sky-500/40 shadow-[0_0_28px_rgba(56,189,248,0.25)] hover:shadow-[0_0_38px_rgba(56,189,248,0.4)]",
   amber:   "border-amber-500/25 hover:border-amber-400/55 hover:shadow-[0_0_28px_rgba(251,191,36,0.18)]",
   red:     "border-red-500/25 hover:border-red-400/55 hover:shadow-[0_0_28px_rgba(248,113,113,0.18)]",
+  indigo:  "border-indigo-500/30 hover:border-indigo-400/60 hover:shadow-[0_0_32px_rgba(129,140,248,0.25)]",
   slate:   "border-white/10 hover:border-[#00d1ff]/35 hover:shadow-[0_0_24px_rgba(0,209,255,0.12)]",
 };
 

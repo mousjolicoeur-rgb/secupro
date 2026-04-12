@@ -12,7 +12,7 @@ export default function AgentEspaceProPage() {
   useEffect(() => {
     void (async () => {
       if (!(await isAuthenticatedClient())) {
-        router.replace("/agent/login");
+        router.replace("/");
         return;
       }
       setReady(true);

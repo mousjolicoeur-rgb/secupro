@@ -6,6 +6,7 @@ import { Moon, Sun } from "lucide-react";
 export default function AgentTopBar(props: {
   title: string;
   subtitle?: string;
+  subtitleClassName?: string;
   agentName: string;
   rightStatus?: boolean;
   theme?: "nocturne" | "normal";
@@ -39,7 +40,7 @@ export default function AgentTopBar(props: {
           {props.agentName}
         </div>
         {props.subtitle ? (
-          <div className="mt-1 text-xs text-slate-500 truncate">
+          <div className={props.subtitleClassName ?? "mt-1 text-xs text-slate-500 truncate"}>
             {props.subtitle}
           </div>
         ) : null}

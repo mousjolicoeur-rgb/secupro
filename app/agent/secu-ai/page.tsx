@@ -95,7 +95,13 @@ export default function SecuAIPage() {
       </div>
 
       <div className="relative mx-auto w-full max-w-2xl px-5 py-6 md:px-8 md:py-8 flex flex-col flex-1">
-        <AgentTopBar title="SECUPRO / SECU AI" agentName="Assistant CCN" theme={theme} />
+        <AgentTopBar
+          title="SECUPRO / SECU AI"
+          agentName="Assistant CCN"
+          subtitle="la Convention Collective Nationale"
+          subtitleClassName="mt-1 text-sm text-emerald-400 truncate"
+          theme={theme}
+        />
 
         <button type="button" onClick={() => router.push("/agent/activate")}
           className={["mt-4 inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black uppercase tracking-widest border w-fit transition-colors",

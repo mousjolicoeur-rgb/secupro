@@ -127,7 +127,7 @@ export default function AgentProfilPage() {
       if (cancelled) return;
 
       if (!data.user) {
-        router.replace("/agent/login");
+        router.replace("/");
         return;
       }
 

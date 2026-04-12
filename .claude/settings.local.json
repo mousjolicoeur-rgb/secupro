@@ -17,7 +17,14 @@
       "Bash(git:*)",
       "Bash(xargs grep:*)",
       "Bash(xargs wc:*)",
-      "Bash(vercel:*)"
+      "Bash(vercel:*)",
+      "Bash(ls C:/Users/musta/secupro/*.local)",
+      "Bash(ls C:/Users/musta/secupro/.env*)",
+      "Bash(curl -s 'https://ladvecmpjpictubnnnsq.supabase.co/auth/v1/admin/users?page=1&per_page=5' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZHZlY21wanBpY3R1Ym5ubnNxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDk4MzMzMCwiZXhwIjoyMDkwNTU5MzMwfQ.eyATx4T3_NW2NjVK6f6zN5vcsCxHRLsVvaERnbx_W_o' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZHZlY21wanBpY3R1Ym5ubnNxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDk4MzMzMCwiZXhwIjoyMDkwNTU5MzMwfQ.eyATx4T3_NW2NjVK6f6zN5vcsCxHRLsVvaERnbx_W_o')",
+      "Bash(npm install:*)",
+      "Bash(npx next:*)",
+      "Bash(curl -s -X POST https://ladvecmpjpictubnnnsq.supabase.co/storage/v1/bucket -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZHZlY21wanBpY3R1Ym5ubnNxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDk4MzMzMCwiZXhwIjoyMDkwNTU5MzMwfQ.eyATx4T3_NW2NjVK6f6zN5vcsCxHRLsVvaERnbx_W_o' -H 'Content-Type: application/json' -d '{\"id\":\"documents\",\"name\":\"documents\",\"public\":true,\"fileSizeLimit\":20971520,\"allowedMimeTypes\":[\"application/pdf\",\"image/jpeg\",\"image/png\",\"image/webp\"]}')",
+      "Bash(npm run:*)"
     ]
   }
 }

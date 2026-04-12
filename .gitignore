@@ -16,6 +16,10 @@
 /out/
 secupro-app/.next/
 secupro-app/node_modules/
+services/node_modules/
+
+# archives
+*.zip
 
 # production
 /build
