@@ -20,7 +20,6 @@ type Fiche = {
   file_path: string | null;
   file_url: string | null;
   ocr_status: string | null;
-  entreprise_id: string | null;
   created_at: string;
 };
 
@@ -65,7 +64,7 @@ export default function PaiePage() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [entrepriseId, setEntrepriseId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [fiches, setFiches] = useState<Fiche[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -88,14 +87,14 @@ export default function PaiePage() {
   const [deleting, setDeleting] = useState(false);
 
   // ── Fetch fiches ────────────────────────────────────────────────────────────
-  const fetchFiches = useCallback(async (id: string) => {
+  const fetchFiches = useCallback(async (uid: string) => {
     setLoading(true);
     setFetchError(null);
     try {
       const { data, error } = await supabase
         .from('fiches_paie')
         .select('*')
-        .eq('entreprise_id', id)
+        .eq('user_id', uid)
         .order('created_at', { ascending: false });
       if (error) throw error;
       setFiches((data as Fiche[]) || []);
@@ -107,10 +106,11 @@ export default function PaiePage() {
   }, []);
 
   useEffect(() => {
-    const id = localStorage.getItem('entreprise_id');
-    if (!id) { router.push('/agent'); return; }
-    setEntrepriseId(id);
-    fetchFiches(id);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) { router.push('/agent'); return; }
+      setUserId(user.id);
+      fetchFiches(user.id);
+    });
   }, [router, fetchFiches]);
 
   // ── Reset & cleanup modal state ─────────────────────────────────────────────
@@ -147,7 +147,7 @@ export default function PaiePage() {
     try {
       const fd = new FormData();
       fd.append('file', selectedFile);
-      fd.append('userId', entrepriseId ?? 'unknown');
+      fd.append('userId', userId ?? 'unknown');
 
       setOcrState('ocr');
       const res = await fetch('/api/paie/ocr', { method: 'POST', body: fd });
@@ -182,20 +182,16 @@ export default function PaiePage() {
 
   // ── Save fiche ──────────────────────────────────────────────────────────────
   const saveFiche = async () => {
-    if (!entrepriseId || !form.mois) return;
+    if (!userId || !form.mois) return;
     setSaving(true);
     setSaveError(null);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Utilisateur non authentifié');
-
       const clean = (v: string) => v.trim().replace(',', '.');
       const toFloat = (v: string) => v.trim() ? parseFloat(clean(v)) : null;
       const toInt   = (v: string) => v.trim() ? parseInt(clean(v), 10) : null;
 
       const payload: Record<string, unknown> = {
-        user_id:           user.id,
-        entreprise_id:     entrepriseId,
+        user_id:           userId,
         mois:              form.mois.trim(),
         salaire_net:       toFloat(form.salaire_net),
         heures_effectuees: toFloat(form.heures_travaillees),
@@ -213,9 +209,9 @@ export default function PaiePage() {
       if (error) throw error;
 
       resetModal();
-      await fetchFiches(entrepriseId);
+      await fetchFiches(userId);
     } catch (err) {
-      console.error('[saveFiche] erreur →', err);
+      console.error('[saveFiche] erreur →', JSON.stringify(err, null, 2));
       setSaveError(err instanceof Error ? err.message : 'Impossible d\'enregistrer');
     } finally {
       setSaving(false);
@@ -224,13 +220,13 @@ export default function PaiePage() {
 
   // ── Delete fiche ────────────────────────────────────────────────────────────
   const confirmDelete = async () => {
-    if (!deleteTarget || !entrepriseId) return;
+    if (!deleteTarget || !userId) return;
     setDeleting(true);
     try {
       const { error } = await supabase.from('fiches_paie').delete().eq('id', deleteTarget.id);
       if (error) throw error;
       setDeleteTarget(null);
-      await fetchFiches(entrepriseId);
+      await fetchFiches(userId);
     } catch {
       // Non-blocking: just close modal, list will refresh
       setDeleteTarget(null);
@@ -339,7 +335,7 @@ export default function PaiePage() {
               <span>{fetchError}</span>
             </div>
             <button
-              onClick={() => entrepriseId && fetchFiches(entrepriseId)}
+              onClick={() => userId && fetchFiches(userId)}
               className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors"
             >
               <RefreshCw size={12} /> Réessayer
