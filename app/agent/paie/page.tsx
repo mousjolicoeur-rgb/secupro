@@ -11,13 +11,12 @@ import { supabase } from '@/lib/supabaseClient';
 type Fiche = {
   id: string;
   mois: string | null;
-  salaire_brut: number | null;
   salaire_net: number | null;
   heures_effectuees: number | null;
-  acompte: number | null;
+  acomptes: number | null;
   retenues: number | null;
   conges_pris: number | null;
-  conges_restant: number | null;
+  conges_restants: number | null;
   file_path: string | null;
   file_url: string | null;
   ocr_status: string | null;
@@ -187,27 +186,36 @@ export default function PaiePage() {
     setSaving(true);
     setSaveError(null);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Utilisateur non authentifié');
+
+      const clean = (v: string) => v.trim().replace(',', '.');
+      const toFloat = (v: string) => v.trim() ? parseFloat(clean(v)) : null;
+      const toInt   = (v: string) => v.trim() ? parseInt(clean(v), 10) : null;
+
       const payload: Record<string, unknown> = {
-        entreprise_id: entrepriseId,
-        mois: form.mois,
-        salaire_brut: null,
-        salaire_net: form.salaire_net ? parseFloat(form.salaire_net) : null,
-        acompte: form.acompte ? parseFloat(form.acompte) : null,
-        retenues: form.retenues ? parseFloat(form.retenues) : null,
-        heures_effectuees: form.heures_travaillees ? parseFloat(form.heures_travaillees) : null,
-        conges_pris: form.conges_pris ? parseInt(form.conges_pris) : null,
-        conges_restant: form.conges_restant ? parseInt(form.conges_restant) : null,
-        file_path: ocrResult?.file_path ?? null,
-        file_url: ocrResult?.file_url ?? null,
-        ocr_status: ocrResult ? (ocrState === 'partial' ? 'partial' : 'done') : 'manual',
+        user_id:           user.id,
+        entreprise_id:     entrepriseId,
+        mois:              form.mois.trim(),
+        salaire_net:       toFloat(form.salaire_net),
+        heures_effectuees: toFloat(form.heures_travaillees),
+        acomptes:          toFloat(form.acompte),
+        retenues:          toFloat(form.retenues),
+        conges_pris:       toInt(form.conges_pris),
+        conges_restants:   toInt(form.conges_restant),
+        file_path:         ocrResult?.file_path ?? null,
+        file_url:          ocrResult?.file_url ?? null,
+        ocr_status:        ocrResult ? (ocrState === 'partial' ? 'partial' : 'done') : 'manual',
       };
+
+      console.log('[saveFiche] payload →', payload);
       const { error } = await supabase.from('fiches_paie').insert([payload]);
       if (error) throw error;
 
-      // Memory cleanup: release file reference before closing modal
       resetModal();
       await fetchFiches(entrepriseId);
     } catch (err) {
+      console.error('[saveFiche] erreur →', err);
       setSaveError(err instanceof Error ? err.message : 'Impossible d\'enregistrer');
     } finally {
       setSaving(false);
@@ -259,8 +267,7 @@ export default function PaiePage() {
         <p className="text-emerald-300/60 text-[10px] uppercase tracking-widest font-bold mb-1">Dernier salaire net</p>
         <p className="text-4xl font-black text-white">{eur(latest?.salaire_net)}</p>
         <div className="flex flex-wrap gap-x-6 gap-y-1 mt-2 text-xs text-emerald-300/50 font-semibold">
-          <span>Brut : {eur(latest?.salaire_brut)}</span>
-          {latest?.acompte ? <span>Acompte : {eur(latest.acompte)}</span> : null}
+          {latest?.acomptes ? <span>Acompte : {eur(latest.acomptes)}</span> : null}
           {latest?.retenues ? <span>Retenues : {eur(latest.retenues)}</span> : null}
         </div>
         <div className="mt-4">
@@ -275,9 +282,9 @@ export default function PaiePage() {
             <span>{HEURES_CONTRAT}h contractuelles</span>
           </div>
         </div>
-        {latest?.conges_restant != null && (
+        {latest?.conges_restants != null && (
           <p className="mt-3 text-[10px] text-emerald-300/50 font-bold uppercase tracking-widest">
-            Congés restants : <span className="text-emerald-300">{latest.conges_restant} j</span>
+            Congés restants : <span className="text-emerald-300">{latest.conges_restants} j</span>
             {latest.conges_pris != null
               ? <span className="ml-2 text-slate-500">· Pris : {latest.conges_pris} j</span>
               : null}
@@ -376,11 +383,11 @@ export default function PaiePage() {
                       <p className="text-white font-black text-sm uppercase tracking-wider">{f.mois ?? '—'}</p>
                       <p className="text-emerald-400 font-black text-base mt-0.5">{eur(f.salaire_net)}</p>
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
-                        {f.acompte ? <span className="text-slate-400 text-[10px]">Acompte {eur(f.acompte)}</span> : null}
+                        {f.acomptes ? <span className="text-slate-400 text-[10px]">Acompte {eur(f.acomptes)}</span> : null}
                         {f.retenues ? <span className="text-slate-400 text-[10px]">Retenues {eur(f.retenues)}</span> : null}
                         {f.heures_effectuees ? <span className="text-slate-400 text-[10px]">{f.heures_effectuees}h</span> : null}
-                        {f.conges_restant != null
-                          ? <span className="text-slate-400 text-[10px]">Congés {f.conges_pris ?? 0}j / {f.conges_restant}j rest.</span>
+                        {f.conges_restants != null
+                          ? <span className="text-slate-400 text-[10px]">Congés {f.conges_pris ?? 0}j / {f.conges_restants}j rest.</span>
                           : null}
                       </div>
                     </div>
@@ -411,12 +418,12 @@ export default function PaiePage() {
                       )}
                     </div>
                     <p className="text-emerald-400 font-black text-sm">{eur(f.salaire_net)}</p>
-                    <p className="text-slate-300 text-sm">{eur(f.acompte)}</p>
+                    <p className="text-slate-300 text-sm">{eur(f.acomptes)}</p>
                     <p className="text-slate-300 text-sm">{eur(f.retenues)}</p>
                     <p className="text-slate-300 text-sm">{num(f.heures_effectuees)}h</p>
                     <p className="text-slate-300 text-xs">
-                      {f.conges_pris != null || f.conges_restant != null
-                        ? `${f.conges_pris ?? 0}j · ${f.conges_restant ?? '—'}j rest.`
+                      {f.conges_pris != null || f.conges_restants != null
+                        ? `${f.conges_pris ?? 0}j · ${f.conges_restants ?? '—'}j rest.`
                         : '—'}
                     </p>
                     <div className="flex gap-1.5 justify-end">

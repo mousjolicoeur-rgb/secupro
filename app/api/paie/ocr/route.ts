@@ -27,24 +27,13 @@ export async function POST(req: NextRequest) {
 
     // ─── 1. Upload vers Supabase Storage ─────────────────────────────────────
     const { error: uploadError } = await supabaseAdmin.storage
-      .from('fiches-paie')
+      .from('payrolls')
       .upload(storagePath, buffer, { contentType: file.type, upsert: false });
 
-    if (uploadError) {
-      // If bucket doesn't exist, try to create it then retry
-      if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('not found')) {
-        await supabaseAdmin.storage.createBucket('fiches-paie', { public: true });
-        const { error: retryErr } = await supabaseAdmin.storage
-          .from('fiches-paie')
-          .upload(storagePath, buffer, { contentType: file.type, upsert: false });
-        if (retryErr) throw retryErr;
-      } else {
-        throw uploadError;
-      }
-    }
+    if (uploadError) throw uploadError;
 
     const { data: urlData } = supabaseAdmin.storage
-      .from('fiches-paie')
+      .from('payrolls')
       .getPublicUrl(storagePath);
 
     const fileUrl = urlData.publicUrl;
