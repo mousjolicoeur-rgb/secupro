@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 128" width="480" height="128">
+  <defs>
+    <!-- Icon gradient: neon blue → golden (matches button palette) -->
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d1ff"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+
+    <!-- Shield glass fill (dark) -->
+    <linearGradient id="shieldFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0a1628" stop-opacity="0.92"/>
+      <stop offset="100%" stop-color="#050d1a" stop-opacity="0.96"/>
+    </linearGradient>
+
+    <!-- Glow for circuit lines -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Strong glow for center core -->
+    <filter id="glowCore" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Neon text glow (SECU) -->
+    <filter id="glowSecu" x="-5%" y="-20%" width="110%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Subtle glow (PRO, tagline) -->
+    <filter id="glowSoft" x="-5%" y="-20%" width="110%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!--  SHIELD                                           -->
+  <!-- ══════════════════════════════════════════════════ -->
+
+  <!-- Shield fill -->
+  <path d="M18,8 L112,8 L112,68 Q112,100 65,122 Q18,100 18,68 Z"
+        fill="url(#shieldFill)"/>
+
+  <!-- Shield outer border (gradient + glow) -->
+  <path d="M18,8 L112,8 L112,68 Q112,100 65,122 Q18,100 18,68 Z"
+        fill="none" stroke="url(#iconGrad)" stroke-width="2.5" filter="url(#glow)"/>
+
+  <!-- Shield inner decorative line -->
+  <path d="M26,16 L104,16 L104,68 Q104,95 65,114 Q26,95 26,68 Z"
+        fill="none" stroke="url(#iconGrad)" stroke-width="0.6" opacity="0.2"/>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!--  CPU / AI CHIP (centred in shield)                -->
+  <!-- ══════════════════════════════════════════════════ -->
+
+  <!-- Outer chip rectangle -->
+  <rect x="43" y="44" width="44" height="44" rx="4" ry="4"
+        fill="none" stroke="url(#iconGrad)" stroke-width="2" filter="url(#glow)"/>
+
+  <!-- Inner chip core area -->
+  <rect x="51" y="52" width="28" height="28" rx="2" ry="2"
+        fill="url(#iconGrad)" fill-opacity="0.07"
+        stroke="url(#iconGrad)" stroke-width="0.9" opacity="0.45"/>
+
+  <!-- Center processor dot -->
+  <circle cx="65" cy="66" r="5.5" fill="url(#iconGrad)" filter="url(#glowCore)"/>
+
+  <!-- 4 inner corner dots -->
+  <circle cx="54" cy="55" r="2" fill="url(#iconGrad)" filter="url(#glow)"/>
+  <circle cx="76" cy="55" r="2" fill="url(#iconGrad)" filter="url(#glow)"/>
+  <circle cx="54" cy="77" r="2" fill="url(#iconGrad)" filter="url(#glow)"/>
+  <circle cx="76" cy="77" r="2" fill="url(#iconGrad)" filter="url(#glow)"/>
+
+  <!-- LEFT pins -->
+  <line x1="43" y1="51" x2="32" y2="51" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+  <line x1="43" y1="58" x2="32" y2="58" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+  <line x1="43" y1="66" x2="32" y2="66" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+  <line x1="43" y1="74" x2="32" y2="74" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+  <line x1="43" y1="81" x2="32" y2="81" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+
+  <!-- RIGHT pins -->
+  <line x1="87" y1="51" x2="98" y2="51" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+  <line x1="87" y1="58" x2="98" y2="58" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+  <line x1="87" y1="66" x2="98" y2="66" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+  <line x1="87" y1="74" x2="98" y2="74" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+  <line x1="87" y1="81" x2="98" y2="81" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+
+  <!-- TOP pins -->
+  <line x1="50" y1="44" x2="50" y2="33" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+  <line x1="57" y1="44" x2="57" y2="33" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+  <line x1="65" y1="44" x2="65" y2="33" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+  <line x1="73" y1="44" x2="73" y2="33" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+  <line x1="80" y1="44" x2="80" y2="33" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+
+  <!-- BOTTOM pins -->
+  <line x1="50" y1="88" x2="50" y2="99" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+  <line x1="57" y1="88" x2="57" y2="99" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+  <line x1="65" y1="88" x2="65" y2="99" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+  <line x1="73" y1="88" x2="73" y2="99" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+  <line x1="80" y1="88" x2="80" y2="99" stroke="url(#iconGrad)" stroke-width="1.8" stroke-linecap="round" filter="url(#glow)"/>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!--  SEPARATOR                                        -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <line x1="132" y1="20" x2="132" y2="108"
+        stroke="url(#iconGrad)" stroke-width="0.9" opacity="0.3"/>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!--  WORDMARK                                         -->
+  <!-- ══════════════════════════════════════════════════ -->
+
+  <!-- SECU — neon blue + glow (exact match to page.tsx) -->
+  <text x="150" y="75"
+        font-family="Montserrat, 'Arial Black', 'Helvetica Neue', sans-serif"
+        font-weight="900"
+        font-size="52"
+        letter-spacing="1"
+        filter="url(#glowSecu)">
+    <tspan fill="#00d1ff">SECU</tspan><tspan fill="white" filter="url(#glowSoft)">PRO</tspan>
+  </text>
+
+  <!-- Tagline -->
+  <text x="152" y="96"
+        font-family="Montserrat, Arial, sans-serif"
+        font-weight="400"
+        font-size="8.5"
+        fill="#00d1ff"
+        fill-opacity="0.5"
+        letter-spacing="4">SÉCURITÉ · INTELLIGENCE · PERFORMANCE</text>
+
+</svg>

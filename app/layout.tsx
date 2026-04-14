@@ -16,6 +16,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SecuPRO — Gestion opérationnelle · Sécurité privée",
   description: "SecuPRO, la plateforme de gestion pour les agents et entreprises de sécurité privée.",
+  icons: {
+    icon: [
+      { url: "/secupro-icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/secupro-icon.svg",
+    apple: [
+      { url: "/secupro-icon.svg", type: "image/svg+xml" },
+    ],
+  },
 };
 
 export default function RootLayout({
