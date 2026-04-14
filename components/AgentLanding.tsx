@@ -60,8 +60,10 @@ function Verrou({ children, bloque }: { children: React.ReactNode; bloque: boole
         <span style={{ color: "#fbbf24", fontWeight: 700, fontSize: "18px" }}>9.99€/mois</span>
         , sans engagement.
       </p>
-      <Link
-        href="/abonnement"
+      <a
+        href="https://buy.stripe.com/test_5kQfZae222Vse0leoq5gc00"
+        target="_blank"
+        rel="noopener noreferrer"
         style={{
           display: "inline-block",
           background: "#f59e0b",
@@ -78,7 +80,7 @@ function Verrou({ children, bloque }: { children: React.ReactNode; bloque: boole
         }}
       >
         S&apos;abonner maintenant
-      </Link>
+      </a>
     </div>
   );
 }

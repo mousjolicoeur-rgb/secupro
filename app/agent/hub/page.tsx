@@ -49,8 +49,10 @@ function VerrouBas() {
           Accès Premium
         </span>
       </div>
-      <Link
-        href="/abonnement"
+      <a
+        href="https://buy.stripe.com/test_5kQfZae222Vse0leoq5gc00"
+        target="_blank"
+        rel="noopener noreferrer"
         style={{
           display: "inline-block",
           background: "#f59e0b",
@@ -66,7 +68,7 @@ function VerrouBas() {
         }}
       >
         S&apos;abonner — 9.99€/mois
-      </Link>
+      </a>
     </div>
   );
 }
