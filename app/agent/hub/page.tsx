@@ -22,63 +22,50 @@ import { supabase } from "@/lib/supabaseClient";
 // ── CONTRÔLE ACCÈS — false = verrou FORCÉ, aucune condition ───────────────
 const isPremium = false;
 
-// ── COMPOSANT VERROU INLINE ───────────────────────────────────────────────
-function VerrouPremium() {
+// ── BOUTON VERROU — affiché en bas de la carte, titre toujours visible ────
+function VerrouBas() {
   return (
     <div
       style={{
-        position: "absolute",
-        inset: 0,
+        marginTop: "auto",
+        paddingTop: "16px",
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        borderRadius: "16px",
-        background: "rgba(0,0,0,0.72)",
-        backdropFilter: "blur(3px)",
-        zIndex: 10,
+        alignItems: "flex-start",
+        gap: "10px",
       }}
     >
-      <div
-        style={{
-          padding: "10px",
-          borderRadius: "50%",
-          background: "#f59e0b",
-          color: "#000",
-          marginBottom: "8px",
-          boxShadow: "0 0 22px rgba(245,158,11,0.7)",
-        }}
-      >
-        <Lock size={20} />
+      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+        <Lock size={13} style={{ color: "#f59e0b" }} />
+        <span
+          style={{
+            color: "#f59e0b",
+            fontSize: "9px",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: "0.2em",
+          }}
+        >
+          Accès Premium
+        </span>
       </div>
-      <span
-        style={{
-          color: "#f59e0b",
-          fontSize: "9px",
-          fontWeight: 900,
-          textTransform: "uppercase",
-          letterSpacing: "0.25em",
-          marginBottom: "10px",
-        }}
-      >
-        Premium
-      </span>
       <Link
         href="/abonnement"
-        onClick={(e) => e.stopPropagation()}
         style={{
+          display: "inline-block",
           background: "#f59e0b",
           color: "#000",
-          padding: "6px 18px",
+          padding: "8px 20px",
           borderRadius: "999px",
           fontWeight: 900,
-          fontSize: "9px",
+          fontSize: "10px",
           textTransform: "uppercase",
           letterSpacing: "0.12em",
           textDecoration: "none",
+          boxShadow: "0 0 16px rgba(245,158,11,0.45)",
         }}
       >
-        S&apos;abonner
+        S&apos;abonner — 9.99€/mois
       </Link>
     </div>
   );
@@ -88,6 +75,7 @@ type Tile = {
   href: string;
   label: string;
   sub: string;
+  teaser?: string;
   Icon: LucideIcon;
   accent: "cyan" | "emerald" | "violet" | "sky" | "amber" | "red" | "slate" | "indigo";
   secuAiGlow?: boolean;
@@ -96,22 +84,19 @@ type Tile = {
 };
 
 const TILES: Tile[] = [
-  { href: "/agent/profil",     label: "Profil",      sub: "Identité tactique",          Icon: User,        accent: "cyan" },
-  { href: "/agent/planning",   label: "Planning",    sub: "Vacations & créneaux",        Icon: Calendar,    accent: "cyan",    premium: true },
-  { href: "/agent/paie",       label: "Paie",        sub: "Salaires & acomptes",         Icon: Banknote,    accent: "emerald", premium: true },
-  { href: "/agent/docs",       label: "Documents",   sub: "Carte CNAPS & diplômes",      Icon: FileText,    accent: "violet" },
-  { href: "/agent/secu-ai",    label: "Secu AI",     sub: "Assistant sécurité IA",       Icon: Bot,         accent: "sky",     secuAiGlow: true, premium: true },
-  { href: "/agent/actualites", label: "Actualités",  sub: "Infos & alertes secteur",     Icon: Newspaper,   accent: "amber",   premium: true },
-  { href: "/agent/calendrier", label: "RDV-CALENDRIER", sub: "CALENDRIER ET RDV PRO",    Icon: CalendarDays, accent: "indigo" },
-  {
-    href: "/agent/espace-pro",
-    label: "Espace PRO",
-    sub: "Connexion",
-    Icon: ShieldCheck,
-    accent: "violet",
-    espaceProTitle: true,
-  },
-  { href: "/agent/support",    label: "Support",     sub: "Aide & assistance",           Icon: LifeBuoy,    accent: "slate" },
+  { href: "/agent/profil",     label: "Profil",         sub: "Identité tactique",       Icon: User,        accent: "cyan" },
+  { href: "/agent/planning",   label: "Planning",       sub: "Vacations & créneaux",    Icon: Calendar,    accent: "cyan",    premium: true,
+    teaser: "Accédez à vos vacations en temps réel" },
+  { href: "/agent/paie",       label: "Paie",           sub: "Salaires & acomptes",     Icon: Banknote,    accent: "emerald", premium: true,
+    teaser: "Consultez vos bulletins et acomptes instantanément" },
+  { href: "/agent/docs",       label: "Documents",      sub: "Carte CNAPS & diplômes",  Icon: FileText,    accent: "violet" },
+  { href: "/agent/secu-ai",    label: "Secu AI",        sub: "Assistant sécurité IA",   Icon: Bot,         accent: "sky",     secuAiGlow: true, premium: true,
+    teaser: "Votre assistant IA dédié à la sécurité privée" },
+  { href: "/agent/actualites", label: "Actualités",     sub: "Infos & alertes secteur", Icon: Newspaper,   accent: "amber",   premium: true,
+    teaser: "Infos et alertes du secteur en direct" },
+  { href: "/agent/calendrier", label: "RDV-Calendrier", sub: "Calendrier et RDV pro",   Icon: CalendarDays, accent: "indigo" },
+  { href: "/agent/espace-pro", label: "Espace PRO",     sub: "Connexion",               Icon: ShieldCheck, accent: "violet",  espaceProTitle: true },
+  { href: "/agent/support",    label: "Support",        sub: "Aide & assistance",       Icon: LifeBuoy,    accent: "slate" },
 ];
 
 const ACCENT_ICON: Record<string, string> = {
@@ -209,8 +194,7 @@ export default function AgentHubPage() {
             className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
             aria-label="Navigation modules agent"
           >
-            {TILES.map(({ href, label, sub, Icon, accent, secuAiGlow, espaceProTitle, premium }) => {
-              // Verrou DIRECT : si isPremium est false, on n'évalue rien d'autre
+            {TILES.map(({ href, label, sub, teaser, Icon, accent, secuAiGlow, espaceProTitle, premium }) => {
               const locked = premium && !isPremium;
 
               return (
@@ -219,52 +203,85 @@ export default function AgentHubPage() {
                   className={[
                     "group relative flex flex-col overflow-hidden rounded-2xl border",
                     "bg-gradient-to-br from-[rgba(28,42,58,0.95)] to-[rgba(12,22,34,0.92)]",
-                    "backdrop-blur-xl p-6 transition-all duration-300",
-                    locked ? "border-amber-500/40 cursor-default" : ACCENT_BORDER[accent],
+                    "backdrop-blur-xl p-6 transition-all duration-300 min-h-[160px]",
+                    locked
+                      ? "border-amber-500/30 hover:border-amber-500/60 hover:shadow-[0_0_28px_rgba(245,158,11,0.15)]"
+                      : ACCENT_BORDER[accent],
                   ].join(" ")}
                 >
-                  {/* Liseré haut */}
-                  <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00d1ff]/25 to-transparent" />
-
-                  {/* Icône */}
+                  {/* Liseré haut — amber si verrouillé */}
                   <div
-                    className={[
-                      "mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-black/30",
-                      secuAiGlow && !locked ? "border-sky-500/40 shadow-[0_0_16px_rgba(56,189,248,0.3)]" : "",
-                    ].join(" ")}
-                  >
-                    <Icon
+                    className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent to-transparent"
+                    style={{
+                      background: locked
+                        ? "linear-gradient(to right, transparent, rgba(245,158,11,0.4), transparent)"
+                        : "linear-gradient(to right, transparent, rgba(0,209,255,0.25), transparent)",
+                    }}
+                  />
+
+                  {/* Icône + badge cadenas */}
+                  <div className="mb-3 flex items-center gap-3">
+                    <div
                       className={[
-                        "h-5 w-5",
-                        locked ? "opacity-20" : ACCENT_ICON[accent],
+                        "flex h-11 w-11 items-center justify-center rounded-xl border bg-black/30",
+                        locked
+                          ? "border-amber-500/30"
+                          : `border-white/10 ${secuAiGlow ? "border-sky-500/40 shadow-[0_0_16px_rgba(56,189,248,0.3)]" : ""}`,
                       ].join(" ")}
-                    />
+                    >
+                      <Icon
+                        className={[
+                          "h-5 w-5",
+                          locked ? "text-amber-500/50" : ACCENT_ICON[accent],
+                        ].join(" ")}
+                      />
+                    </div>
+                    {locked && (
+                      <Lock size={14} style={{ color: "#f59e0b", opacity: 0.8 }} />
+                    )}
                   </div>
 
-                  {/* Titre */}
-                  <span className={["text-base font-black uppercase tracking-wide", locked ? "text-slate-700" : "text-white"].join(" ")}>
+                  {/* Titre — toujours visible */}
+                  <span
+                    className="text-base font-black uppercase tracking-wide"
+                    style={{ color: locked ? "#f59e0b" : "#fff" }}
+                  >
                     {espaceProTitle ? "ESPACE PRO" : label}
                   </span>
 
                   {/* Sous-titre */}
-                  <span className="mt-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
-                    {locked ? "Premium requis" : sub}
+                  <span className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                    {sub}
                   </span>
 
-                  {/* Flèche — modules libres uniquement */}
-                  {!locked && (
-                    <Link href={href} className="absolute inset-0" aria-label={label} />
-                  )}
-                  {!locked && (
-                    <div className="absolute bottom-4 right-4 text-slate-700 transition-all duration-200 group-hover:text-[#00d1ff] group-hover:translate-x-0.5">
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                        <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
+                  {/* Teaser — phrase d'accroche visible même verrouillé */}
+                  {locked && teaser && (
+                    <p
+                      style={{
+                        marginTop: "10px",
+                        fontSize: "11px",
+                        color: "#94a3b8",
+                        lineHeight: 1.5,
+                        fontStyle: "italic",
+                      }}
+                    >
+                      {teaser}
+                    </p>
                   )}
 
-                  {/* VERROU — affiché directement si isPremium === false */}
-                  {locked && <VerrouPremium />}
+                  {/* Bas de carte : bouton abonnement OU flèche navigation */}
+                  {locked ? (
+                    <VerrouBas />
+                  ) : (
+                    <>
+                      <Link href={href} className="absolute inset-0" aria-label={label} />
+                      <div className="absolute bottom-4 right-4 text-slate-700 transition-all duration-200 group-hover:text-[#00d1ff] group-hover:translate-x-0.5">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                          <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                    </>
+                  )}
                 </div>
               );
             })}
