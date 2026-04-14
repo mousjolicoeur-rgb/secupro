@@ -1,5 +1,7 @@
 "use client";
 
+console.log("HUB CHARGÉ - FORCE LOCK");
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -9,12 +11,78 @@ import {
   CalendarDays,
   FileText,
   LifeBuoy,
+  Lock,
   Newspaper,
   ShieldCheck,
   User,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+
+// ── CONTRÔLE ACCÈS — false = verrou FORCÉ, aucune condition ───────────────
+const isPremium = false;
+
+// ── COMPOSANT VERROU INLINE ───────────────────────────────────────────────
+function VerrouPremium() {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: "16px",
+        background: "rgba(0,0,0,0.72)",
+        backdropFilter: "blur(3px)",
+        zIndex: 10,
+      }}
+    >
+      <div
+        style={{
+          padding: "10px",
+          borderRadius: "50%",
+          background: "#f59e0b",
+          color: "#000",
+          marginBottom: "8px",
+          boxShadow: "0 0 22px rgba(245,158,11,0.7)",
+        }}
+      >
+        <Lock size={20} />
+      </div>
+      <span
+        style={{
+          color: "#f59e0b",
+          fontSize: "9px",
+          fontWeight: 900,
+          textTransform: "uppercase",
+          letterSpacing: "0.25em",
+          marginBottom: "10px",
+        }}
+      >
+        Premium
+      </span>
+      <Link
+        href="/abonnement"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "#f59e0b",
+          color: "#000",
+          padding: "6px 18px",
+          borderRadius: "999px",
+          fontWeight: 900,
+          fontSize: "9px",
+          textTransform: "uppercase",
+          letterSpacing: "0.12em",
+          textDecoration: "none",
+        }}
+      >
+        S&apos;abonner
+      </Link>
+    </div>
+  );
+}
 
 type Tile = {
   href: string;
@@ -24,15 +92,16 @@ type Tile = {
   accent: "cyan" | "emerald" | "violet" | "sky" | "amber" | "red" | "slate" | "indigo";
   secuAiGlow?: boolean;
   espaceProTitle?: boolean;
+  premium?: boolean;
 };
 
 const TILES: Tile[] = [
   { href: "/agent/profil",     label: "Profil",      sub: "Identité tactique",          Icon: User,        accent: "cyan" },
-  { href: "/agent/planning",   label: "Planning",    sub: "Vacations & créneaux",        Icon: Calendar,    accent: "cyan" },
-  { href: "/agent/paie",       label: "Paie",        sub: "Salaires & acomptes",         Icon: Banknote,    accent: "emerald" },
+  { href: "/agent/planning",   label: "Planning",    sub: "Vacations & créneaux",        Icon: Calendar,    accent: "cyan",    premium: true },
+  { href: "/agent/paie",       label: "Paie",        sub: "Salaires & acomptes",         Icon: Banknote,    accent: "emerald", premium: true },
   { href: "/agent/docs",       label: "Documents",   sub: "Carte CNAPS & diplômes",      Icon: FileText,    accent: "violet" },
-  { href: "/agent/secu-ai",    label: "Secu AI",     sub: "Assistant sécurité IA",       Icon: Bot,         accent: "sky", secuAiGlow: true },
-  { href: "/agent/actualites", label: "Actualités",  sub: "Infos & alertes secteur",     Icon: Newspaper,   accent: "amber" },
+  { href: "/agent/secu-ai",    label: "Secu AI",     sub: "Assistant sécurité IA",       Icon: Bot,         accent: "sky",     secuAiGlow: true, premium: true },
+  { href: "/agent/actualites", label: "Actualités",  sub: "Infos & alertes secteur",     Icon: Newspaper,   accent: "amber",   premium: true },
   { href: "/agent/calendrier", label: "RDV-CALENDRIER", sub: "CALENDRIER ET RDV PRO",    Icon: CalendarDays, accent: "indigo" },
   {
     href: "/agent/espace-pro",
@@ -140,66 +209,65 @@ export default function AgentHubPage() {
             className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
             aria-label="Navigation modules agent"
           >
-            {TILES.map(({ href, label, sub, Icon, accent, secuAiGlow, espaceProTitle }) => (
-              <Link
-                key={href}
-                href={href}
-                className={[
-                  "group relative flex flex-col overflow-hidden rounded-2xl border",
-                  "bg-gradient-to-br from-[rgba(28,42,58,0.95)] to-[rgba(12,22,34,0.92)]",
-                  "backdrop-blur-xl p-6 transition-all duration-300",
-                  ACCENT_BORDER[accent],
-                ].join(" ")}
-              >
-                {/* Liseré haut */}
-                <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00d1ff]/25 to-transparent" />
+            {TILES.map(({ href, label, sub, Icon, accent, secuAiGlow, espaceProTitle, premium }) => {
+              // Verrou DIRECT : si isPremium est false, on n'évalue rien d'autre
+              const locked = premium && !isPremium;
 
-                {/* Icône */}
+              return (
                 <div
+                  key={href}
                   className={[
-                    "mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-black/30",
-                    "transition-colors group-hover:border-[#00d1ff]/30 group-hover:bg-white/[0.06]",
-                    secuAiGlow ? "border-sky-500/40 shadow-[0_0_16px_rgba(56,189,248,0.3)]" : "",
+                    "group relative flex flex-col overflow-hidden rounded-2xl border",
+                    "bg-gradient-to-br from-[rgba(28,42,58,0.95)] to-[rgba(12,22,34,0.92)]",
+                    "backdrop-blur-xl p-6 transition-all duration-300",
+                    locked ? "border-amber-500/40 cursor-default" : ACCENT_BORDER[accent],
                   ].join(" ")}
                 >
-                  <Icon
+                  {/* Liseré haut */}
+                  <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00d1ff]/25 to-transparent" />
+
+                  {/* Icône */}
+                  <div
                     className={[
-                      "h-5 w-5 transition-all duration-300",
-                      ACCENT_ICON[accent],
+                      "mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-black/30",
+                      secuAiGlow && !locked ? "border-sky-500/40 shadow-[0_0_16px_rgba(56,189,248,0.3)]" : "",
                     ].join(" ")}
-                  />
-                </div>
-
-                {/* Titre */}
-                {espaceProTitle ? (
-                  <span className="text-base font-black uppercase tracking-wide text-white">
-                    ESPACE PRO
-                  </span>
-                ) : (
-                  <span className="text-base font-black uppercase tracking-wide text-white">
-                    {label}
-                  </span>
-                )}
-
-                {/* Sous-titre */}
-                <span className="mt-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500 transition-colors group-hover:text-slate-400">
-                  {sub}
-                </span>
-
-                {/* Flèche */}
-                <div className="absolute bottom-4 right-4 text-slate-700 transition-all duration-200 group-hover:text-[#00d1ff] group-hover:translate-x-0.5">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                    <path
-                      d="M2 7h10M8 3l4 4-4 4"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                  >
+                    <Icon
+                      className={[
+                        "h-5 w-5",
+                        locked ? "opacity-20" : ACCENT_ICON[accent],
+                      ].join(" ")}
                     />
-                  </svg>
+                  </div>
+
+                  {/* Titre */}
+                  <span className={["text-base font-black uppercase tracking-wide", locked ? "text-slate-700" : "text-white"].join(" ")}>
+                    {espaceProTitle ? "ESPACE PRO" : label}
+                  </span>
+
+                  {/* Sous-titre */}
+                  <span className="mt-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+                    {locked ? "Premium requis" : sub}
+                  </span>
+
+                  {/* Flèche — modules libres uniquement */}
+                  {!locked && (
+                    <Link href={href} className="absolute inset-0" aria-label={label} />
+                  )}
+                  {!locked && (
+                    <div className="absolute bottom-4 right-4 text-slate-700 transition-all duration-200 group-hover:text-[#00d1ff] group-hover:translate-x-0.5">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  )}
+
+                  {/* VERROU — affiché directement si isPremium === false */}
+                  {locked && <VerrouPremium />}
                 </div>
-              </Link>
-            ))}
+              );
+            })}
           </nav>
 
           <footer className="mt-12 text-center">

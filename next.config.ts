@@ -1,56 +1,23 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
-// Récupère le host Supabase depuis l'env (ex. ladvecmpjpictubnnnsq.supabase.co)
-const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
-  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).host
-  : "*.supabase.co";
-
-const SENTRY_REPORT_URI =
-  "https://o4511165590667264.ingest.de.sentry.io/api/4511165599449168/security/?sentry_key=b3db3aeb701708f76b52680049ac1d59";
-
-const contentSecurityPolicy = [
-  // Tout bloquer par défaut sauf 'self'
-  "default-src 'self'",
-
-  // Scripts : Next.js 15 injecte des scripts inline lors de l'hydratation
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-
-  // Styles : Tailwind + Google Fonts (Geist)
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-
-  // Polices Google Fonts
-  "font-src 'self' data: https://fonts.gstatic.com",
-
-  // Images : Supabase Storage, tuiles OpenStreetMap (Leaflet), data URIs, blobs
-  `img-src 'self' data: blob: https://${supabaseHost} https://*.tile.openstreetmap.org`,
-
-  // Connexions réseau : Supabase (REST + WebSocket), Sentry (tunnel /monitoring + ingest direct), Anthropic
-  `connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://o4511165590667264.ingest.de.sentry.io`,
-
-  // Web Workers : Tesseract.js + PDF.js utilisent des workers en blob:
-  "worker-src 'self' blob:",
-  "child-src 'self' blob:",
-
-  // Médias (vidéo/audio)
-  "media-src 'self' blob:",
-
-  // Iframes : interdites (équivalent X-Frame-Options DENY)
-  "frame-src 'none'",
-  "frame-ancestors 'none'",
-
-  // Sécurité de base
-  "base-uri 'self'",
-  "form-action 'self'",
-
-  // Rapport de violations vers Sentry
-  `report-uri ${SENTRY_REPORT_URI}`,
-].join("; ");
-
+// La CSP (avec nonce par requête) est gérée dans middleware.ts.
+// Ce fichier conserve uniquement les headers de sécurité statiques.
 const securityHeaders = [
   {
+    // ── CSP : autorise self + inline + Supabase + Sentry ──────────────────
     key: "Content-Security-Policy",
-    value: contentSecurityPolicy,
+    value: [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' data:",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://sentry.io https://*.sentry.io",
+      "frame-src 'none'",
+      "object-src 'none'",
+      "base-uri 'self'",
+    ].join("; "),
   },
   {
     // Empêche l'affichage dans une iframe (site pirate, clickjacking)

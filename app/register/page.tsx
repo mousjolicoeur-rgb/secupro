@@ -1,181 +1,190 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Loader2, Eye, EyeOff } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
+import { useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import Link from 'next/link';
 
 export default function RegisterPage() {
-  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
-  const [email, setEmail]       = useState("");
-  const [password, setPassword] = useState("");
-  const [showPwd, setShowPwd]   = useState(false);
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState("");
-  const [success, setSuccess]   = useState("");
-
-  // Si déjà connecté → hub direct
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) router.replace("/agent/profil");
-    });
-  }, [router]);
-
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password || loading) return;
+    setError('');
     setLoading(true);
-    setError("");
-    setSuccess("");
 
-    const { data, error: err } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-    });
-
-    if (err) {
-      setError(err.message);
+    if (password !== confirmPassword) {
+      setError('Les mots de passe ne correspondent pas');
       setLoading(false);
       return;
     }
 
-    if (data.session) await supabase.auth.signOut();
+    if (password.length < 6) {
+      setError('Le mot de passe doit contenir au moins 6 caractères');
+      setLoading(false);
+      return;
+    }
 
-    setSuccess("Compte créé — connecte-toi avec tes identifiants.");
-    setLoading(false);
-    setTimeout(() => router.push("/"), 1800);
+    try {
+      const origin = window.location.origin;
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        console.error('[SecuPRO] signUp error:', {
+          message: error.message,
+          status: error.status,
+          code: (error as any).code ?? null,
+        });
+        setError(error.message);
+      } else {
+        console.info('[SecuPRO] signUp OK — email de confirmation envoyé à', email);
+        setRegistrationSuccess(true);
+      }
+    } catch (err) {
+      console.error('[SecuPRO] signUp exception:', err);
+      setError('Une erreur est survenue');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center px-6">
-
-      {/* Glow ambiance */}
-      <div className="pointer-events-none fixed inset-0 -z-10" aria-hidden>
-        <div
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(37,99,235,0.07) 0%, transparent 65%)" }}
-        />
-      </div>
-
-      <div className="w-full max-w-xs flex flex-col items-center gap-8">
-
-        {/* ── TITRE ── */}
-        <div className="text-center">
-          <h1 className="text-7xl font-black tracking-tighter select-none leading-none">
-            <span
-              style={{
-                color: "#2563eb",
-                textShadow:
-                  "0 0 32px rgba(37,99,235,0.95), 0 0 70px rgba(37,99,235,0.55)",
-              }}
-            >
-              SECU
-            </span>
-            <span className="text-white">PRO</span>
-          </h1>
-          <p className="mt-2.5 text-[10px] font-bold uppercase tracking-[0.35em] text-slate-700">
-            Création de compte Agent
-          </p>
+  // ── Écran de confirmation envoyée ──────────────────────────
+  if (registrationSuccess) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4">
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-bold text-cyan-500 tracking-tighter">SECUPRO</h1>
+          <p className="text-slate-400 uppercase text-xs tracking-[0.2em]">Système de Gestion Agents</p>
         </div>
 
-        {/* ── Séparateur ── */}
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-blue-600/30 to-transparent" />
-
-        {/* ── FORMULAIRE ── */}
-        <form onSubmit={handleRegister} className="w-full flex flex-col gap-3">
-
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => { setEmail(e.target.value); setError(""); }}
-            placeholder="Email"
-            autoComplete="email"
-            required
-            className="w-full rounded-2xl border bg-black px-5 py-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-slate-700 font-semibold"
-            style={{
-              borderColor: email ? "rgba(37,99,235,0.55)" : "rgba(255,255,255,0.08)",
-              boxShadow: email ? "0 0 16px rgba(37,99,235,0.12)" : "none",
-              caretColor: "#2563eb",
-            }}
-          />
-
-          <div className="relative">
-            <input
-              type={showPwd ? "text" : "password"}
-              value={password}
-              onChange={(e) => { setPassword(e.target.value); setError(""); }}
-              placeholder="Mot de passe (min. 6 caractères)"
-              autoComplete="new-password"
-              required
-              minLength={6}
-              className="w-full rounded-2xl border bg-black px-5 py-4 pr-12 text-sm text-white outline-none transition-all duration-200 placeholder:text-slate-700 font-semibold"
-              style={{
-                borderColor: password ? "rgba(37,99,235,0.55)" : "rgba(255,255,255,0.08)",
-                boxShadow: password ? "0 0 16px rgba(37,99,235,0.12)" : "none",
-                caretColor: "#2563eb",
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPwd((v) => !v)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-700 hover:text-slate-500 transition-colors"
-              tabIndex={-1}
-            >
-              {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
-            </button>
+        <div className="w-full max-w-md bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-2xl text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cyan-500/10 border border-cyan-500/30 mb-6">
+            <svg className="w-8 h-8 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
           </div>
 
-          {error && (
-            <p className="text-red-400 text-[11px] font-bold tracking-wide text-center -mt-1">
-              {error}
-            </p>
-          )}
-          {success && (
-            <p className="text-emerald-400 text-[11px] font-bold tracking-wide text-center -mt-1">
-              {success}
-            </p>
-          )}
+          <h2 className="text-xl font-semibold text-white mb-3">Enrôlement initié</h2>
+          <p className="text-slate-400 text-sm mb-6">
+            Un email de confirmation a été envoyé à{' '}
+            <span className="text-cyan-400 font-medium">{email}</span>.<br />
+            Cliquez sur le lien pour activer votre accès.
+          </p>
 
-          {/* ── Bouton CRÉER MON COMPTE ── */}
+          <div className="bg-slate-950 border border-slate-800 rounded-lg p-4 mb-6 text-left">
+            <p className="text-xs text-slate-500">
+              Email non reçu ? Vérifiez votre dossier spam ou{' '}
+              <button
+                onClick={() => setRegistrationSuccess(false)}
+                className="text-cyan-500 hover:text-cyan-400 transition-colors"
+              >
+                recommencez l'inscription
+              </button>
+              .
+            </p>
+          </div>
+
+          <Link
+            href="/login"
+            className="block w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-3 rounded-lg transition-colors text-sm"
+          >
+            Retour à la connexion
+          </Link>
+
+          <p className="text-center text-slate-500 text-xs mt-6">
+            🔒 Serveur sécurisé - Protocole de cryptage AES-256
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Formulaire d'inscription ───────────────────────────────
+  return (
+    <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4">
+      <div className="mb-8 text-center">
+        <h1 className="text-4xl font-bold text-cyan-500 tracking-tighter">SECUPRO</h1>
+        <p className="text-slate-400 uppercase text-xs tracking-[0.2em]">Système de Gestion Agents</p>
+      </div>
+
+      <div className="w-full max-w-md bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-2xl">
+        <h2 className="text-xl font-semibold text-white mb-6">Créer un compte Agent</h2>
+
+        {error && (
+          <div className="mb-4 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSignUp} className="space-y-4">
+          <div>
+            <label className="text-sm text-slate-400 ml-1">Email professionnel</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              required
+              className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-cyan-500 outline-none transition-all disabled:opacity-50 mt-1"
+              placeholder="agent@secupro.app"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm text-slate-400 ml-1">Mot de passe</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              required
+              className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-cyan-500 outline-none transition-all disabled:opacity-50 mt-1"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm text-slate-400 ml-1">Confirmer le mot de passe</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={loading}
+              required
+              className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-cyan-500 outline-none transition-all disabled:opacity-50 mt-1"
+              placeholder="••••••••"
+            />
+          </div>
+
           <button
             type="submit"
-            disabled={loading || !email.trim() || !password}
-            className="group relative overflow-hidden w-full rounded-2xl py-4 font-black text-sm uppercase tracking-[0.2em] text-white transition-all duration-200 active:scale-[0.98] disabled:opacity-35 disabled:cursor-not-allowed mt-1"
-            style={{
-              background: "#2563eb",
-              boxShadow: email && password && !loading
-                ? "0 0 28px rgba(37,99,235,0.55), 0 4px 18px rgba(37,99,235,0.3)"
-                : "none",
-            }}
+            disabled={loading}
+            className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg transition-colors shadow-lg shadow-cyan-900/20"
           >
-            <span
-              className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-20deg] bg-white/10 transition-transform duration-500 group-hover:translate-x-full"
-              aria-hidden
-            />
-            {loading ? (
-              <Loader2 size={17} className="animate-spin mx-auto" />
-            ) : (
-              "Créer mon compte"
-            )}
+            {loading ? 'Enrôlement en cours...' : 'Démarrer l\'enrôlement'}
           </button>
-
         </form>
 
-        {/* ── Retour connexion ── */}
-        <button
-          type="button"
-          onClick={() => router.push("/")}
-          className="text-[10px] font-bold uppercase tracking-[0.35em] text-slate-700 hover:text-slate-500 transition-colors -mt-4"
-        >
-          ← Retour connexion
-        </button>
-
-        {/* ── Footer ── */}
-        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-800 -mt-4">
-          © 2026 SECUPRO COMMAND SYSTEM
+        <p className="text-center text-slate-500 text-xs mt-6">
+          Déjà inscrit ?{' '}
+          <Link href="/login" className="text-cyan-500 hover:text-cyan-400 transition-colors">
+            Se connecter
+          </Link>
         </p>
 
+        <p className="text-center text-slate-600 text-xs mt-4">
+          🔒 Serveur sécurisé - Protocole de cryptage AES-256
+        </p>
       </div>
     </div>
   );

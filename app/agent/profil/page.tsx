@@ -54,34 +54,41 @@ function buildFromMeta(meta: Record<string, unknown> | null | undefined): Tactic
   return { prenom, nom, matricule };
 }
 
-async function fetchIdentityForUser(userId: string): Promise<Partial<TacticalIdentity>> {
-  // Best effort across common schemas. Only select what we need.
-  const tries: Array<{
-    table: string;
-    columns: string;
-    match: { column: string; value: string };
-  }> = [
-    { table: "agents", columns: "prenom,nom,matricule", match: { column: "id", value: userId } },
-    { table: "agents", columns: "prenom,nom,matricule", match: { column: "user_id", value: userId } },
-    { table: "profiles", columns: "prenom,nom,matricule", match: { column: "id", value: userId } },
-    { table: "profiles", columns: "prenom,nom,matricule", match: { column: "user_id", value: userId } },
+type ProfileRow = {
+  prenom?: string | null;
+  nom?: string | null;
+  matricule?: string | null;
+  email?: string | null;
+  telephone?: string | null;
+  societe?: string | null;
+  carte_pro?: string | null;
+};
+
+async function fetchProfileFromDb(userId: string): Promise<ProfileRow> {
+  const cols = "prenom,nom,matricule,email,telephone,societe,carte_pro";
+
+  // Try profiles.id first, then profiles.user_id, then agents
+  const tries = [
+    { table: "profiles", col: "id" },
+    { table: "profiles", col: "user_id" },
+    { table: "agents",   col: "id" },
+    { table: "agents",   col: "user_id" },
   ];
 
   for (const t of tries) {
     const { data, error } = await supabase
       .from(t.table)
-      .select(t.columns)
-      .eq(t.match.column, t.match.value)
+      .select(cols)
+      .eq(t.col, userId)
       .maybeSingle();
-    if (error) continue;
-    if (!data) continue;
-    return {
-      prenom: compact(asString((data as any).prenom)),
-      nom: compact(asString((data as any).nom)),
-      matricule: compact(asString((data as any).matricule)),
-    };
+    if (error || !data) continue;
+    return data as ProfileRow;
   }
   return {};
+}
+
+async function upsertProfile(userId: string, row: ProfileRow) {
+  await supabase.from("profiles").upsert({ id: userId, ...row }, { onConflict: "id" });
 }
 
 export default function AgentProfilPage() {
@@ -93,6 +100,7 @@ export default function AgentProfilPage() {
     nom: "",
     matricule: "",
   });
+  const [userId, setUserId] = useState("");
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
   const [telephone, setTelephone] = useState("");
@@ -100,7 +108,39 @@ export default function AgentProfilPage() {
   const [societe, setSociete] = useState("");
   const [matricule, setMatricule] = useState("");
   const [cartePro, setCartePro] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isProfileIncomplete = !prenom || !nom || !telephone || !societe || !matricule;
+
+  async function saveProfile() {
+    if (!userId) return;
+    setSaving(true);
+    setSaveMsg(null);
+    try {
+      await upsertProfile(userId, {
+        prenom, nom, matricule,
+        email, telephone, societe,
+        carte_pro: cartePro,
+      });
+      const resolved = { prenom, nom, matricule };
+      setIdentity(resolved);
+      setSaveMsg("Profil enregistré avec succès.");
+
+      // Notification email (non-bloquant)
+      fetch("/api/notify/new-lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prenom, nom, email, telephone }),
+      }).catch(() => {/* silencieux */});
+    } catch {
+      setSaveMsg("Erreur lors de l'enregistrement.");
+    } finally {
+      setSaving(false);
+      setTimeout(() => setSaveMsg(null), 4000);
+    }
+  }
 
   function handleImageChange(file: File | null) {
     if (!file) return;
@@ -132,20 +172,35 @@ export default function AgentProfilPage() {
         return;
       }
 
+      const uid = data.user.id;
+      const authEmail = data.user.email ?? "";
+      setUserId(uid);
+
       const meta = (data.user.user_metadata ?? {}) as Record<string, unknown>;
       const fromMeta = buildFromMeta(meta);
-      const fromDb = await fetchIdentityForUser(data.user.id);
+      const fromDb = await fetchProfileFromDb(uid);
 
       if (cancelled) return;
+
       const resolved = {
-        prenom: compact(fromDb.prenom || fromMeta.prenom || ""),
-        nom: compact(fromDb.nom || fromMeta.nom || ""),
+        prenom:    compact(fromDb.prenom    || fromMeta.prenom    || ""),
+        nom:       compact(fromDb.nom       || fromMeta.nom       || ""),
         matricule: compact(fromDb.matricule || fromMeta.matricule || ""),
       };
       setIdentity(resolved);
       setPrenom(resolved.prenom);
       setNom(resolved.nom);
       setMatricule(resolved.matricule);
+      setEmail(compact(fromDb.email || authEmail));
+      setTelephone(compact(fromDb.telephone || ""));
+      setSociete(compact(fromDb.societe || ""));
+      setCartePro(compact(fromDb.carte_pro || ""));
+
+      // Crée la ligne profiles si elle n'existe pas encore
+      if (!fromDb.prenom && !fromDb.email) {
+        await upsertProfile(uid, { email: authEmail });
+      }
+
       setAllowed(true);
     })();
 
@@ -258,6 +313,22 @@ export default function AgentProfilPage() {
           </div>
         </div>
 
+        {/* Bannière profil incomplet */}
+        {isProfileIncomplete && (
+          <div className="mt-5 flex items-center justify-between gap-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-3">
+            <p className="text-xs font-bold text-amber-300 uppercase tracking-widest">
+              Profil incomplet — Complète tes informations pour activer toutes les fonctionnalités.
+            </p>
+            <button
+              type="button"
+              onClick={saveProfile}
+              className="shrink-0 text-[10px] font-black uppercase tracking-widest text-amber-300 border border-amber-400/40 px-3 py-1.5 rounded-xl hover:bg-amber-400/10 transition-colors"
+            >
+              ÉDITER MON PROFIL ↓
+            </button>
+          </div>
+        )}
+
         <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-3">
           {/* Avatar card — image + 2 ronds uniquement */}
           <div className={[hudCardClass, "flex flex-col items-center p-6 md:p-7"].join(" ")}>
@@ -314,19 +385,19 @@ export default function AgentProfilPage() {
             <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <label className={labelClass}>Prénom</label>
-                <input value={prenom} onChange={(e) => setPrenom(e.target.value)} placeholder="NOT_SET" className={fieldClass} />
+                <input value={prenom} onChange={(e) => setPrenom(e.target.value)} placeholder="À compléter" className={fieldClass} />
               </div>
               <div>
                 <label className={labelClass}>Nom</label>
-                <input value={nom} onChange={(e) => setNom(e.target.value)} placeholder="NOT_SET" className={fieldClass} />
+                <input value={nom} onChange={(e) => setNom(e.target.value)} placeholder="À compléter" className={fieldClass} />
               </div>
               <div>
                 <label className={labelClass}>Téléphone</label>
-                <input value={telephone} onChange={(e) => setTelephone(e.target.value)} placeholder="NOT_SET" className={fieldClass} />
+                <input value={telephone} onChange={(e) => setTelephone(e.target.value)} placeholder="À compléter" className={fieldClass} />
               </div>
               <div>
                 <label className={labelClass}>Email</label>
-                <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="NOT_SET" className={fieldClass} />
+                <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="À compléter" className={fieldClass} />
               </div>
             </div>
           </div>
@@ -343,17 +414,37 @@ export default function AgentProfilPage() {
             <div className="mt-5 flex flex-col gap-4">
               <div>
                 <label className={labelClass}>Société</label>
-                <input value={societe} onChange={(e) => setSociete(e.target.value)} placeholder="NOT_SET" className={fieldClass} />
+                <input value={societe} onChange={(e) => setSociete(e.target.value)} placeholder="À compléter" className={fieldClass} />
               </div>
               <div>
                 <label className={labelClass}>Matricule</label>
-                <input value={matricule} onChange={(e) => setMatricule(e.target.value)} placeholder="NOT_SET" className={fieldClass} />
+                <input value={matricule} onChange={(e) => setMatricule(e.target.value)} placeholder="À compléter" className={fieldClass} />
               </div>
               <div>
                 <label className={labelClass}>N° Carte Professionnelle</label>
-                <input value={cartePro} onChange={(e) => setCartePro(e.target.value)} placeholder="NOT_SET" className={fieldClass} />
+                <input value={cartePro} onChange={(e) => setCartePro(e.target.value)} placeholder="À compléter" className={fieldClass} />
               </div>
             </div>
+
+            {/* Save message */}
+            {saveMsg && (
+              <p className={[
+                "mt-4 text-xs font-bold uppercase tracking-widest",
+                saveMsg.includes("succès") ? "text-emerald-400" : "text-red-400",
+              ].join(" ")}>
+                {saveMsg}
+              </p>
+            )}
+
+            {/* Bouton Enregistrer */}
+            <button
+              type="button"
+              onClick={saveProfile}
+              disabled={saving}
+              className="mt-5 w-full py-3.5 rounded-2xl bg-emerald-400 text-[#050A12] text-sm font-black uppercase tracking-widest disabled:opacity-50 active:scale-[0.98] transition-all hover:bg-emerald-300"
+            >
+              {saving ? "Enregistrement..." : "ENREGISTRER LE PROFIL"}
+            </button>
           </div>
 
           {/* Bloc — Hub Tactique */}

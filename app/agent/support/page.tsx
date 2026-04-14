@@ -241,7 +241,7 @@ export default function AgentSupportPage() {
           <button
             type="button"
             onClick={() => setBugOpen(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-amber-500/35 bg-amber-500/10 py-3.5 text-xs font-bold uppercase tracking-widest text-amber-100 hover:bg-amber-500/20"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#00e5ff] py-3.5 text-xs font-bold uppercase tracking-widest text-[#00e5ff] hover:bg-[#00e5ff] hover:text-black transition-all duration-300"
           >
             <ShieldAlert className="h-4 w-4 shrink-0" />
             Signaler un Bug
