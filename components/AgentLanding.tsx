@@ -61,7 +61,7 @@ function Verrou({ children, bloque }: { children: React.ReactNode; bloque: boole
         , sans engagement.
       </p>
       <a
-        href="https://buy.stripe.com/test_5kQfZae222Vse0leoq5gc00"
+        href="https://buy.stripe.com/28E6oAbTU3ZwaO92FI5gc01"
         target="_blank"
         rel="noopener noreferrer"
         style={{
