@@ -18,11 +18,11 @@ export const metadata: Metadata = {
   description: "SecuPRO, la plateforme de gestion pour les agents et entreprises de sécurité privée.",
   icons: {
     icon: [
-      { url: "/secupro-icon.svg", type: "image/svg+xml" },
+      { url: "/secupro-logo-official.png", type: "image/png", sizes: "512x512" },
     ],
-    shortcut: "/secupro-icon.svg",
+    shortcut: "/secupro-logo-official.png",
     apple: [
-      { url: "/secupro-icon.svg", type: "image/svg+xml" },
+      { url: "/secupro-logo-official.png", sizes: "512x512" },
     ],
   },
 };

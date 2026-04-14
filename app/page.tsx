@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -38,32 +39,20 @@ export default function LandingPage() {
 
       <div className="w-full max-w-sm flex flex-col items-center gap-8 relative z-10">
 
-        {/* Titre */}
-        <div className="text-center">
-          <h1
-            className="font-black tracking-tighter leading-none select-none"
-            style={{ fontSize: "clamp(4.5rem, 18vw, 6.5rem)" }}
-          >
-            <span
-              style={{
-                color: "#00d1ff",
-                textShadow:
-                  "0 0 18px rgba(0,209,255,1), 0 0 40px rgba(0,209,255,0.8), 0 0 80px rgba(0,209,255,0.5)",
-              }}
-            >
-              SECU
-            </span>
-            <span
-              style={{
-                color: "#ffffff",
-                textShadow: "0 0 22px rgba(255,255,255,0.45)",
-              }}
-            >
-              PRO
-            </span>
-          </h1>
+        {/* Logo officiel */}
+        <div className="text-center flex flex-col items-center gap-3">
+          <Image
+            src="/secupro-logo-official.png"
+            alt="SecuPRO"
+            width={200}
+            height={200}
+            priority
+            style={{
+              filter: "drop-shadow(0 0 24px rgba(41,212,245,0.35)) drop-shadow(0 0 48px rgba(41,212,245,0.15))",
+            }}
+          />
           <p
-            className="mt-2 font-bold uppercase"
+            className="font-bold uppercase"
             style={{
               fontSize: "9px",
               letterSpacing: "0.45em",

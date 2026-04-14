@@ -2,6 +2,7 @@
 
 console.log("HUB CHARGÉ - FORCE LOCK");
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -174,12 +175,26 @@ export default function AgentHubPage() {
         <div className="ow-content mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
           {/* Header cockpit */}
           <header className="mb-10 ow-header-panel">
-            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-500">
-              SECUPRO — Interface Agent
-            </p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl ow-title-accent">
-              HUB <span className="text-[#00d1ff]">AGENT</span>
-            </h1>
+            <div className="flex items-center gap-4 mb-3">
+              <Image
+                src="/secupro-logo-official.png"
+                alt="SecuPRO"
+                width={56}
+                height={56}
+                priority
+                style={{
+                  filter: "drop-shadow(0 0 12px rgba(41,212,245,0.3))",
+                }}
+              />
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-500">
+                  Interface Agent
+                </p>
+                <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl ow-title-accent">
+                  HUB <span className="text-[#00d1ff]">AGENT</span>
+                </h1>
+              </div>
+            </div>
             <div className="mt-3 flex items-center gap-2">
               <span
                 className="inline-block h-2 w-2 rounded-full bg-[#39ff14] animate-pulse"

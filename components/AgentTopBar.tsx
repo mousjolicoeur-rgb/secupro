@@ -3,6 +3,7 @@
 import AgentAvatar from "@/components/AgentAvatar";
 import { Moon, Sun, Crown } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function AgentTopBar(props: {
   title: string;
@@ -24,26 +25,37 @@ export default function AgentTopBar(props: {
           : "border-cyan-400/15 bg-white/[0.04] shadow-[0_0_40px_rgba(34,211,238,0.05)]",
       ].join(" ")}
     >
-      {/* SECTION GAUCHE : Titres */}
-      <div className="min-w-0">
-        <div
-          className={[
-            "text-lg font-black uppercase tracking-tight truncate",
-            isNormal ? "text-slate-900" : "text-white",
-          ].join(" ")}
-        >
-          {props.title}
-        </div>
-        {props.subtitle && (
+      {/* SECTION GAUCHE : Logo + Titres */}
+      <div className="flex items-center gap-3 min-w-0">
+        <Image
+          src="/secupro-logo-official.png"
+          alt="SecuPRO"
+          width={36}
+          height={36}
+          className="shrink-0"
+          priority
+        />
+        <div className="w-px h-8 shrink-0 opacity-20" style={{ background: "currentColor" }} />
+        <div className="min-w-0">
           <div
             className={[
-              "text-[10px] font-medium uppercase tracking-widest opacity-60 truncate",
-              props.subtitleClassName || (isNormal ? "text-slate-500" : "text-cyan-400"),
+              "text-lg font-black uppercase tracking-tight truncate",
+              isNormal ? "text-slate-900" : "text-white",
             ].join(" ")}
           >
-            {props.subtitle}
+            {props.title}
           </div>
-        )}
+          {props.subtitle && (
+            <div
+              className={[
+                "text-[10px] font-medium uppercase tracking-widest opacity-60 truncate",
+                props.subtitleClassName || (isNormal ? "text-slate-500" : "text-cyan-400"),
+              ].join(" ")}
+            >
+              {props.subtitle}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* SECTION DROITE : Boutons et Avatar */}
