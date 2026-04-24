@@ -12,7 +12,7 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const errorParam = searchParams.get('error');
+  const errorParam = searchParams?.get('error');
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
