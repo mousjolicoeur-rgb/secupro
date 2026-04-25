@@ -20,6 +20,7 @@ type Fiche = {
   file_path: string | null;
   file_url: string | null;
   ocr_status: string | null;
+  analyse_ia: any | null;
   created_at: string;
 };
 
@@ -35,6 +36,14 @@ type OcrResult = {
     heures_travaillees?: number | null;
     conges_pris?: number | null;
     conges_restant?: number | null;
+    analyse_ia?: {
+      points_ok: string[];
+      alertes: string[];
+      coefficient_detecte: number | null;
+      taux_horaire_detecte: number | null;
+      heures_sup_detectees: number | null;
+      date_analyse: string;
+    };
   };
 };
 
@@ -150,7 +159,7 @@ export default function PaiePage() {
       fd.append('userId', userId ?? 'unknown');
 
       setOcrState('ocr');
-      const res = await fetch('/api/paie/ocr', { method: 'POST', body: fd });
+      const res = await fetch('/api/analyze-payslip', { method: 'POST', body: fd });
 
       if (!res.ok) {
         let msg = 'Erreur serveur';
@@ -202,6 +211,7 @@ export default function PaiePage() {
         file_path:         ocrResult?.file_path ?? null,
         file_url:          ocrResult?.file_url ?? null,
         ocr_status:        ocrResult ? (ocrState === 'partial' ? 'partial' : 'done') : 'manual',
+        analyse_ia:        ocrResult?.extracted?.analyse_ia ?? null,
       };
 
       console.log('[saveFiche] payload →', payload);
@@ -255,32 +265,32 @@ export default function PaiePage() {
           ← Hub
         </button>
         <p className="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-bold">Salaire & Budget</p>
-        <h1 className="text-emerald-400 text-3xl font-black tracking-tighter">PAIE</h1>
+        <h1 className="text-blue-400 text-3xl font-black tracking-tighter">PAIE</h1>
       </div>
 
       {/* Hero card */}
-      <div className="mx-4 mb-5 rounded-2xl bg-gradient-to-br from-emerald-600/30 to-emerald-900/30 border border-emerald-500/25 p-5 shadow-[0_0_30px_rgba(52,211,153,0.12)]">
-        <p className="text-emerald-300/60 text-[10px] uppercase tracking-widest font-bold mb-1">Dernier salaire net</p>
+      <div className="mx-4 mb-5 rounded-2xl bg-gradient-to-br from-blue-600/30 to-blue-900/30 border border-blue-500/25 p-5 shadow-[0_0_30px_rgba(59,130,246,0.12)]">
+        <p className="text-blue-300/60 text-[10px] uppercase tracking-widest font-bold mb-1">Dernier salaire net</p>
         <p className="text-4xl font-black text-white">{eur(latest?.salaire_net)}</p>
-        <div className="flex flex-wrap gap-x-6 gap-y-1 mt-2 text-xs text-emerald-300/50 font-semibold">
+        <div className="flex flex-wrap gap-x-6 gap-y-1 mt-2 text-xs text-blue-300/50 font-semibold">
           {latest?.acomptes ? <span>Acompte : {eur(latest.acomptes)}</span> : null}
           {latest?.retenues ? <span>Retenues : {eur(latest.retenues)}</span> : null}
         </div>
         <div className="mt-4">
           <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
             <div
-              className="h-full bg-emerald-400 rounded-full transition-all duration-700"
+              className="h-full bg-blue-400 rounded-full transition-all duration-700"
               style={{ width: `${heuresPct}%` }}
             />
           </div>
-          <div className="flex justify-between text-[10px] text-emerald-300/50 mt-1 font-semibold">
+          <div className="flex justify-between text-[10px] text-blue-300/50 mt-1 font-semibold">
             <span>{latest?.heures_effectuees ?? 0}h effectuées</span>
             <span>{HEURES_CONTRAT}h contractuelles</span>
           </div>
         </div>
         {latest?.conges_restants != null && (
-          <p className="mt-3 text-[10px] text-emerald-300/50 font-bold uppercase tracking-widest">
-            Congés restants : <span className="text-emerald-300">{latest.conges_restants} j</span>
+          <p className="mt-3 text-[10px] text-blue-300/50 font-bold uppercase tracking-widest">
+            Congés restants : <span className="text-blue-300">{latest.conges_restants} j</span>
             {latest.conges_pris != null
               ? <span className="ml-2 text-slate-500">· Pris : {latest.conges_pris} j</span>
               : null}
@@ -322,8 +332,8 @@ export default function PaiePage() {
         {/* Loading spinner */}
         {loading && (
           <div className="flex items-center justify-center h-32 gap-3">
-            <Loader2 className="text-emerald-400 animate-spin" size={20} />
-            <p className="text-emerald-400 text-sm font-bold tracking-widest">Chargement...</p>
+            <Loader2 className="text-blue-400 animate-spin" size={20} />
+            <p className="text-blue-400 text-sm font-bold tracking-widest">Chargement...</p>
           </div>
         )}
 
@@ -350,7 +360,7 @@ export default function PaiePage() {
             <p className="text-slate-500 text-sm">Aucune fiche de paie</p>
             <button
               onClick={() => { resetModal(); setShowUpload(true); }}
-              className="text-emerald-400 text-xs font-black uppercase tracking-widest border border-emerald-500/30 px-4 py-2 rounded-xl active:scale-95 transition-all"
+              className="text-blue-400 text-xs font-black uppercase tracking-widest border border-blue-500/30 px-4 py-2 rounded-xl active:scale-95 transition-all"
             >
               + Uploader une fiche
             </button>
@@ -368,29 +378,32 @@ export default function PaiePage() {
             </div>
 
             <div className="space-y-2">
-              {fiches.map((f) => (
                 <div
                   key={f.id}
-                  className="bg-white/[0.03] border border-white/[0.07] rounded-2xl px-4 py-3 hover:border-emerald-500/20 transition-colors"
+                  className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-4 hover:border-blue-500/20 transition-colors"
                 >
-                  {/* Mobile */}
-                  <div className="sm:hidden flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-white font-black text-sm uppercase tracking-wider">{f.mois ?? '—'}</p>
-                      <p className="text-emerald-400 font-black text-base mt-0.5">{eur(f.salaire_net)}</p>
+                  {/* Fiche Info */}
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-white font-black text-sm uppercase tracking-wider">{f.mois ?? '—'}</p>
+                        {f.ocr_status === 'done' && (
+                          <span className="text-[9px] text-blue-400 font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20">Audit IA</span>
+                        )}
+                      </div>
+                      <p className="text-blue-400 font-black text-base mt-0.5">{eur(f.salaire_net)}</p>
+                      
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
-                        {f.acomptes ? <span className="text-slate-400 text-[10px]">Acompte {eur(f.acomptes)}</span> : null}
-                        {f.retenues ? <span className="text-slate-400 text-[10px]">Retenues {eur(f.retenues)}</span> : null}
-                        {f.heures_effectuees ? <span className="text-slate-400 text-[10px]">{f.heures_effectuees}h</span> : null}
-                        {f.conges_restants != null
-                          ? <span className="text-slate-400 text-[10px]">Congés {f.conges_pris ?? 0}j / {f.conges_restants}j rest.</span>
-                          : null}
+                        {f.heures_effectuees ? <span className="text-slate-400 text-[10px]">{f.heures_effectuees}h travaillées</span> : null}
+                        {f.analyse_ia?.heures_sup_detectees ? <span className="text-amber-400 font-bold text-[10px]">+{f.analyse_ia.heures_sup_detectees}h sup</span> : null}
+                        {f.analyse_ia?.coefficient_detecte ? <span className="text-slate-400 text-[10px]">Coeff {f.analyse_ia.coefficient_detecte}</span> : null}
                       </div>
                     </div>
+                    
                     <div className="flex gap-2 shrink-0">
                       {f.file_url && (
                         <a href={f.file_url} target="_blank" rel="noopener noreferrer"
-                          className="p-2 rounded-xl border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                          className="p-2 rounded-xl border border-blue-500/25 text-blue-400 hover:bg-blue-500/10 transition-colors"
                           title="Télécharger le PDF original">
                           <Download size={14} />
                         </a>
@@ -402,40 +415,44 @@ export default function PaiePage() {
                     </div>
                   </div>
 
-                  {/* Desktop */}
-                  <div className="hidden sm:grid grid-cols-[1.8fr_1.2fr_1fr_1fr_0.8fr_1fr_auto] gap-2 items-center">
-                    <div>
-                      <p className="text-white font-black text-sm uppercase tracking-wide">{f.mois ?? '—'}</p>
-                      {f.ocr_status === 'done' && (
-                        <span className="text-[9px] text-emerald-500/60 font-bold uppercase tracking-widest">IA OCR</span>
+                  {/* Analyse IA Results */}
+                  {f.analyse_ia && (
+                    <div className="mt-4 pt-4 border-t border-white/[0.05] space-y-2">
+                      {f.analyse_ia.alertes?.length > 0 && (
+                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <AlertTriangle size={14} className="text-amber-500" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">Anomalies détectées</span>
+                          </div>
+                          <ul className="space-y-1">
+                            {f.analyse_ia.alertes.map((a: string, i: number) => (
+                              <li key={i} className="text-xs text-amber-300/80 flex items-start gap-1.5">
+                                <span className="mt-1 w-1 h-1 rounded-full bg-amber-500 shrink-0" />
+                                <span>{a}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       )}
-                      {f.ocr_status === 'partial' && (
-                        <span className="text-[9px] text-amber-500/70 font-bold uppercase tracking-widest">OCR partiel</span>
+                      
+                      {f.analyse_ia.points_ok?.length > 0 && (
+                        <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCircle size={14} className="text-emerald-500" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Points conformes</span>
+                          </div>
+                          <ul className="space-y-1">
+                            {f.analyse_ia.points_ok.map((p: string, i: number) => (
+                              <li key={i} className="text-xs text-emerald-400/70 flex items-start gap-1.5">
+                                <span className="mt-1 w-1 h-1 rounded-full bg-emerald-500 shrink-0" />
+                                <span>{p}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       )}
                     </div>
-                    <p className="text-emerald-400 font-black text-sm">{eur(f.salaire_net)}</p>
-                    <p className="text-slate-300 text-sm">{eur(f.acomptes)}</p>
-                    <p className="text-slate-300 text-sm">{eur(f.retenues)}</p>
-                    <p className="text-slate-300 text-sm">{num(f.heures_effectuees)}h</p>
-                    <p className="text-slate-300 text-xs">
-                      {f.conges_pris != null || f.conges_restants != null
-                        ? `${f.conges_pris ?? 0}j · ${f.conges_restants ?? '—'}j rest.`
-                        : '—'}
-                    </p>
-                    <div className="flex gap-1.5 justify-end">
-                      {f.file_url && (
-                        <a href={f.file_url} target="_blank" rel="noopener noreferrer"
-                          className="p-1.5 rounded-lg border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
-                          title="Télécharger le PDF original">
-                          <Download size={13} />
-                        </a>
-                      )}
-                      <button onClick={() => setDeleteTarget(f)}
-                        className="p-1.5 rounded-lg border border-red-500/20 text-red-400/60 hover:bg-red-500/10 transition-colors">
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -467,9 +484,9 @@ export default function PaiePage() {
             {/* File drop zone */}
             <div
               onClick={() => fileRef.current?.click()}
-              className="cursor-pointer border-2 border-dashed border-emerald-500/30 rounded-2xl p-5 text-center hover:border-emerald-500/60 transition-colors"
+              className="cursor-pointer border-2 border-dashed border-blue-500/30 rounded-2xl p-5 text-center hover:border-blue-500/60 transition-colors"
             >
-              <Upload className="mx-auto mb-2 text-emerald-400/60" size={26} />
+              <Upload className="mx-auto mb-2 text-blue-400/60" size={26} />
               {selectedFile ? (
                 <p className="text-white text-sm font-bold truncate px-2">{selectedFile.name}</p>
               ) : (
@@ -492,9 +509,9 @@ export default function PaiePage() {
               <div className="space-y-2">
                 <button
                   onClick={launchOcr}
-                  className="w-full py-3 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-black text-sm uppercase tracking-widest rounded-2xl active:scale-95 transition-all hover:bg-emerald-500/25"
+                  className="w-full py-3 bg-blue-500/15 border border-blue-500/30 text-blue-400 font-black text-sm uppercase tracking-widest rounded-2xl active:scale-95 transition-all hover:bg-blue-500/25"
                 >
-                  Analyser avec l&apos;IA (OCR)
+                  Audit SecuIA (IDCC 1351)
                 </button>
                 <button
                   onClick={() => setOcrState('done')}
@@ -507,11 +524,12 @@ export default function PaiePage() {
 
             {/* Spinner during OCR */}
             {(ocrState === 'uploading' || ocrState === 'ocr') && (
-              <div className="flex items-center justify-center gap-3 py-4">
-                <Loader2 className="text-emerald-400 animate-spin" size={20} />
-                <p className="text-emerald-400 text-sm font-bold uppercase tracking-widest">
+              <div className="flex flex-col items-center justify-center gap-3 py-6">
+                <Loader2 className="text-blue-400 animate-spin" size={26} />
+                <p className="text-blue-400 text-sm font-bold uppercase tracking-widest">
                   {ocrState === 'uploading' ? 'Envoi du fichier...' : 'Analyse IA en cours...'}
                 </p>
+                {ocrState === 'ocr' && <p className="text-[10px] text-slate-500 uppercase font-black">Recherche d'anomalies IDCC 1351</p>}
               </div>
             )}
 
@@ -529,7 +547,7 @@ export default function PaiePage() {
             {ocrState === 'done' && (
               <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-widest">
                 <CheckCircle size={14} />
-                Données extraites — Vérifiez et corrigez si besoin
+                Audit complet — Vérifiez les données
               </div>
             )}
 
@@ -549,6 +567,45 @@ export default function PaiePage() {
             {/* Editable fields (done, partial, or error) */}
             {showFields && (
               <>
+                {/* ── AI Results Banner if available ── */}
+                {ocrResult?.extracted?.analyse_ia && (
+                  <div className="space-y-3 mb-4">
+                    {ocrResult.extracted.analyse_ia.alertes?.length > 0 && (
+                      <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <AlertTriangle size={16} className="text-amber-500" />
+                          <span className="text-xs font-black uppercase tracking-widest text-amber-500">Alerte IDCC 1351</span>
+                        </div>
+                        <ul className="space-y-1.5">
+                          {ocrResult.extracted.analyse_ia.alertes.map((a: string, i: number) => (
+                            <li key={i} className="text-sm text-amber-200 flex items-start gap-2">
+                              <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                              <span>{a}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {ocrResult.extracted.analyse_ia.points_ok?.length > 0 && (
+                      <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle size={14} className="text-emerald-500" />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Points conformes</span>
+                        </div>
+                        <ul className="space-y-1">
+                          {ocrResult.extracted.analyse_ia.points_ok.map((p: string, i: number) => (
+                            <li key={i} className="text-xs text-emerald-400/80 flex items-start gap-1.5">
+                              <span className="mt-1 w-1 h-1 rounded-full bg-emerald-500 shrink-0" />
+                              <span>{p}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="space-y-3">
                   {/* MOIS — pleine largeur */}
                   <div>
@@ -667,7 +724,7 @@ export default function PaiePage() {
                   <button
                     onClick={saveFiche}
                     disabled={saving || !form.mois}
-                    className="flex-1 py-3 rounded-xl bg-emerald-400 text-[#050A12] text-sm font-black uppercase tracking-wider disabled:opacity-50 active:scale-95 transition-all"
+                    className="flex-1 py-3 rounded-xl bg-blue-500 text-white text-sm font-black uppercase tracking-wider disabled:opacity-50 active:scale-95 transition-all"
                   >
                     {saving ? <span className="flex items-center justify-center gap-2"><Loader2 size={14} className="animate-spin" /> Enregistrement...</span> : 'Enregistrer'}
                   </button>

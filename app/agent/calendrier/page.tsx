@@ -1,333 +1,515 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, Plus, ChevronLeft, ChevronRight, Clock, MapPin, Loader2 } from 'lucide-react';
+import { 
+  ArrowLeft, Calendar as CalendarIcon, CalendarDays, 
+  Plus, ChevronLeft, ChevronRight, Briefcase, User, 
+  MapPin, Clock, X, Loader2 
+} from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
-type RDV = {
+type EventAgent = {
   id: string;
+  agent_id: string;
   titre: string;
-  date: string;       // YYYY-MM-DD
-  heure: string;      // HH:MM
-  lieu: string;
-  type: 'mission' | 'formation' | 'medical' | 'admin' | 'autre';
+  date_debut: string;
+  date_fin?: string;
+  note?: string;
+  couleur?: string;
 };
 
-const TYPE_CONFIG = {
-  mission:    { label: 'Mission',    color: '#00d1ff', bg: 'bg-[#00d1ff]/10',    border: 'border-[#00d1ff]/25'    },
-  formation:  { label: 'Formation',  color: '#34d399', bg: 'bg-emerald-500/10',  border: 'border-emerald-500/25'  },
-  medical:    { label: 'Médical',    color: '#f87171', bg: 'bg-red-500/10',       border: 'border-red-500/25'      },
-  admin:      { label: 'Admin',      color: '#fbbf24', bg: 'bg-amber-500/10',    border: 'border-amber-500/25'    },
-  autre:      { label: 'Autre',      color: '#818cf8', bg: 'bg-indigo-500/10',   border: 'border-indigo-500/25'   },
+type PlanningRow = {
+  id: string;
+  site?: string;
+  lieu?: string;
+  nom_site?: string;
+  date?: string;
+  shift_date?: string;
+  date_debut?: string;
+  horaires?: string;
+  creneau?: string;
+  plage_horaire?: string;
+  societes?: { nom: string };
 };
 
-const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-const DAYS_FR   = ['L','M','M','J','V','S','D'];
+type ViewMode = 'semaine' | 'mois';
+type TabMode = 'perso' | 'pro';
 
-const EMPTY_FORM = { titre: '', date: '', heure: '', lieu: '', type: 'autre' as RDV['type'] };
+// Helpers de dates
+function getWeekMonday(d: Date): Date {
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + diff);
+}
+
+function getWeekDays(monday: Date): Date[] {
+  return Array.from({ length: 7 }, (_, i) =>
+    new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i)
+  );
+}
+
+function getMonthDays(date: Date): Date[] {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const firstDayOfMonth = new Date(year, month, 1);
+  const lastDayOfMonth = new Date(year, month + 1, 0);
+  
+  // Pad with previous month days
+  const startOffset = firstDayOfMonth.getDay() === 0 ? 6 : firstDayOfMonth.getDay() - 1;
+  const days = [];
+  
+  for (let i = startOffset; i > 0; i--) {
+    days.push(new Date(year, month, 1 - i));
+  }
+  for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
+    days.push(new Date(year, month, i));
+  }
+  // Pad end
+  const endOffset = days.length % 7 === 0 ? 0 : 7 - (days.length % 7);
+  for (let i = 1; i <= endOffset; i++) {
+    days.push(new Date(year, month + 1, i));
+  }
+  return days;
+}
+
+function toISO(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 export default function CalendrierPage() {
   const router = useRouter();
+  
+  const [agentId, setAgentId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<TabMode>('pro');
+  const [view, setView] = useState<ViewMode>('semaine');
+  
+  // Dates
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  
+  // Data
+  const [persoEvents, setPersoEvents] = useState<EventAgent[]>([]);
+  const [proEvents, setProEvents] = useState<PlanningRow[]>([]);
+  
+  // Modals
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<EventAgent | PlanningRow | null>(null);
+  
+  // Add Form
+  const [formTitre, setFormTitre] = useState('');
+  const [formDate, setFormDate] = useState(toISO(new Date()));
+  const [formHeure, setFormHeure] = useState('08:00');
+  const [formNote, setFormNote] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const today = new Date();
-  const [year, setYear]   = useState(today.getFullYear());
-  const [month, setMonth] = useState(today.getMonth());
+  useEffect(() => {
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.replace('/');
+        return;
+      }
+      
+      const { data: agentData } = await supabase
+        .from('agents')
+        .select('id')
+        .eq('email', session.user.email)
+        .single();
+        
+      if (agentData) {
+        setAgentId(agentData.id);
+        await loadData(agentData.id);
+      }
+      setLoading(false);
+    };
+    init();
+  }, [router]);
 
-  const [rdvs, setRdvs] = useState<RDV[]>([]);
-  const [showAdd, setShowAdd]   = useState(false);
-  const [form, setForm]         = useState({ ...EMPTY_FORM });
-  const [saving, setSaving]     = useState(false);
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const loadData = async (uid: string) => {
+    // Fetch Perso
+    const { data: persoData } = await supabase
+      .from('evenements_agent')
+      .select('*')
+      .eq('agent_id', uid);
+    
+    // Fetch Pro (via auth RLS or direct relation, actually plannings table might just use agent_id or user_id)
+    // Assuming 'agent_id' maps to agents(id) or 'user_id' maps to auth.uid(). Since the user said "joindre avec agents via agent_id", we use agent_id.
+    const { data: proData } = await supabase
+      .from('plannings')
+      .select('*, societes(nom)')
+      .eq('agent_id', uid);
 
-  // ── Calendar grid ────────────────────────────────────────────────────────────
-  const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  // Shift so week starts Monday (0=Mon … 6=Sun)
-  const startOffset = (firstDay === 0 ? 6 : firstDay - 1);
-
-  const prevMonth = () => {
-    if (month === 0) { setYear(y => y - 1); setMonth(11); }
-    else setMonth(m => m - 1);
+    if (persoData) setPersoEvents(persoData as EventAgent[]);
+    if (proData) setProEvents(proData as PlanningRow[]);
   };
-  const nextMonth = () => {
-    if (month === 11) { setYear(y => y + 1); setMonth(0); }
-    else setMonth(m => m + 1);
+
+  const handlePrev = () => {
+    const newDate = new Date(currentDate);
+    if (view === 'semaine') newDate.setDate(newDate.getDate() - 7);
+    else newDate.setMonth(newDate.getMonth() - 1);
+    setCurrentDate(newDate);
   };
 
-  const rdvsForDay = (day: number) => {
-    const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return rdvs.filter(r => r.date === key);
+  const handleNext = () => {
+    const newDate = new Date(currentDate);
+    if (view === 'semaine') newDate.setDate(newDate.getDate() + 7);
+    else newDate.setMonth(newDate.getMonth() + 1);
+    setCurrentDate(newDate);
   };
 
-  // ── Add RDV ──────────────────────────────────────────────────────────────────
-  const openAdd = (day?: number) => {
-    const dateStr = day
-      ? `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-      : '';
-    setForm({ ...EMPTY_FORM, date: dateStr });
-    setShowAdd(true);
-  };
-
-  const saveRdv = async () => {
-    if (!form.titre || !form.date) return;
+  const handleAddSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!agentId || !formTitre || !formDate) return;
     setSaving(true);
-    await new Promise(r => setTimeout(r, 300)); // visual feedback
-    const newRdv: RDV = { ...form, id: `${Date.now()}` };
-    setRdvs(prev => [...prev, newRdv].sort((a, b) => a.date.localeCompare(b.date) || a.heure.localeCompare(b.heure)));
+    
+    const combinedStart = new Date(`${formDate}T${formHeure}:00`);
+    
+    const { error } = await supabase
+      .from('evenements_agent')
+      .insert({
+        agent_id: agentId,
+        titre: formTitre,
+        date_debut: combinedStart.toISOString(),
+        note: formNote,
+        couleur: 'blue'
+      });
+      
+    if (!error) {
+      await loadData(agentId);
+      setShowAddModal(false);
+      setFormTitre('');
+      setFormNote('');
+    } else {
+      alert("Erreur lors de la création de l'événement.");
+    }
     setSaving(false);
-    setShowAdd(false);
-    setForm({ ...EMPTY_FORM });
   };
 
-  const deleteRdv = (id: string) => setRdvs(prev => prev.filter(r => r.id !== id));
+  // Rendering logic
+  const daysToRender = useMemo(() => {
+    if (view === 'semaine') return getWeekDays(getWeekMonday(currentDate));
+    return getMonthDays(currentDate);
+  }, [currentDate, view]);
 
-  // ── Selected day RDVs ────────────────────────────────────────────────────────
-  const selectedDayRdvs = selectedDay ? rdvs.filter(r => r.date === selectedDay) : [];
-
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-  const upcomingRdvs = rdvs.filter(r => r.date >= todayStr).slice(0, 5);
+  const monthLabel = currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="min-h-screen bg-[#060D18] text-white flex flex-col pb-16">
-
-      {/* Header */}
-      <div className="px-5 pt-10 pb-5">
-        <button onClick={() => router.push('/agent/hub')}
-          className="text-slate-500 text-[10px] uppercase tracking-widest mb-3 flex items-center gap-1 hover:text-indigo-400 transition-colors">
-          ← Hub
+    <div className="min-h-screen bg-[#060D18] text-white flex flex-col pb-24 font-sans">
+      
+      {/* ── Header ── */}
+      <div className="px-5 pt-10 pb-6 border-b border-white/5 bg-gradient-to-b from-[#0a1426] to-transparent sticky top-0 z-20 backdrop-blur-md">
+        <button
+          onClick={() => router.push('/agent/hub')}
+          className="inline-flex items-center gap-1.5 text-slate-500 text-[10px] uppercase tracking-widest mb-5 hover:text-white transition-colors"
+        >
+          <ArrowLeft size={12} /> Hub
         </button>
-        <p className="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-bold">Agenda professionnel</p>
-        <h1 className="text-indigo-400 text-3xl font-black tracking-tighter"
-          style={{ textShadow: '0 0 20px rgba(129,140,248,0.5)' }}>
-          MES RENDEZ-VOUS PRO
-        </h1>
-        <div className="mt-2 flex items-center gap-2">
-          <span className="inline-block h-2 w-2 rounded-full bg-indigo-400 animate-pulse"
-            style={{ boxShadow: '0 0 8px rgba(129,140,248,0.85)' }} />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            {rdvs.length} rendez-vous enregistré{rdvs.length !== 1 ? 's' : ''}
-          </span>
-        </div>
-      </div>
 
-      {/* ── CALENDAR ─────────────────────────────────────────────────────────── */}
-      <div className="px-4 mb-5">
-        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
-          {/* Nav */}
-          <div className="flex items-center justify-between mb-4">
-            <button onClick={prevMonth}
-              className="p-2 rounded-xl border border-white/10 text-slate-400 hover:text-white hover:border-white/20 transition-all active:scale-95">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-[10px] text-[#3B82F6] uppercase tracking-[0.3em] font-bold mb-1">
+              Gestion du Temps
+            </p>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tighter text-white">
+              CALEN<span className="text-[#3B82F6]">DRIER</span>
+            </h1>
+          </div>
+          {tab === 'perso' && (
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="w-10 h-10 rounded-full bg-[#3B82F6] text-white shadow-[0_0_20px_rgba(59,130,246,0.4)] flex items-center justify-center active:scale-95 transition-transform"
+            >
+              <Plus size={20} />
+            </button>
+          )}
+        </div>
+
+        {/* ── Tabs Perso / Pro ── */}
+        <div className="flex bg-white/5 rounded-2xl p-1 mt-6 border border-white/10">
+          <button
+            onClick={() => setTab('pro')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+              tab === 'pro' ? 'bg-[#3B82F6] text-white shadow-md' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Briefcase size={14} /> Pro (Shifts)
+          </button>
+          <button
+            onClick={() => setTab('perso')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+              tab === 'perso' ? 'bg-[#3B82F6] text-white shadow-md' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <User size={14} /> Personnel
+          </button>
+        </div>
+
+        {/* ── Controls (Mois/Semaine & Navigation) ── */}
+        <div className="flex items-center justify-between mt-6">
+          <div className="flex bg-white/5 rounded-xl p-0.5 border border-white/5">
+            <button
+              onClick={() => setView('semaine')}
+              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors ${
+                view === 'semaine' ? 'bg-white/10 text-white' : 'text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              Semaine
+            </button>
+            <button
+              onClick={() => setView('mois')}
+              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors ${
+                view === 'mois' ? 'bg-white/10 text-white' : 'text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              Mois
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button onClick={handlePrev} className="p-1.5 text-slate-400 hover:text-white bg-white/5 rounded-lg">
               <ChevronLeft size={16} />
             </button>
-            <p className="text-white font-black text-sm uppercase tracking-widest">
-              {MONTHS_FR[month]} {year}
-            </p>
-            <button onClick={nextMonth}
-              className="p-2 rounded-xl border border-white/10 text-slate-400 hover:text-white hover:border-white/20 transition-all active:scale-95">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#3B82F6] min-w-[120px] text-center">
+              {monthLabel}
+            </span>
+            <button onClick={handleNext} className="p-1.5 text-slate-400 hover:text-white bg-white/5 rounded-lg">
               <ChevronRight size={16} />
             </button>
           </div>
-
-          {/* Day labels */}
-          <div className="grid grid-cols-7 mb-2">
-            {DAYS_FR.map((d, i) => (
-              <div key={i} className="text-center text-[9px] font-black uppercase tracking-widest text-slate-600">{d}</div>
-            ))}
-          </div>
-
-          {/* Grid */}
-          <div className="grid grid-cols-7 gap-0.5">
-            {/* Empty cells before first day */}
-            {Array.from({ length: startOffset }).map((_, i) => (
-              <div key={`e${i}`} className="aspect-square" />
-            ))}
-            {/* Day cells */}
-            {Array.from({ length: daysInMonth }).map((_, i) => {
-              const day = i + 1;
-              const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-              const dayRdvs = rdvsForDay(day);
-              const isToday = dateStr === todayStr;
-              const isSelected = dateStr === selectedDay;
-
-              return (
-                <button key={day}
-                  onClick={() => setSelectedDay(isSelected ? null : dateStr)}
-                  className={[
-                    'aspect-square rounded-lg flex flex-col items-center justify-center relative transition-all active:scale-95',
-                    isToday    ? 'bg-indigo-500/20 border border-indigo-400/50' :
-                    isSelected ? 'bg-white/[0.08] border border-white/20' :
-                                 'border border-transparent hover:bg-white/[0.04]',
-                  ].join(' ')}
-                >
-                  <span className={`text-[11px] font-bold ${isToday ? 'text-indigo-300' : 'text-white/70'}`}>{day}</span>
-                  {dayRdvs.length > 0 && (
-                    <div className="flex gap-0.5 mt-0.5">
-                      {dayRdvs.slice(0, 3).map(r => (
-                        <span key={r.id} className="w-1 h-1 rounded-full"
-                          style={{ backgroundColor: TYPE_CONFIG[r.type].color }} />
-                      ))}
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Add button */}
-          <button onClick={() => openAdd()}
-            className="mt-4 w-full py-3 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-500/25 transition-all active:scale-95"
-            style={{ boxShadow: '0 0 16px rgba(129,140,248,0.1)' }}>
-            <Plus size={14} />
-            Nouveau rendez-vous
-          </button>
         </div>
       </div>
 
-      {/* ── SELECTED DAY PANEL ───────────────────────────────────────────────── */}
-      {selectedDay && (
-        <div className="px-4 mb-5">
-          <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-4">
-            <p className="text-indigo-300 text-[10px] font-black uppercase tracking-widest mb-3">
-              {new Date(selectedDay + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-            </p>
-            {selectedDayRdvs.length === 0 ? (
-              <div className="text-center py-4">
-                <p className="text-slate-600 text-xs">Aucun rendez-vous ce jour</p>
-                <button onClick={() => openAdd(parseInt(selectedDay.split('-')[2]))}
-                  className="mt-2 text-indigo-400 text-xs font-bold hover:underline">
-                  + Ajouter un RDV
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {selectedDayRdvs.map(rdv => (
-                  <RdvCard key={rdv.id} rdv={rdv} onDelete={deleteRdv} />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── UPCOMING RDVs ────────────────────────────────────────────────────── */}
-      <div className="px-4">
-        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-3">À venir</p>
-        {upcomingRdvs.length === 0 ? (
-          <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-8 text-center">
-            <CalendarDays className="mx-auto mb-3 text-indigo-400/30" size={36} />
-            <p className="text-slate-600 text-sm">Aucun rendez-vous planifié</p>
-            <p className="text-slate-700 text-xs mt-1">Appuyez sur &quot;Nouveau rendez-vous&quot; pour commencer</p>
+      {/* ── Grid ── */}
+      <div className="px-4 mt-6 flex-1">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <Loader2 className="text-[#3B82F6] animate-spin" size={32} />
           </div>
         ) : (
-          <div className="space-y-2">
-            {upcomingRdvs.map(rdv => (
-              <RdvCard key={rdv.id} rdv={rdv} onDelete={deleteRdv} />
+          <div className={`grid grid-cols-7 gap-1 sm:gap-2 ${view === 'mois' ? 'auto-rows-fr' : ''}`}>
+            {/* Jours de la semaine en-tête */}
+            {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(d => (
+              <div key={d} className="text-center text-[9px] font-black text-slate-500 uppercase tracking-widest pb-2">
+                {d}
+              </div>
             ))}
+            
+            {/* Cellules */}
+            {daysToRender.map((day, i) => {
+              const iso = toISO(day);
+              const isToday = iso === toISO(new Date());
+              const isCurrentMonth = day.getMonth() === currentDate.getMonth();
+
+              // Get events for this day
+              let dayEvents: any[] = [];
+              if (tab === 'perso') {
+                dayEvents = persoEvents.filter(e => e.date_debut.startsWith(iso));
+              } else {
+                dayEvents = proEvents.filter(e => {
+                  const raw = e.date ?? e.shift_date ?? e.date_debut;
+                  return typeof raw === 'string' && raw.startsWith(iso);
+                });
+              }
+
+              return (
+                <div 
+                  key={i} 
+                  className={`flex flex-col rounded-xl border border-white/5 p-1 sm:p-2 min-h-[80px] sm:min-h-[100px] transition-colors ${
+                    isToday ? 'bg-[#3B82F6]/10 border-[#3B82F6]/30' : 
+                    isCurrentMonth ? 'bg-white/[0.02]' : 'bg-transparent opacity-40'
+                  }`}
+                >
+                  <span className={`text-xs font-black ${isToday ? 'text-[#3B82F6]' : 'text-slate-400'} text-right mb-1`}>
+                    {day.getDate()}
+                  </span>
+                  
+                  <div className="flex flex-col gap-1 overflow-y-auto custom-scrollbar flex-1">
+                    {dayEvents.map(ev => {
+                      const isPro = tab === 'pro';
+                      const title = isPro ? (ev.site ?? ev.nom_site ?? 'Vacation') : ev.titre;
+                      return (
+                        <div
+                          key={ev.id}
+                          onClick={() => setSelectedEvent({ ...ev, _isPro: isPro })}
+                          className={`text-[9px] sm:text-xs font-bold px-1.5 py-1 rounded cursor-pointer truncate ${
+                            isPro ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' : 'bg-[#3B82F6]/20 text-[#3B82F6] hover:bg-[#3B82F6]/30'
+                          }`}
+                        >
+                          {title}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* ── ADD MODAL ───────────────────────────────────────────────────────── */}
-      {showAdd && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
-          <div className="w-full max-w-sm bg-[#080F1C] border border-indigo-500/20 rounded-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Agenda Pro</p>
-                <h2 className="text-white font-black text-base uppercase tracking-wide">Nouveau RDV</h2>
+      {/* ── Modal Add Event (Perso) ── */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-[#060D18]/80 backdrop-blur-sm" onClick={() => setShowAddModal(false)} />
+          <form 
+            onSubmit={handleAddSubmit}
+            className="relative w-full max-w-sm bg-[#0b1426] border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col animate-in zoom-in-95 duration-200"
+          >
+            <h3 className="text-xl font-black text-white mb-6">Ajouter un événement</h3>
+            
+            <label className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-1.5">Titre</label>
+            <input 
+              type="text" required value={formTitre} onChange={e => setFormTitre(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white mb-4 focus:outline-none focus:border-[#3B82F6]/50"
+              placeholder="Ex: Rendez-vous médical"
+            />
+            
+            <div className="flex gap-4 mb-4">
+              <div className="flex-1">
+                <label className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-1.5 block">Date</label>
+                <input 
+                  type="date" required value={formDate} onChange={e => setFormDate(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#3B82F6]/50 [color-scheme:dark]"
+                />
               </div>
-              <button onClick={() => setShowAdd(false)} className="text-slate-500 hover:text-white transition-colors text-xl font-bold">×</button>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="text-slate-500 text-[9px] uppercase tracking-widest font-bold block mb-1">Titre *</label>
-                <input type="text" placeholder="Ex: Visite médicale, Formation SST..."
-                  value={form.titre} onChange={e => setForm(f => ({ ...f, titre: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-white text-sm outline-none focus:border-indigo-400/50 transition-colors" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-slate-500 text-[9px] uppercase tracking-widest font-bold block mb-1">Date *</label>
-                  <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-white text-sm outline-none focus:border-indigo-400/50 transition-colors" />
-                </div>
-                <div>
-                  <label className="text-slate-500 text-[9px] uppercase tracking-widest font-bold block mb-1">Heure</label>
-                  <input type="time" value={form.heure} onChange={e => setForm(f => ({ ...f, heure: e.target.value }))}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-white text-sm outline-none focus:border-indigo-400/50 transition-colors" />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-slate-500 text-[9px] uppercase tracking-widest font-bold block mb-1">Lieu</label>
-                <input type="text" placeholder="Adresse ou lieu..."
-                  value={form.lieu} onChange={e => setForm(f => ({ ...f, lieu: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-white text-sm outline-none focus:border-indigo-400/50 transition-colors" />
-              </div>
-
-              <div>
-                <label className="text-slate-500 text-[9px] uppercase tracking-widest font-bold block mb-1">Type</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(Object.keys(TYPE_CONFIG) as RDV['type'][]).map(t => (
-                    <button key={t}
-                      onClick={() => setForm(f => ({ ...f, type: t }))}
-                      className={`py-2 rounded-xl border text-[10px] font-black uppercase tracking-wider transition-all ${form.type === t ? `${TYPE_CONFIG[t].bg} ${TYPE_CONFIG[t].border}` : 'border-white/10 text-slate-500'}`}
-                      style={form.type === t ? { color: TYPE_CONFIG[t].color } : {}}>
-                      {TYPE_CONFIG[t].label}
-                    </button>
-                  ))}
-                </div>
+              <div className="flex-1">
+                <label className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-1.5 block">Heure</label>
+                <input 
+                  type="time" required value={formHeure} onChange={e => setFormHeure(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#3B82F6]/50 [color-scheme:dark]"
+                />
               </div>
             </div>
-
-            <div className="flex gap-3 pt-1">
-              <button onClick={() => setShowAdd(false)}
-                className="flex-1 py-3 rounded-xl border border-white/10 text-slate-400 text-sm font-bold uppercase tracking-wider active:scale-95 transition-all">
+            
+            <label className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-1.5 block">Note (optionnelle)</label>
+            <textarea 
+              value={formNote} onChange={e => setFormNote(e.target.value)} rows={3}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white mb-6 focus:outline-none focus:border-[#3B82F6]/50 resize-none"
+              placeholder="Détails de l'événement..."
+            />
+            
+            <div className="flex gap-3">
+              <button 
+                type="button" onClick={() => setShowAddModal(false)}
+                className="flex-1 py-3.5 rounded-xl border border-white/10 text-slate-400 text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-colors"
+              >
                 Annuler
               </button>
-              <button onClick={saveRdv} disabled={saving || !form.titre || !form.date}
-                className="flex-1 py-3 rounded-xl bg-indigo-500 text-white text-sm font-black uppercase tracking-wider disabled:opacity-40 active:scale-95 transition-all flex items-center justify-center gap-2"
-                style={{ boxShadow: '0 0 20px rgba(129,140,248,0.3)' }}>
-                {saving ? <><Loader2 size={13} className="animate-spin" />Enreg...</> : 'Enregistrer'}
+              <button 
+                type="submit" disabled={saving}
+                className="flex-1 py-3.5 rounded-xl bg-[#3B82F6] text-white text-xs font-black uppercase tracking-widest hover:bg-[#3B82F6]/80 transition-colors disabled:opacity-50"
+              >
+                {saving ? 'Création...' : 'Créer'}
               </button>
             </div>
+          </form>
+        </div>
+      )}
+
+      {/* ── Modal Detail Event ── */}
+      {selectedEvent && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="absolute inset-0 bg-[#060D18]/80 backdrop-blur-sm" onClick={() => setSelectedEvent(null)} />
+          <div className="relative w-full sm:max-w-sm bg-[#0b1426] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl flex flex-col animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-200">
+            <button 
+              onClick={() => setSelectedEvent(null)}
+              className="absolute top-5 right-5 p-2 rounded-full bg-white/5 text-slate-400 hover:text-white transition-colors"
+            >
+              <X size={18} />
+            </button>
+            
+            {(selectedEvent as any)._isPro ? (
+              <>
+                <div className="flex items-center gap-2 text-emerald-400 text-[10px] font-black uppercase tracking-widest mb-2">
+                  <Briefcase size={12} /> Shift Professionnel
+                </div>
+                <h3 className="text-2xl font-black text-white mb-6 leading-tight">
+                  {(selectedEvent as PlanningRow).site ?? (selectedEvent as PlanningRow).nom_site ?? 'Vacation'}
+                </h3>
+                
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                      <Clock size={18} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Horaires</p>
+                      <p className="text-sm text-white font-semibold">
+                        {(selectedEvent as PlanningRow).horaires ?? (selectedEvent as PlanningRow).creneau ?? (selectedEvent as PlanningRow).plage_horaire ?? 'Non défini'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#3B82F6]/10 flex items-center justify-center text-[#3B82F6] shrink-0">
+                      <MapPin size={18} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Employeur</p>
+                      <p className="text-sm text-white font-semibold">
+                        {(selectedEvent as PlanningRow).societes?.nom ?? 'Société Inconnue'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 text-[#3B82F6] text-[10px] font-black uppercase tracking-widest mb-2">
+                  <User size={12} /> Événement Personnel
+                </div>
+                <h3 className="text-2xl font-black text-white mb-6 leading-tight">
+                  {(selectedEvent as EventAgent).titre}
+                </h3>
+                
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#3B82F6]/10 flex items-center justify-center text-[#3B82F6] shrink-0">
+                      <Clock size={18} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Début</p>
+                      <p className="text-sm text-white font-semibold">
+                        {new Date((selectedEvent as EventAgent).date_debut).toLocaleString('fr-FR', {
+                          day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {(selectedEvent as EventAgent).note && (
+                    <div className="mt-4 p-4 rounded-xl bg-white/5 border border-white/5 text-sm text-slate-300 whitespace-pre-wrap">
+                      {(selectedEvent as EventAgent).note}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+            
+            <button 
+              onClick={() => setSelectedEvent(null)}
+              className="w-full py-4 rounded-xl bg-white/5 text-slate-300 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-colors"
+            >
+              Fermer
+            </button>
           </div>
         </div>
       )}
-    </div>
-  );
-}
 
-// ── RDV Card ──────────────────────────────────────────────────────────────────
-function RdvCard({ rdv, onDelete }: { rdv: RDV; onDelete: (id: string) => void }) {
-  const cfg = TYPE_CONFIG[rdv.type];
-  return (
-    <div className={`flex items-center gap-3 rounded-xl border p-3 ${cfg.bg} ${cfg.border}`}>
-      <div className="w-1 self-stretch rounded-full shrink-0" style={{ backgroundColor: cfg.color }} />
-      <div className="flex-1 min-w-0">
-        <p className="text-white font-black text-sm truncate">{rdv.titre}</p>
-        <div className="flex items-center gap-3 mt-0.5">
-          {rdv.heure && (
-            <span className="flex items-center gap-1 text-[10px] text-slate-400">
-              <Clock size={9} />{rdv.heure}
-            </span>
-          )}
-          {rdv.lieu && (
-            <span className="flex items-center gap-1 text-[10px] text-slate-400 truncate">
-              <MapPin size={9} />{rdv.lieu}
-            </span>
-          )}
-        </div>
-        <span className="text-[9px] font-bold uppercase tracking-widest mt-0.5 inline-block" style={{ color: cfg.color }}>
-          {cfg.label}
-        </span>
-      </div>
-      <button onClick={() => onDelete(rdv.id)}
-        className="shrink-0 p-1.5 rounded-lg text-slate-600 hover:text-red-400 transition-colors">
-        ×
-      </button>
+      {/* Styles for scrollbar */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255,255,255,0.1);
+          border-radius: 4px;
+        }
+      `}} />
     </div>
   );
 }

@@ -10,8 +10,10 @@ import {
 import { supabase } from "@/lib/supabaseClient";
 import { isAuthenticatedClient } from "@/lib/authClient";
 import type { PlanningImportResult } from "@/app/api/planning/import/route";
+import { parseHoraires, detectConflicts, type ParsedShift, type Conflict } from "@/lib/planningUtils";
+import { AlertTriangle } from "lucide-react";
 
-type PlanningRow = Record<string, unknown> & { id?: string };
+type PlanningRow = Record<string, unknown> & { id?: string; societe_id?: string; societes?: { nom: string } };
 
 // ─── Helpers semaine ─────────────────────────────────────────────────────────
 
@@ -67,6 +69,7 @@ export default function AgentPlanningPage() {
   const [ready, setReady] = useState(false);
   const [agentId, setAgentId] = useState<string | null>(null);
   const [rows, setRows] = useState<PlanningRow[]>([]);
+  const [conflicts, setConflicts] = useState<Conflict[]>([]);
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
@@ -110,13 +113,47 @@ export default function AgentPlanningPage() {
     setLoadErr(null);
     const { data, error } = await supabase
       .from("plannings")
-      .select("*")
+      .select("*, societes(nom)")
       .eq("user_id", uid)
       .order("date", { ascending: true });
-    if (error) { setLoadErr(error.message); setRows([]); }
-    else { setRows((data ?? []) as PlanningRow[]); }
+      
+    if (error) { 
+      setLoadErr(error.message); 
+      setRows([]); 
+      setConflicts([]);
+    } else { 
+      const planningData = (data ?? []) as PlanningRow[];
+      setRows(planningData); 
+      
+      // Compute conflicts
+      const shiftsToParse: ParsedShift[] = planningData.map(r => {
+        const rawDate = r.date ?? r.shift_date ?? r.date_debut;
+        const horairesStr = rowHoraires(r);
+        const parsed = parseHoraires(horairesStr);
+        if (typeof rawDate === 'string' && parsed) {
+          return {
+            id: r.id || Math.random().toString(),
+            date: rawDate,
+            startMin: parsed.startMin,
+            endMin: parsed.endMin,
+            societeId: r.societe_id || null,
+            raw: r
+          };
+        }
+        return null;
+      }).filter(Boolean) as ParsedShift[];
+
+      // Only pass current week shifts to conflicts (or all, but weekly rules apply)
+      // Actually we should filter shifts by the current selected week or analyze all
+      // Let's analyze all loaded shifts. The rules might throw false max_semaine if we load multiple weeks.
+      // Filter by the selected week
+      const currentWeekIsoDates = weekDays.map(d => toISO(d));
+      const weeklyShifts = shiftsToParse.filter(s => currentWeekIsoDates.includes(s.date));
+      
+      setConflicts(detectConflicts(weeklyShifts));
+    }
     setLoading(false);
-  }, []);
+  }, [weekDays]);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -429,6 +466,29 @@ export default function AgentPlanningPage() {
           </div>
         )}
 
+        {/* ── Alertes de Conflits ── */}
+        {conflicts.length > 0 && (
+          <div className="mb-6 overflow-hidden rounded-2xl border border-red-500/50 bg-[#0A0505]/90 backdrop-blur-md"
+            style={{ boxShadow: "0 0 40px rgba(248,113,113,0.15), inset 0 1px 0 rgba(248,113,113,0.1)" }}>
+            <div className="flex items-center gap-3 border-b border-red-500/20 bg-red-500/10 px-5 py-3 sm:px-7">
+              <AlertTriangle className="h-5 w-5 text-red-500 animate-pulse" />
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-red-400">
+                Alerte IDCC 1351 : Conflits Multi-Employeurs ({conflicts.length})
+              </span>
+            </div>
+            <div className="p-5 sm:px-7">
+              <ul className="space-y-3">
+                {conflicts.map((c, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-red-500 shadow-[0_0_8px_rgba(248,113,113,0.8)]" />
+                    <span className="text-sm font-medium text-red-200">{c.message}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
         {/* ── Tableau plein écran ── */}
         <div ref={exportRef}
           className="flex-1 overflow-hidden rounded-2xl border border-[#00d1ff]/20 bg-[#07111e]/90 backdrop-blur-md"
@@ -570,10 +630,19 @@ export default function AgentPlanningPage() {
                       </div>
                     </div>
 
-                    {/* Site */}
+                    {/* Site & Employeur */}
                     <div>
                       {site ? (
-                        <span className="text-sm font-semibold text-slate-100">{site}</span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-semibold text-slate-100">{site}</span>
+                          {/* Affichage de l'employeur s'il existe */}
+                          {row?.societes && (
+                            <span className="text-[10px] font-bold text-[#00d1ff] uppercase tracking-wider mt-0.5">
+                              {/* @ts-ignore */}
+                              {row.societes.nom || "Employeur"}
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-700">
                           No Service
@@ -581,8 +650,8 @@ export default function AgentPlanningPage() {
                       )}
                     </div>
 
-                    {/* Horaires */}
-                    <div>
+                    {/* Horaires et Badge Conflit */}
+                    <div className="flex flex-col items-start gap-2">
                       {horaires ? (
                         <span
                           className="inline-block rounded-lg border border-[#00d1ff]/20 bg-[#00d1ff]/[0.07] px-3 py-1 text-xs font-black tracking-wide text-[#00d1ff]"
@@ -592,6 +661,14 @@ export default function AgentPlanningPage() {
                         </span>
                       ) : (
                         <span className="text-slate-700 text-sm">—</span>
+                      )}
+                      
+                      {/* Surbrillance visuelle du conflit sur cette vacation */}
+                      {hasVacation && row?.id && conflicts.some(c => c.shiftIds.includes(row.id as string)) && (
+                        <div className="inline-flex items-center gap-1.5 rounded-md bg-red-500/20 px-2 py-0.5 border border-red-500/30">
+                          <AlertTriangle className="h-3 w-3 text-red-500" />
+                          <span className="text-[9px] font-black uppercase text-red-400">Conflit</span>
+                        </div>
                       )}
                     </div>
                   </div>
