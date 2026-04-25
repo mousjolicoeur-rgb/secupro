@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const resend    = new Resend(process.env.RESEND_API_KEY);
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL   ?? "contact@secupro.app";
 const FROM_EMAIL  = process.env.FROM_EMAIL    ?? "SECUPRO <noreply@secupro.app>";
 
 export async function POST(req: NextRequest) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   // ── 1. Vérification du secret (header x-webhook-secret) ──────────────────
   const secret = process.env.WEBHOOK_SECRET;
   if (secret) {

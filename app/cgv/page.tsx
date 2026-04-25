@@ -179,10 +179,10 @@ export default function CGVPage() {
           <p>
             Pour toute question relative à votre abonnement ou à ces CGV, contactez-nous :{" "}
             <a
-              href="mailto:mustaphajelikhi@outlook.fr"
+              href="mailto:support@secupro.app"
               style={{ color: "#00d1ff", textDecoration: "none" }}
             >
-              mustaphajelikhi@outlook.fr
+              support@secupro.app
             </a>
           </p>
         </Section>

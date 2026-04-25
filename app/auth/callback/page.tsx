@@ -11,8 +11,8 @@ function CallbackInner() {
 
   useEffect(() => {
     const handle = async () => {
-      const code = searchParams.get('code');
-      const errorParam = searchParams.get('error');
+      const code = searchParams?.get('code');
+      const errorParam = searchParams?.get('error');
 
       if (errorParam) {
         router.replace('/login?error=confirmation_failed');

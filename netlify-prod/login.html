@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecuPRO — Authentification Sécurisée</title>
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="grid-bg" aria-hidden="true"></div>
+<div class="halo" style="background:radial-gradient(ellipse, rgba(255,115,0,0.07) 0%, transparent 65%);" aria-hidden="true"></div>
+
+<main class="auth-wrap">
+
+  <div class="auth-card">
+
+    <!-- Logo -->
+    <div class="auth-logo-wrap">
+      <div class="auth-logo-ring">
+        <span class="auth-logo-icon">🏛️</span>
+      </div>
+      <div class="auth-title">
+        <p class="auth-label">SecuPRO · Command Center</p>
+        <h1 class="auth-h1">
+          AUTHENTIFICATION SÉCURISÉE
+          <span>ACCÈS COMMAND CENTER</span>
+        </h1>
+        <p class="auth-sub">Données chiffrées AES-256 · Accès restreint</p>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- Bannière sécurité -->
+    <div class="security-banner">
+      <span class="security-icon">🛡️</span>
+      <div>
+        <p class="security-title">Accès restreint</p>
+        <p class="security-desc">Réservé aux entreprises clientes SecuPRO</p>
+      </div>
+      <span style="margin-left:auto;font-size:13px;opacity:0.3;">🖥️</span>
+    </div>
+
+    <!-- Formulaire -->
+    <form class="form" id="loginForm" onsubmit="handleLogin(event)" autocomplete="off" novalidate>
+
+      <div class="field">
+        <label class="field-label" for="email">
+          <span class="icon">✉️</span> Email Professionnel
+        </label>
+        <div class="input-wrap">
+          <span class="input-icon">@</span>
+          <input
+            id="email"
+            type="email"
+            placeholder="direction@entreprise.fr"
+            autocomplete="off"
+            spellcheck="false"
+            required
+          >
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="password">
+          <span class="icon">🔒</span> Code d'accès sécurisé
+        </label>
+        <div class="input-wrap">
+          <span class="input-icon">🔑</span>
+          <input
+            id="password"
+            type="password"
+            placeholder="••••••••••••"
+            autocomplete="off"
+            required
+          >
+          <button type="button" class="toggle-pwd" onclick="togglePwd()" id="toggleBtn" title="Afficher/Masquer">👁️</button>
+        </div>
+      </div>
+
+      <div id="formError" style="display:none;text-align:center;font-size:10px;font-weight:700;color:rgba(255,68,85,0.85);padding:4px 0;"></div>
+
+      <button type="submit" class="submit-btn">
+        <span>🔐</span> ÉTABLIR LA CONNEXION
+      </button>
+
+    </form>
+
+    <p class="form-footer">Connexion chiffrée · SecuPRO Command System v2</p>
+  </div>
+
+  <div class="auth-page-footer">
+    <p>© 2026 SECUPRO COMMAND SYSTEM</p>
+    <a href="mailto:contact@secupro.app?subject=Support%20Command%20Center" class="auth-support">
+      ✉️ Contacter le support
+    </a>
+    <div style="margin-top:16px;">
+      <a href="index.html" style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.25em;color:rgba(0,209,255,0.25);">← Retour à l'accueil</a>
+    </div>
+  </div>
+
+</main>
+
+<script>
+function togglePwd() {
+  const input = document.getElementById('password');
+  const btn = document.getElementById('toggleBtn');
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁️';
+  }
+}
+
+function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const errEl = document.getElementById('formError');
+
+  if (!email || !password) {
+    errEl.style.display = 'block';
+    errEl.textContent = 'Veuillez remplir tous les champs.';
+    return;
+  }
+
+  const btn = document.querySelector('.submit-btn');
+  btn.textContent = '⏳ Authentification en cours…';
+  btn.disabled = true;
+  errEl.style.display = 'none';
+
+  setTimeout(() => {
+    window.location.href = 'dashboard.html';
+  }, 1400);
+}
+</script>
+
+</body>
+</html>

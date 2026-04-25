@@ -24,7 +24,14 @@
       "Bash(npm install:*)",
       "Bash(npx next:*)",
       "Bash(curl -s -X POST https://ladvecmpjpictubnnnsq.supabase.co/storage/v1/bucket -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZHZlY21wanBpY3R1Ym5ubnNxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDk4MzMzMCwiZXhwIjoyMDkwNTU5MzMwfQ.eyATx4T3_NW2NjVK6f6zN5vcsCxHRLsVvaERnbx_W_o' -H 'Content-Type: application/json' -d '{\"id\":\"documents\",\"name\":\"documents\",\"public\":true,\"fileSizeLimit\":20971520,\"allowedMimeTypes\":[\"application/pdf\",\"image/jpeg\",\"image/png\",\"image/webp\"]}')",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npm list *)",
+      "Bash(npx tsc *)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(curl -s \"http://localhost:3001/\")",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/provisioning/import -H 'Content-Type: application/json' -d '{\"agents\":[{\"email\":\"test@test.fr\",\"nom\":\"Test\",\"prenom\":\"User\"}],\"societeId\":\"ton-societe-id\",\"batchId\":\"test-batch\"}' -w '\\\\n\\\\nHTTP_STATUS:%{http_code}')",
+      "Bash(curl -s -X POST http://localhost:3000/api/provisioning/import -H 'Content-Type: application/json' --data-raw '{\"agents\":[{\"email\":\"test2@test.fr\",\"nom\":\"Dupont\",\"prenom\":\"Jean\"}],\"societeId\":\"ton-societe-id\",\"batchId\":\"test-batch-2\"}' -w '\\\\nHTTP %{http_code}')"
     ]
   }
 }

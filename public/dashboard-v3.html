@@ -329,7 +329,7 @@ nav.sb-nav{flex:1;padding:12px 10px;overflow-y:auto;display:flex;flex-direction:
         </div>
         <button onclick="loadAgentsFromSupabase()" id="btn-refresh" class="btn-sm ghost" style="white-space:nowrap;">🔄 Rafraîchir</button>
         <button onclick="exportCSV()" class="btn-sm ghost" style="white-space:nowrap;">⬇ Export CSV</button>
-        <button class="btn-sm primary" style="white-space:nowrap;">+ Ajouter agent</button>
+        <button class="btn-sm primary" style="white-space:nowrap;" onclick="openAddAgent()">+ Ajouter agent</button>
       </div>
 
       <div class="filter-tabs">
@@ -1955,7 +1955,7 @@ function openInviteMember() {
     <div style="margin-bottom:20px;">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px;">Rôle</div>
       <select id="inv-role" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--white);font-size:13px;outline:none;cursor:pointer;">
-        <option>Chef d'exploitation</option><option>Superviseur</option><option>RH / Administratif</option><option>Lecteur</option>
+        <option>Chef d'exploitation</option><option>Chef de site</option><option>Superviseur</option><option>RH / Administratif</option><option>Lecteur</option>
       </select>
     </div>
     <div id="inv-msg" style="display:none;padding:10px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;font-weight:600;"></div>
@@ -1983,9 +1983,37 @@ function sendInvite() {
   },1200);
 }
 
+function roleBadge(role) {
+  const s = {
+    'Administrateur':      'rgba(26,111,212,0.15)|var(--blueL)',
+    "Chef d'exploitation": 'rgba(0,209,255,0.12)|var(--cyan)',
+    'Chef de site':        'rgba(16,185,129,0.15)|var(--green)',
+    'Superviseur':         'rgba(249,115,22,0.12)|var(--orange)',
+  };
+  const [bg, col] = (s[role] || 'rgba(90,122,159,0.12)|var(--muted)').split('|');
+  return `padding:4px 12px;border-radius:100px;font-size:11px;font-weight:700;background:${bg};color:${col};`;
+}
+
+function saveMemberRole(name) {
+  const sel = document.getElementById('modal-role-select');
+  if (!sel) return;
+  const m = teamMembers.find(x => x.name === name);
+  if (m) m.role = sel.value;
+  document.querySelector('[data-member-modal]').remove();
+  renderSettings();
+}
+
+function cycleRight(ri, ci) {
+  const vals = ['✅', '👁️', '❌'];
+  const cur = accessRights[ri][ci];
+  accessRights[ri][ci] = vals[(vals.indexOf(cur) + 1) % vals.length];
+  renderSettingsContent('equipe');
+}
+
 function openMemberSettings(name, role) {
   const ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;';
+  ov.dataset.memberModal = '1';
   const ini = name.split(' ').map(n=>n[0]).join('').slice(0,2);
   ov.innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;width:420px;">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
@@ -1995,9 +2023,10 @@ function openMemberSettings(name, role) {
     </div>
     <div style="margin-bottom:16px;">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px;">Modifier le rôle</div>
-      <select style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--white);font-size:13px;outline:none;cursor:pointer;">
+      <select id="modal-role-select" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--white);font-size:13px;outline:none;cursor:pointer;">
         <option ${role==='Administrateur'?'selected':''}>Administrateur</option>
         <option ${role==="Chef d'exploitation"?'selected':''}>Chef d'exploitation</option>
+        <option ${role==='Chef de site'?'selected':''}>Chef de site</option>
         <option ${role==='Superviseur'?'selected':''}>Superviseur</option>
         <option>RH / Administratif</option><option>Lecteur</option>
       </select>
@@ -2009,7 +2038,7 @@ function openMemberSettings(name, role) {
     </div>
     <div style="display:flex;gap:10px;">
       <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">Annuler</button>
-      <button onclick="this.closest('[style*=fixed]').remove();alert('✅ Modifications enregistrées')" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--blue);color:#fff;font-size:13px;font-weight:900;cursor:pointer;">💾 Enregistrer</button>
+      <button onclick="saveMemberRole('${name}')" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--blue);color:#fff;font-size:13px;font-weight:900;cursor:pointer;">💾 Enregistrer</button>
     </div>
   </div>`;
   document.body.appendChild(ov);
@@ -2076,6 +2105,23 @@ const SETTINGS_SECTIONS = [
 ];
 let currentSettingsTab = 'entreprise';
 
+let teamMembers = [
+  {name:'Mustapha',        email:'contact@secupro.app',             role:'Administrateur',     last:'Aujourd\'hui'},
+  {name:'Jean-Pierre R.',  email:'jp.richard@securite-pro.fr',      role:"Chef d'exploitation", last:'Hier'},
+  {name:'Karim B.',        email:'k.benali@securite-pro.fr',         role:'Chef de site',        last:'Il y a 2j'},
+  {name:'Fatima Z.',       email:'f.zairi@securite-pro.fr',          role:'Superviseur',         last:'Il y a 3j'},
+];
+
+let accessRights = [
+  ['Agents & Import CSV', '✅','✅','👁️','👁️'],
+  ['Compliance CNAPS',    '✅','✅','👁️','👁️'],
+  ['Performance & KPIs',  '✅','✅','✅', '✅'],
+  ['Bulletins de paie',   '✅','✅','❌', '❌'],
+  ['SecuIA',              '✅','✅','✅', '✅'],
+  ['Facturation',         '✅','❌','❌', '❌'],
+  ['Paramètres équipe',   '✅','❌','❌', '❌'],
+];
+
 function renderSettings() {
   // Nav
   let nav = '';
@@ -2132,9 +2178,9 @@ function settingsInput(val, placeholder='', width='200px') {
   ">`;
 }
 
-function settingsSelect(options, selected) {
+function settingsSelect(options, selected, onchangeFn='') {
   const opts = options.map(o => `<option value="${o.v}" ${o.v===selected?'selected':''}>${o.l}</option>`).join('');
-  return `<select style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--white);font-size:13px;outline:none;cursor:pointer;">${opts}</select>`;
+  return `<select ${onchangeFn?`onchange="${onchangeFn}"`:''}  style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--white);font-size:13px;outline:none;cursor:pointer;">${opts}</select>`;
 }
 
 function renderSettingsContent(tab) {
@@ -2145,7 +2191,7 @@ function renderSettingsContent(tab) {
       <div class="card" style="margin-bottom:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
           <div class="card-title" style="margin:0;">Profil de la société</div>
-          <button class="btn-sm primary">💾 Enregistrer</button>
+          <button class="btn-sm primary" onclick="saveEntreprise()">💾 Enregistrer</button>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
           ${['Raison sociale','SIRET','Code APE','N° CNAPS société'].map((l,i) => `
@@ -2179,7 +2225,7 @@ function renderSettingsContent(tab) {
       <div class="card" style="margin-bottom:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
           <div class="card-title" style="margin:0;">Seuils d'alertes CNAPS</div>
-          <button class="btn-sm primary">💾 Enregistrer</button>
+          <button class="btn-sm primary" onclick="saveAlertes()">💾 Enregistrer</button>
         </div>
         <p style="font-size:12px;color:var(--muted);margin-bottom:20px;">Définissez les délais à partir desquels SecuPRO déclenche automatiquement une alerte.</p>
         ${settingsRow('⏰ Alerte expiration carte pro — Niveau WARNING','Déclencher un avertissement X jours avant expiration',
@@ -2206,7 +2252,7 @@ function renderSettingsContent(tab) {
       <div class="card" style="margin-bottom:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
           <div class="card-title" style="margin:0;">Paramètres IDCC 1351</div>
-          <button class="btn-sm ghost" style="font-size:11px;">↺ Valeurs par défaut</button>
+          <button class="btn-sm ghost" style="font-size:11px;" onclick="resetReglements()">↺ Valeurs par défaut</button>
         </div>
         <p style="font-size:12px;color:var(--muted);margin-bottom:20px;">Ces valeurs sont pré-renseignées selon la Convention Collective Nationale de la Sécurité Privée (IDCC 1351). Modifiez uniquement si votre accord d'entreprise prévoit des dispositions plus favorables.</p>
         ${settingsRow('⏱️ Durée max vacation journalière','Art. 7 IDCC 1351 — Maximum légal : 10h consécutives',
@@ -2237,8 +2283,8 @@ function renderSettingsContent(tab) {
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;">
           <div>
             <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.2em;color:var(--blueL);margin-bottom:6px;">Plan actuel</div>
-            <div style="font-size:28px;font-weight:900;color:var(--white);">Business</div>
-            <div style="font-size:14px;color:var(--muted);margin-top:4px;">99€ / mois · 11–30 agents · Renouvellement le 01/06/2026</div>
+            <div style="font-size:28px;font-weight:900;color:var(--white);">Pro</div>
+            <div style="font-size:14px;color:var(--muted);margin-top:4px;">99,99€ / mois · 11–30 agents · Renouvellement le 01/06/2026</div>
           </div>
           <div style="padding:6px 16px;border-radius:100px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);font-size:12px;font-weight:700;color:var(--green);">✅ Actif</div>
         </div>
@@ -2249,8 +2295,8 @@ function renderSettingsContent(tab) {
           <span style="font-size:12px;font-weight:700;color:var(--blueL);">24/30 agents utilisés</span>
         </div>
         <div style="display:flex;gap:10px;margin-top:18px;">
-          <button class="btn-sm primary" style="padding:10px 20px;">⬆ Passer au Pro (199€/mois)</button>
-          <button class="btn-sm ghost" style="padding:10px 20px;">📄 Voir les factures</button>
+          <button class="btn-sm primary" style="padding:10px 20px;" onclick="openPlanModal()">⬆ Passer au Premium (199,99€/mois)</button>
+          <button class="btn-sm ghost" style="padding:10px 20px;" onclick="switchSettingsTab('abonnement');setTimeout(()=>document.querySelector('#s-settings .card:last-child')?.scrollIntoView({behavior:'smooth'}),200)">📄 Voir les factures</button>
         </div>
       </div>
       <div class="card" style="margin-bottom:16px;">
@@ -2258,44 +2304,45 @@ function renderSettingsContent(tab) {
         <div style="display:flex;align-items:center;gap:14px;padding:14px;border-radius:12px;background:var(--card2);border:1px solid var(--border);margin-bottom:12px;">
           <span style="font-size:24px">💳</span>
           <div style="flex:1"><div style="font-weight:700;font-size:13px">Visa •••• •••• •••• 4242</div><div style="font-size:12px;color:var(--muted)">Expire 09/2027 · Facturation automatique</div></div>
-          <button class="btn-sm ghost" style="font-size:11px;">Modifier</button>
+          <button class="btn-sm ghost" style="font-size:11px;" onclick="openEditPayment()">Modifier</button>
         </div>
-        <button class="btn-sm ghost" style="padding:10px 16px;font-size:12px;">+ Ajouter un moyen de paiement</button>
+        <button class="btn-sm ghost" style="padding:10px 16px;font-size:12px;" onclick="openAddPayment()">+ Ajouter un moyen de paiement</button>
       </div>
       <div class="card">
         <div class="card-title">Historique des factures</div>
-        ${['Avril 2026 — 99,00€','Mars 2026 — 99,00€','Février 2026 — 99,00€','Janvier 2026 — 49,00€ (Starter)'].map((f,i)=>
-          `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border2);">
-            <div style="font-size:13px;color:var(--white);">${f}</div>
+        ${FACTURES.map(f=>
+          `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border2);">
+            <div>
+              <div style="font-size:13px;color:var(--white);font-weight:600;">${f.month} — ${f.ttc.toFixed(2).replace('.',',')}€</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px;">${f.id} · Plan ${f.plan}</div>
+            </div>
             <div style="display:flex;align-items:center;gap:10px;">
-              <span style="font-size:11px;font-weight:700;color:var(--green);">✅ Payée</span>
-              <button style="background:transparent;border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:var(--blueL);font-size:11px;cursor:pointer;">PDF</button>
+              <span style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--green);">✅ Payée</span>
+              <button onclick="downloadFacture('${f.id}')" style="background:transparent;border:1px solid var(--border);border-radius:8px;padding:5px 11px;color:var(--blueL);font-size:11px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--blueL)'" onmouseout="this.style.borderColor='var(--border)'">📄 PDF</button>
             </div>
           </div>`).join('')}
+        <div style="margin-top:14px;">
+          <button onclick="downloadAllFactures()" style="width:100%;background:transparent;border:1px solid var(--border);border-radius:10px;padding:11px;color:var(--blueL);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;" onmouseover="this.style.borderColor='var(--blueL)';this.style.background='rgba(43,143,255,0.06)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='transparent'">⬇ Télécharger toutes les factures (ZIP)</button>
+        </div>
       </div>`;
   }
 
   else if (tab === 'equipe') {
-    const members = [
-      {name:'Mustapha',email:'contact@secupro.app',role:'Administrateur',last:'Aujourd\'hui'},
-      {name:'Jean-Pierre R.',email:'jp.richard@securite-pro.fr',role:'Chef d\'exploitation',last:'Hier'},
-      {name:'Fatima Z.',email:'f.zairi@securite-pro.fr',role:'Superviseur',last:'Il y a 3j'},
-    ];
     html = `
       <div class="card" style="margin-bottom:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-          <div class="card-title" style="margin:0;">Membres de l'équipe (${members.length})</div>
+          <div class="card-title" style="margin:0;">Membres de l'équipe (${teamMembers.length})</div>
           <button class="btn-sm primary" onclick="openInviteMember()">+ Inviter un membre</button>
         </div>
-        ${members.map(m => `
+        ${teamMembers.map(m => `
           <div style="display:flex;align-items:center;gap:14px;padding:12px;border-radius:12px;background:var(--card2);margin-bottom:8px;">
             <div class="agent-avatar" style="width:40px;height:40px;font-size:13px;">${m.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
             <div style="flex:1;">
               <div style="font-weight:700;font-size:13px;">${m.name}</div>
               <div style="font-size:11px;color:var(--muted);">${m.email} · Dernière connexion : ${m.last}</div>
             </div>
-            <span style="padding:4px 12px;border-radius:100px;font-size:11px;font-weight:700;background:${m.role==='Administrateur'?'rgba(26,111,212,0.15)':'rgba(90,122,159,0.12)'};color:${m.role==='Administrateur'?'var(--blueL)':'var(--muted)'};">${m.role}</span>
-            <button onclick="openMemberSettings('${m.name}','${m.role}')" style="background:transparent;border:1px solid var(--border);border-radius:8px;padding:5px 12px;color:var(--muted);font-size:11px;cursor:pointer;">⚙️</button>
+            <span style="${roleBadge(m.role)}">${m.role}</span>
+            <button data-name="${m.name}" data-role="${m.role}" onclick="openMemberSettings(this.dataset.name,this.dataset.role)" style="background:transparent;border:1px solid var(--border);border-radius:8px;padding:5px 12px;color:var(--muted);font-size:11px;cursor:pointer;">⚙️</button>
           </div>`).join('')}
       </div>
       <div class="card">
@@ -2307,25 +2354,18 @@ function renderSettingsContent(tab) {
                 <th style="text-align:left;padding:8px 0;border-bottom:1px solid var(--border);">Module</th>
                 <th style="padding:8px 12px;border-bottom:1px solid var(--border);">Admin</th>
                 <th style="padding:8px 12px;border-bottom:1px solid var(--border);">Chef exploit.</th>
+                <th style="padding:8px 12px;border-bottom:1px solid var(--border);">Chef de site</th>
                 <th style="padding:8px 12px;border-bottom:1px solid var(--border);">Superviseur</th>
               </tr>
             </thead>
             <tbody>
-              ${[
-                ['Agents & Import CSV','✅','✅','👁️'],
-                ['Compliance CNAPS','✅','✅','👁️'],
-                ['Performance & KPIs','✅','✅','✅'],
-                ['Bulletins de paie','✅','✅','❌'],
-                ['SecuIA','✅','✅','✅'],
-                ['Facturation','✅','❌','❌'],
-                ['Paramètres équipe','✅','❌','❌'],
-              ].map(r=>`<tr style="border-bottom:1px solid var(--border2);">
+              ${accessRights.map((r, ri) => `<tr style="border-bottom:1px solid var(--border2);">
                 <td style="padding:10px 0;color:var(--white);font-weight:600;">${r[0]}</td>
-                ${r.slice(1).map(v=>`<td style="text-align:center;padding:10px 12px;">${v}</td>`).join('')}
+                ${r.slice(1).map((v, ci) => `<td onclick="cycleRight(${ri},${ci+1})" title="Cliquer pour modifier" style="text-align:center;padding:10px 12px;cursor:pointer;border-radius:6px;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">${v}</td>`).join('')}
               </tr>`).join('')}
             </tbody>
           </table>
-          <div style="font-size:11px;color:var(--muted);margin-top:10px;">✅ Lecture + écriture &nbsp;·&nbsp; 👁️ Lecture seule &nbsp;·&nbsp; ❌ Aucun accès</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:10px;">✅ Lecture + écriture &nbsp;·&nbsp; 👁️ Lecture seule &nbsp;·&nbsp; ❌ Aucun accès &nbsp;·&nbsp; <span style="opacity:.6;">Cliquer une cellule pour modifier</span></div>
         </div>
       </div>`;
   }
@@ -2335,9 +2375,9 @@ function renderSettingsContent(tab) {
       <div class="card" style="margin-bottom:16px;">
         <div class="card-title">Authentification</div>
         ${settingsRow('🔐 Double authentification (2FA)','Sécurisez votre compte avec un code SMS ou une application OTP',makeToggle(false))}
-        ${settingsRow('🔑 Changer le mot de passe','Dernière modification : il y a 32 jours',`<button class="btn-sm ghost" style="font-size:12px;">Modifier →</button>`)}
-        ${settingsRow('📱 Appareils de confiance','2 appareils enregistrés (Chrome Windows · iPhone)',`<button class="btn-sm ghost" style="font-size:12px;">Gérer →</button>`)}
-        ${settingsRow('⏰ Délai d\'expiration de session','Déconnecter automatiquement après inactivité',settingsSelect([{v:'30',l:'30 minutes'},{v:'60',l:'1 heure'},{v:'240',l:'4 heures'},{v:'0',l:'Jamais'}],'60'))}
+        ${settingsRow('🔑 Changer le mot de passe','Dernière modification : il y a 32 jours',`<button class="btn-sm ghost" style="font-size:12px;" onclick="openPasswordModal()">Modifier →</button>`)}
+        ${settingsRow('📱 Appareils de confiance','2 appareils enregistrés (Chrome Windows · iPhone)',`<button class="btn-sm ghost" style="font-size:12px;" onclick="openDevicesModal()">Gérer →</button>`)}
+        ${settingsRow('⏰ Délai d\'expiration de session','Déconnecter automatiquement après inactivité',settingsSelect([{v:'30',l:'30 minutes'},{v:'60',l:'1 heure'},{v:'240',l:'4 heures'},{v:'0',l:'Jamais'}],'60','saveSessionTimeout(this)'))}
       </div>
       <div class="card" style="margin-bottom:16px;">
         <div class="card-title">Journal de sécurité</div>
@@ -2357,38 +2397,38 @@ function renderSettingsContent(tab) {
       </div>
       <div class="card" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.04);">
         <div class="card-title" style="color:var(--red);">Zone dangereuse</div>
-        ${settingsRow('🗑️ Supprimer toutes les données agents','Action irréversible. Tous les agents et documents seront supprimés.',`<button style="background:transparent;border:1px solid var(--red);border-radius:10px;padding:8px 16px;color:var(--red);font-size:12px;font-weight:700;cursor:pointer;">Supprimer</button>`)}
-        ${settingsRow('❌ Fermer le compte','Résiliation immédiate de l\'abonnement et suppression du compte.',`<button style="background:var(--red);border:none;border-radius:10px;padding:8px 16px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">Fermer le compte</button>`)}
+        ${settingsRow('🗑️ Supprimer toutes les données agents','Action irréversible. Tous les agents et documents seront supprimés.',`<button onclick="openDeleteDataModal()" style="background:transparent;border:1px solid var(--red);border-radius:10px;padding:8px 16px;color:var(--red);font-size:12px;font-weight:700;cursor:pointer;">Supprimer</button>`)}
+        ${settingsRow('❌ Fermer le compte','Résiliation immédiate de l\'abonnement et suppression du compte.',`<button onclick="openCloseAccountModal()" style="background:var(--red);border:none;border-radius:10px;padding:8px 16px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">Fermer le compte</button>`)}
       </div>`;
   }
 
   else if (tab === 'integrations') {
     html = `
       <div class="card" style="margin-bottom:16px;">
-        <div class="card-title">Clé API SecuPRO</div>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Utilisez cette clé pour connecter SecuPRO à vos outils externes (logiciels RH, planning, etc.)</p>
+        <div class="card-title">Clé d'accès API</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Transmettez cette clé à votre prestataire informatique pour connecter SecuPRO à vos logiciels existants (planning, RH, paie). Ne la partagez pas par email.</p>
         <div style="display:flex;gap:10px;align-items:center;">
           <input value="spro_live_••••••••••••••••••••••••••••••4242" readonly style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--muted);font-size:12px;font-family:monospace;outline:none;">
-          <button class="btn-sm ghost" style="padding:10px 16px;">👁️ Révéler</button>
-          <button class="btn-sm ghost" style="padding:10px 16px;">📋 Copier</button>
-          <button class="btn-sm ghost" style="padding:10px 16px;color:var(--orange);">↺ Régénérer</button>
+          <button class="btn-sm ghost" style="padding:10px 16px;" id="btn-reveal-key" onclick="revealApiKey(this)">👁️ Révéler</button>
+          <button class="btn-sm ghost" style="padding:10px 16px;" onclick="copyApiKey()">📋 Copier</button>
+          <button class="btn-sm ghost" style="padding:10px 16px;color:var(--orange);" onclick="regenerateApiKey()">↺ Régénérer</button>
         </div>
       </div>
       <div class="card" style="margin-bottom:16px;">
         <div class="card-title">Intégrations disponibles</div>
         ${[
           {name:'Stripe',desc:'Paiement et facturation automatique',icon:'💳',connected:true},
-          {name:'Supabase',desc:'Base de données agents en temps réel',icon:'🗄️',connected:true},
-          {name:'Anthropic Claude',desc:'IA SecuIA et analyse bulletins',icon:'🤖',connected:true},
           {name:'Comète SQL',desc:'Import automatique des plannings',icon:'📅',connected:false},
           {name:'Winpres',desc:'Synchronisation planning temps réel',icon:'🔄',connected:false},
-          {name:'Slack',desc:'Notifications d\'alertes dans vos canaux',icon:'💬',connected:false},
+          {name:'Sage / Cegid',desc:'Synchronisation RH, bulletins de paie et salaires',icon:'📊',connected:false},
+          {name:'TEAMS / Outlook',desc:'Notifications et alertes d\'équipe dans vos canaux',icon:'📧',connected:false},
+          {name:'Slack',desc:'Alertes et rapports dans vos canaux Slack',icon:'💬',connected:false},
         ].map(i=>`<div style="display:flex;align-items:center;gap:14px;padding:12px;border-radius:12px;background:var(--card2);margin-bottom:8px;">
           <span style="font-size:24px">${i.icon}</span>
           <div style="flex:1;"><div style="font-weight:700;font-size:13px;">${i.name}</div><div style="font-size:11px;color:var(--muted);">${i.desc}</div></div>
-          ${i.connected
-            ? `<span style="padding:4px 12px;border-radius:100px;background:rgba(34,197,94,0.1);color:var(--green);font-size:11px;font-weight:700;">✅ Connecté</span>`
-            : `<button class="btn-sm ghost" style="font-size:11px;padding:6px 14px;">Connecter</button>`}
+          ${integrationStates[i.name]
+            ? `<div style="display:flex;align-items:center;gap:8px;"><span style="padding:4px 12px;border-radius:100px;background:rgba(34,197,94,0.1);color:var(--green);font-size:11px;font-weight:700;">✅ Connecté</span><button onclick="disconnectIntegration('${i.name}')" style="background:transparent;border:1px solid rgba(249,115,22,0.25);border-radius:8px;padding:4px 10px;color:var(--orange);font-size:10px;cursor:pointer;font-weight:700;">Déconnecter</button></div>`
+            : `<button class="btn-sm ghost" style="font-size:11px;padding:6px 14px;" onclick="connectIntegration('${i.name}')">Connecter</button>`}
         </div>`).join('')}
       </div>
       <div class="card">
@@ -2396,7 +2436,7 @@ function renderSettingsContent(tab) {
         <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Recevez des notifications HTTP en temps réel sur vos endpoints lors d'événements SecuPRO.</p>
         ${settingsRow('🔔 Webhook alerte CNAPS','URL appelée lors d\'une expiration de carte imminente',settingsInput('https://mon-app.com/webhook/cnaps','https://...','240px'))}
         ${settingsRow('📤 Webhook import agents','URL appelée après chaque import CSV réussi',settingsInput('','https://...','240px'))}
-        <button class="btn-sm primary" style="margin-top:14px;">💾 Enregistrer les webhooks</button>
+        <button class="btn-sm primary" style="margin-top:14px;" onclick="saveWebhooks()">💾 Enregistrer les webhooks</button>
       </div>`;
   }
 
@@ -2418,14 +2458,453 @@ function renderSettingsContent(tab) {
         <div class="card-title">Horaires de notification</div>
         ${settingsRow('⏰ Plage horaire silencieuse','Ne pas recevoir de notifications pendant cette plage',
           `<div style="display:flex;align-items:center;gap:8px;">${makeToggle(true)} <span style="color:var(--muted);font-size:12px;">22h00</span><span style="color:var(--muted);font-size:12px;">→</span><span style="color:var(--muted);font-size:12px;">07h00</span></div>`)}
-        ${settingsRow('📆 Jours de notification','Jours pendant lesquels les notifications sont actives',settingsSelect([{v:'7',l:'7 jours/7'},{v:'5',l:'Jours ouvrés uniquement'},{v:'6',l:'Lun → Sam'}],'7'))}
+        ${settingsRow('📆 Jours de notification','Jours pendant lesquels les notifications sont actives',settingsSelect([{v:'7',l:'7 jours/7'},{v:'5',l:'Jours ouvrés uniquement'},{v:'6',l:'Lun → Sam'}],'7','saveNotifSchedule(this)'))}
       </div>`;
   }
 
   document.getElementById('settings-content').innerHTML = html;
 }
 
-// ── SETTINGS ─────────────────────────────────────────────────
+// ── TOAST ─────────────────────────────────────────────────────
+function showToast(msg, type='success', duration=3000) {
+  const t = document.createElement('div');
+  const colors = {
+    success:'rgba(34,197,94,0.15)|rgba(34,197,94,0.4)|var(--green)',
+    error:  'rgba(239,68,68,0.15)|rgba(239,68,68,0.4)|var(--red)',
+    info:   'rgba(26,111,212,0.15)|rgba(26,111,212,0.4)|var(--blueL)',
+    warning:'rgba(249,115,22,0.15)|rgba(249,115,22,0.4)|var(--orange)'
+  };
+  const [bg, bd, col] = (colors[type]||colors.info).split('|');
+  t.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:9999;padding:14px 20px;border-radius:14px;background:${bg};border:1px solid ${bd};color:${col};font-size:13px;font-weight:700;backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,0.4);transition:opacity .3s,transform .3s;opacity:0;transform:translateY(10px);pointer-events:none;max-width:380px;`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(()=>{ t.style.opacity='1'; t.style.transform='translateY(0)'; });
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(10px)'; setTimeout(()=>t.remove(),300); }, duration);
+}
+
+// ── SAVE HELPERS ─────────────────────────────────────────────
+function saveEntreprise() { showToast('✅ Profil entreprise enregistré','success'); }
+function saveAlertes()    { showToast('✅ Seuils d\'alertes sauvegardés','success'); }
+function saveWebhooks()   { showToast('✅ Webhooks enregistrés','success'); }
+function resetReglements(){ renderSettingsContent('reglements'); showToast('↺ Valeurs IDCC 1351 restaurées','info'); }
+function saveSessionTimeout(sel) {
+  const lbl={'30':'30 minutes','60':'1 heure','240':'4 heures','0':'jamais'};
+  showToast(`✅ Session : expiration après ${lbl[sel.value]||sel.value}`, 'success');
+}
+function saveNotifSchedule(sel) {
+  showToast(`✅ Notifications : ${sel.options[sel.selectedIndex].text}`, 'success');
+}
+
+// ── SECURITE MODALS ──────────────────────────────────────────
+function openPasswordModal() {
+  const ov = document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;';
+  ov.innerHTML=`<div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;width:420px;max-width:95vw;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <div style="font-weight:900;font-size:17px;color:var(--white);">🔑 Modifier le mot de passe</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px;">8 caractères minimum, majuscule + chiffre recommandés</div>
+      </div>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    ${[['pw-current','Mot de passe actuel'],['pw-new','Nouveau mot de passe'],['pw-confirm','Confirmer le nouveau']].map(([id,label])=>`
+      <div style="margin-bottom:14px;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px;">${label}</div>
+        <input id="${id}" type="password" placeholder="••••••••" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--white);font-size:13px;outline:none;">
+      </div>`).join('')}
+    <div id="pw-error" style="display:none;padding:10px 14px;border-radius:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--red);font-size:13px;margin-bottom:12px;"></div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">Annuler</button>
+      <button id="pw-submit" onclick="submitPasswordChange()" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--blue);color:#fff;font-size:13px;font-weight:900;cursor:pointer;">🔑 Modifier</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+  setTimeout(()=>document.getElementById('pw-current')?.focus(),50);
+}
+
+function submitPasswordChange() {
+  const cur=document.getElementById('pw-current')?.value;
+  const nw =document.getElementById('pw-new')?.value;
+  const cnf=document.getElementById('pw-confirm')?.value;
+  const err=document.getElementById('pw-error');
+  err.style.display='none';
+  if(!cur){err.style.display='block';err.textContent='⚠️ Entrez votre mot de passe actuel.';return;}
+  if(!nw||nw.length<8){err.style.display='block';err.textContent='⚠️ Le nouveau mot de passe doit faire au moins 8 caractères.';return;}
+  if(nw!==cnf){err.style.display='block';err.textContent='⚠️ Les mots de passe ne correspondent pas.';return;}
+  const btn=document.getElementById('pw-submit');
+  btn.textContent='⏳ Modification…'; btn.disabled=true;
+  setTimeout(()=>{
+    document.querySelector('[style*="inset:0"][style*="z-index:300"]')?.remove();
+    showToast('✅ Mot de passe modifié avec succès','success');
+  },1200);
+}
+
+function openDevicesModal() {
+  const devices=[
+    {name:'Chrome · Windows 11',    loc:'Lyon (69) — IP 82.64.xx.xx', last:'Aujourd\'hui 08:12',  current:true},
+    {name:'iPhone 15 — Safari',     loc:'Lyon (69) — IP 82.64.xx.xx', last:'Hier 22:34',          current:false},
+  ];
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;';
+  ov.innerHTML=`<div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;width:480px;max-width:95vw;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <div style="font-weight:900;font-size:17px;color:var(--white);">📱 Appareils de confiance</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px;">${devices.length} appareils enregistrés</div>
+      </div>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div id="devices-list">
+    ${devices.map((d,i)=>`
+      <div id="device-${i}" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;background:var(--card2);border:1px solid ${d.current?'var(--blue)':'var(--border)'};margin-bottom:10px;">
+        <span style="font-size:24px;">${d.name.includes('iPhone')?'📱':'💻'}</span>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:13px;color:var(--white);">${d.name}${d.current?' <span style="padding:2px 8px;border-radius:100px;background:rgba(34,197,94,0.1);color:var(--green);font-size:10px;margin-left:6px;">Cet appareil</span>':''}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${d.loc} · ${d.last}</div>
+        </div>
+        ${d.current?'':`<button onclick="revokeDevice(this,'${d.name}',${i})" style="background:transparent;border:1px solid rgba(239,68,68,0.4);border-radius:8px;padding:5px 12px;color:var(--red);font-size:11px;cursor:pointer;font-weight:700;">Révoquer</button>`}
+      </div>`).join('')}
+    </div>
+    <button onclick="revokeAllDevices(this)" style="width:100%;margin-top:4px;padding:11px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.06);color:var(--red);font-size:12px;font-weight:700;cursor:pointer;">🚨 Révoquer tous les autres appareils</button>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+}
+function revokeDevice(btn, name, idx) {
+  btn.textContent='⏳…'; btn.disabled=true;
+  setTimeout(()=>{
+    const row=document.getElementById('device-'+idx);
+    if(row){row.style.opacity='0.35';row.style.transition='opacity .3s';}
+    btn.textContent='Révoqué'; btn.style.color='var(--muted)';
+    showToast(`✅ Appareil "${name}" révoqué`,'success');
+  },800);
+}
+function revokeAllDevices(btn) {
+  btn.textContent='⏳ Révocation…'; btn.disabled=true;
+  setTimeout(()=>{
+    document.querySelector('[style*=fixed]')?.remove();
+    showToast('✅ Tous les autres appareils révoqués','success');
+  },1000);
+}
+
+// ── FACTURES DATA ─────────────────────────────────────────────
+const FACTURES=[
+  {id:'FAC-2026-04',month:'Avril 2026',  date:'30/04/2026',plan:'Pro',      ht:83.33,tva:16.66,ttc:99.99},
+  {id:'FAC-2026-03',month:'Mars 2026',   date:'31/03/2026',plan:'Pro',      ht:83.33,tva:16.66,ttc:99.99},
+  {id:'FAC-2026-02',month:'Février 2026',date:'28/02/2026',plan:'Pro',      ht:83.33,tva:16.66,ttc:99.99},
+  {id:'FAC-2026-01',month:'Janvier 2026',date:'31/01/2026',plan:'Essentiel',ht:41.66,tva: 8.33,ttc:49.99},
+];
+
+// ── ABONNEMENT ────────────────────────────────────────────────
+function openPlanModal() {
+  const plans=[
+    {name:'Essentiel', price:'49,99',    agents:'1–10 agents',   current:false, color:'var(--muted)'},
+    {name:'Pro',       price:'99,99',    agents:'11–30 agents',  current:true,  color:'var(--blue)'},
+    {name:'Premium',   price:'199,99',   agents:'31+ agents',    current:false, color:'var(--cyan)'},
+    {name:'Enterprise',price:'Sur devis',agents:'100+ agents',   current:false, color:'var(--gold)'},
+  ];
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML=`<div style="background:var(--card);border:1px solid var(--border);border-radius:20px;width:720px;max-width:95vw;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-weight:900;font-size:17px;color:var(--white);">💳 Choisir un plan</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px;">Changement effectif immédiatement · facturation au prorata</div>
+      </div>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:20px 24px;">
+      ${plans.map(p=>`<div style="border:2px solid ${p.current?p.color:'var(--border)'};border-radius:14px;padding:18px;${p.current?'background:rgba(26,111,212,0.08);':''}text-align:center;transition:all .2s;" onmouseover="if(!${p.current})this.style.borderColor='${p.color}'" onmouseout="if(!${p.current})this.style.borderColor='var(--border)'">
+        <div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.15em;color:${p.color};margin-bottom:10px;">${p.name}</div>
+        <div style="font-size:26px;font-weight:900;color:var(--white);margin-bottom:4px;">${p.price}${p.price!=='Sur devis'?'€':''}<span style="font-size:11px;color:var(--muted);font-weight:400;">${p.price!=='Sur devis'?' /mois':''}</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">${p.agents}</div>
+        ${p.current
+          ?`<div style="padding:8px;border-radius:8px;background:rgba(34,197,94,0.1);color:var(--green);font-size:11px;font-weight:700;">✅ Plan actuel</div>`
+          :`<button onclick="selectPlan('${p.name}','${p.price}')" style="width:100%;padding:8px;border-radius:8px;border:1px solid ${p.color};background:transparent;color:${p.color};font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='${p.color.replace('var(','').replace(')','').trim()}22'" onmouseout="this.style.background='transparent'">Choisir →</button>`}
+      </div>`).join('')}
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+}
+function selectPlan(name, price) {
+  document.querySelector('[style*="inset:0"][style*="z-index:300"]')?.remove();
+  const msg=price==='Sur devis'
+    ?`📞 Demande de devis Enterprise envoyée — notre équipe vous contactera sous 24h`
+    :`✅ Changement vers le plan ${name} (${price}€/mois) — redirection vers le paiement…`;
+  showToast(msg,'info',5000);
+}
+function generateFacturePDF(f){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+  const W=doc.internal.pageSize.width;
+  const blue=[26,111,212],dark=[13,24,48],muted=[120,140,170];
+  // Bandeau header
+  doc.setFillColor(...blue);
+  doc.rect(0,0,W,42,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(24);
+  doc.text('SecuPRO',14,24);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  doc.text('Gestion operationnelle · Securite privee',14,33);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(13);
+  doc.text(f.id,W-14,20,{align:'right'});
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  doc.text('Emise le '+f.date,W-14,29,{align:'right'});
+  // Bloc facturation
+  doc.setTextColor(...muted);
+  doc.setFontSize(8);
+  doc.text('EMETTEUR',14,56);
+  doc.text('FACTURE A',110,56);
+  doc.setTextColor(...dark);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(10);
+  doc.text('SecuPRO',14,63);
+  doc.text('Securite Pro Lyon SAS',110,63);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  doc.setTextColor(60,80,110);
+  doc.text('contact@secupro.app',14,70);
+  doc.text('Lyon, France',14,76);
+  doc.text('Lyon 69007, France',110,70);
+  doc.text('Plan : '+f.plan,110,76);
+  // Séparateur
+  doc.setDrawColor(210,220,235);
+  doc.line(14,84,W-14,84);
+  // Tableau
+  doc.autoTable({
+    startY:90,
+    head:[['Description','Qte','Prix HT','TVA 20%','Prix TTC']],
+    body:[['Abonnement SecuPRO '+f.plan+' - '+f.month,'1',f.ht.toFixed(2)+' EUR',f.tva.toFixed(2)+' EUR',f.ttc.toFixed(2)+' EUR']],
+    foot:[['','','','Total TTC',f.ttc.toFixed(2)+' EUR']],
+    styles:{fontSize:10,cellPadding:7,textColor:dark},
+    headStyles:{fillColor:blue,textColor:[255,255,255],fontStyle:'bold',fontSize:10},
+    footStyles:{fillColor:[235,242,255],textColor:dark,fontStyle:'bold'},
+    columnStyles:{0:{cellWidth:'auto'},1:{halign:'center',cellWidth:16},2:{halign:'right',cellWidth:30},3:{halign:'right',cellWidth:30},4:{halign:'right',cellWidth:32}},
+    margin:{left:14,right:14},
+  });
+  const y=doc.lastAutoTable.finalY+16;
+  // Badge acquittée
+  doc.setFillColor(34,197,94);
+  doc.roundedRect(14,y,70,12,3,3,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9);
+  doc.text('Facture acquittee',49,y+8,{align:'center'});
+  // Pied de page
+  const ph=doc.internal.pageSize.height;
+  doc.setDrawColor(210,220,235);
+  doc.line(14,ph-16,W-14,ph-16);
+  doc.setTextColor(...muted);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(8);
+  doc.text('SecuPRO · contact@secupro.app · secupro.app',W/2,ph-9,{align:'center'});
+  return doc;
+}
+function downloadFacture(id){
+  const f=FACTURES.find(x=>x.id===id);
+  if(!f)return;
+  const btn=event?.target;
+  if(btn){const o=btn.textContent;btn.textContent='⏳';setTimeout(()=>btn.textContent=o,1600);}
+  generateFacturePDF(f).save(f.id+'.pdf');
+  showToast('Facture '+f.id+' telechargee','success');
+}
+async function downloadAllFactures(){
+  if(!window.JSZip){showToast('Erreur : JSZip non charge','error');return;}
+  const btn=event?.target;
+  if(btn){const o=btn.innerHTML;btn.innerHTML='⏳ Generation...';btn.disabled=true;setTimeout(()=>{btn.innerHTML=o;btn.disabled=false;},4000);}
+  const zip=new JSZip();
+  for(const f of FACTURES){
+    zip.file(f.id+'.pdf',generateFacturePDF(f).output('blob'));
+  }
+  const blob=await zip.generateAsync({type:'blob'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='SecuPRO_Factures_2026.zip';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('Archive ZIP telechargee','success');
+}
+function openEditPayment() {
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;';
+  ov.innerHTML=`<div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;width:420px;max-width:95vw;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="font-weight:900;font-size:17px;color:var(--white);">💳 Modifier le moyen de paiement</div>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px;">Numéro de carte</div>
+      <input placeholder="•••• •••• •••• ••••" maxlength="19" oninput="this.value=this.value.replace(/[^0-9]/g,'').replace(/(.{4})/g,'$1 ').trim()" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--white);font-size:14px;outline:none;font-family:monospace;letter-spacing:.1em;">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+      <div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px;">Expiration (MM/AA)</div>
+        <input placeholder="09/27" maxlength="5" oninput="if(this.value.length===2&&!this.value.includes('/'))this.value+='/'" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--white);font-size:13px;outline:none;font-family:monospace;">
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px;">CVC</div>
+        <input placeholder="•••" maxlength="3" type="password" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--white);font-size:13px;outline:none;font-family:monospace;">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">Annuler</button>
+      <button onclick="this.closest('[style*=fixed]').remove();showToast('✅ Moyen de paiement mis à jour','success')" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--blue);color:#fff;font-size:13px;font-weight:900;cursor:pointer;">💾 Enregistrer</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+}
+function openAddPayment() { openEditPayment(); }
+
+// ── INTEGRATIONS ─────────────────────────────────────────────
+const API_KEY_REAL   = 'spro_live_k8mX92nP4qWvT6jY1rL3hA5sN0dE7fI';
+const API_KEY_MASKED = 'spro_live_••••••••••••••••••••••••••••••4242';
+let apiKeyRevealed = false;
+
+const integrationStates = {
+  'Stripe':true,
+  'Comète SQL':false,'Winpres':false,'Sage / Cegid':false,'TEAMS / Outlook':false,'Slack':false
+};
+
+function revealApiKey(btn) {
+  apiKeyRevealed = !apiKeyRevealed;
+  const wrap = btn.closest('[style*="display:flex"]');
+  const input = wrap?.querySelector('input[readonly]');
+  if(input){
+    input.value = apiKeyRevealed ? API_KEY_REAL : API_KEY_MASKED;
+    input.style.color = apiKeyRevealed ? 'var(--cyan)' : 'var(--muted)';
+  }
+  btn.textContent = apiKeyRevealed ? '🙈 Masquer' : '👁️ Révéler';
+}
+
+function copyApiKey() {
+  const txt = API_KEY_REAL;
+  navigator.clipboard?.writeText(txt).catch(()=>{});
+  showToast('📋 Clé API copiée dans le presse-papiers','success');
+}
+
+function regenerateApiKey() {
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;';
+  ov.innerHTML=`<div style="background:var(--card);border:1px solid rgba(249,115,22,0.35);border-radius:20px;padding:32px;width:400px;text-align:center;">
+    <div style="font-size:40px;margin-bottom:14px;">⚠️</div>
+    <div style="font-weight:900;font-size:17px;color:var(--white);margin-bottom:8px;">Régénérer la clé API ?</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;">L'ancienne clé sera <strong style="color:var(--orange)">invalidée immédiatement</strong>. Toutes vos intégrations utilisant cette clé devront être mises à jour.</div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">Annuler</button>
+      <button onclick="this.closest('[style*=fixed]').remove();doRegenerateKey()" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--orange);color:#fff;font-size:13px;font-weight:900;cursor:pointer;">↺ Régénérer</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+}
+function doRegenerateKey() {
+  apiKeyRevealed=false;
+  showToast('🔑 Nouvelle clé API générée — cliquez Révéler pour la copier','success',4500);
+  renderSettingsContent('integrations');
+}
+
+function connectIntegration(name) {
+  const cfgs={
+    'Comète SQL':   {icon:'📅',fields:[['URL serveur','https://cometem.monsite.fr','text'],['Identifiant','admin','text'],['Mot de passe','','password']]},
+    'Winpres':      {icon:'🔄',fields:[['Clé API Winpres','WP-xxxx-xxxx','text'],['URL sync','https://','text']]},
+    'Sage / Cegid': {icon:'📊',fields:[['URL API Sage / Cegid','https://api.sage.com/...','text'],['Identifiant client','','text'],['Clé secrète','','password']]},
+    'TEAMS / Outlook':{icon:'📧',fields:[['Webhook Teams','https://outlook.office.com/webhook/...','text']]},
+    'Slack':        {icon:'💬',fields:[['Webhook URL Slack','https://hooks.slack.com/services/...','text']]},
+  };
+  const cfg=cfgs[name]||{icon:'🔗',fields:[['Clé API','','text']]};
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;';
+  ov.innerHTML=`<div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;width:440px;max-width:95vw;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <span style="font-size:28px;">${cfg.icon}</span>
+      <div style="flex:1;">
+        <div style="font-weight:900;font-size:17px;color:var(--white);">Connecter ${name}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px;">Entrez vos identifiants de connexion</div>
+      </div>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    ${cfg.fields.map(([label,ph,type])=>`
+      <div style="margin-bottom:14px;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px;">${label}</div>
+        <input type="${type}" placeholder="${ph}" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--white);font-size:13px;outline:none;font-family:monospace;">
+      </div>`).join('')}
+    <div id="connect-status" style="display:none;padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px;"></div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">Annuler</button>
+      <button id="btn-do-connect" onclick="doConnect('${name}',this)" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--blue);color:#fff;font-size:13px;font-weight:900;cursor:pointer;">⚡ Connecter</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+}
+function doConnect(name, btn) {
+  btn.textContent='⏳ Connexion…'; btn.disabled=true;
+  const st=document.getElementById('connect-status');
+  if(st){st.style.display='block';st.style.background='rgba(43,143,255,0.1)';st.style.border='1px solid rgba(43,143,255,0.3)';st.style.color='var(--blueL)';st.textContent='⏳ Test de connexion en cours…';}
+  setTimeout(()=>{
+    integrationStates[name]=true;
+    document.querySelector('[style*="inset:0"][style*="z-index:300"]')?.remove();
+    showToast(`✅ ${name} connecté avec succès`,'success');
+    renderSettingsContent('integrations');
+  },1500);
+}
+function disconnectIntegration(name) {
+  if(!confirm(`Déconnecter ${name} de SecuPRO ?`)) return;
+  integrationStates[name]=false;
+  showToast(`🔌 ${name} déconnecté`,'warning');
+  renderSettingsContent('integrations');
+}
+
+// ── ZONE DANGEREUSE ──────────────────────────────────────────
+function openDeleteDataModal() {
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;';
+  ov.innerHTML=`<div style="background:var(--card);border:2px solid rgba(239,68,68,0.5);border-radius:20px;padding:32px;width:440px;text-align:center;">
+    <div style="font-size:44px;margin-bottom:12px;">🗑️</div>
+    <div style="font-weight:900;font-size:18px;color:var(--red);margin-bottom:8px;">Supprimer toutes les données</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;">Cette action est <strong style="color:var(--red)">irréversible</strong>. Tous les agents, documents et historiques seront définitivement supprimés.</div>
+    <div style="margin-bottom:20px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Tapez <strong style="color:var(--white)">SUPPRIMER</strong> pour confirmer</div>
+      <input id="del-confirm-input" placeholder="SUPPRIMER" style="width:100%;background:var(--card2);border:1px solid rgba(239,68,68,0.4);border-radius:10px;padding:10px 14px;color:var(--white);font-size:13px;text-align:center;outline:none;letter-spacing:.1em;" oninput="document.getElementById('btn-del-ok').style.opacity=this.value==='SUPPRIMER'?'1':'.4'">
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">Annuler</button>
+      <button id="btn-del-ok" onclick="confirmDeleteData()" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--red);color:#fff;font-size:13px;font-weight:900;cursor:pointer;opacity:.4;transition:opacity .2s;">Supprimer</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+  setTimeout(()=>document.getElementById('del-confirm-input')?.focus(),50);
+}
+function confirmDeleteData() {
+  if(document.getElementById('del-confirm-input')?.value!=='SUPPRIMER'){showToast('⚠️ Tapez SUPPRIMER pour confirmer','error');return;}
+  document.querySelector('[style*="inset:0"][style*="z-index:300"]')?.remove();
+  showToast('✅ Données supprimées','success',3000);
+}
+function openCloseAccountModal() {
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;';
+  ov.innerHTML=`<div style="background:var(--card);border:2px solid rgba(239,68,68,0.5);border-radius:20px;padding:32px;width:440px;text-align:center;">
+    <div style="font-size:44px;margin-bottom:12px;">❌</div>
+    <div style="font-weight:900;font-size:18px;color:var(--red);margin-bottom:8px;">Fermer le compte</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;">Votre abonnement sera <strong style="color:var(--red)">résilié immédiatement</strong> et votre compte définitivement supprimé. Cette action est irréversible.</div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--blueL);font-size:13px;font-weight:700;cursor:pointer;">Annuler</button>
+      <button onclick="this.closest('[style*=fixed]').remove();showToast('Compte clôturé — à bientôt','error',5000)" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--red);color:#fff;font-size:13px;font-weight:900;cursor:pointer;">❌ Fermer mon compte</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+}
+
+// ── INIT ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
   renderOverview();
   renderAgents('all');
@@ -2437,5 +2916,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   renderSecuIA();
 });
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </body>
 </html>

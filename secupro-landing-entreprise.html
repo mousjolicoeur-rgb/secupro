@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecuPRO — Plateforme de gestion sécurité privée</title>
+<style>
+  :root {
+    --bg: #070d1a;
+    --bg2: #0c1525;
+    --navy: #0d1f3c;
+    --blue: #1a6fd4;
+    --blueL: #2b8fff;
+    --cyan: #00d1ff;
+    --white: #eef4ff;
+    --muted: #5a7a9f;
+    --gold: #f5a623;
+    --green: #22c55e;
+    --red: #ef4444;
+    --border: rgba(26,111,212,0.22);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--white); font-family: 'Segoe UI', 'Trebuchet MS', sans-serif; overflow-x: hidden; }
+
+  /* ── Ambient ── */
+  .ambient {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 60% 40% at 30% 20%, rgba(0,209,255,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 80% 70%, rgba(26,111,212,0.06) 0%, transparent 60%);
+  }
+  .grid-bg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: linear-gradient(rgba(26,111,212,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(26,111,212,0.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* ── Nav ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(7,13,26,0.88); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 1100px; margin: 0 auto; padding: 16px 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--blue); display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 14px; color: #fff;
+  }
+  .logo-text { font-weight: 900; font-size: 20px; letter-spacing: -0.5px; }
+  .logo-text span:first-child { color: var(--white); }
+  .logo-text span:last-child { color: var(--blueL); }
+  .nav-links { display: flex; align-items: center; gap: 28px; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 600; transition: color .2s; }
+  .nav-links a:hover { color: var(--white); }
+  .nav-ctas { display: flex; align-items: center; gap: 10px; }
+  .btn-ghost { padding: 9px 20px; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--blueL); font-size: 13px; font-weight: 700; cursor: pointer; transition: all .2s; }
+  .btn-ghost:hover { background: rgba(26,111,212,0.08); }
+  .btn-primary {
+    padding: 10px 22px; border-radius: 12px; border: none;
+    background: var(--blue); color: #fff; font-size: 13px; font-weight: 800;
+    cursor: pointer; transition: all .2s;
+    box-shadow: 0 0 24px rgba(26,111,212,0.4), 0 4px 16px rgba(26,111,212,0.2);
+  }
+  .btn-primary:hover { background: var(--blueL); transform: translateY(-1px); }
+  .btn-primary:active { transform: scale(0.97); }
+
+  /* ── Sections ── */
+  section { position: relative; z-index: 1; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── Hero ── */
+  #hero { padding: 80px 24px 72px; text-align: center; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 16px; border-radius: 100px;
+    background: rgba(26,111,212,0.12); border: 1px solid var(--border);
+    color: var(--blueL); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em;
+    margin-bottom: 28px;
+  }
+  h1 {
+    font-size: clamp(34px, 5vw, 60px); font-weight: 900; line-height: 1.1;
+    letter-spacing: -1.5px; max-width: 780px; margin: 0 auto 20px;
+    color: var(--white);
+  }
+  h1 .accent { color: var(--cyan); text-shadow: 0 0 28px rgba(0,209,255,0.5); }
+  .hero-sub {
+    color: var(--muted); font-size: 17px; max-width: 520px; margin: 0 auto 36px;
+    line-height: 1.65;
+  }
+  .hero-ctas { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .btn-hero {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 16px 32px; border-radius: 16px; border: none;
+    background: linear-gradient(135deg, var(--blue), var(--blueL));
+    color: #fff; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: .18em;
+    cursor: pointer; transition: all .2s;
+    box-shadow: 0 0 36px rgba(26,111,212,0.45), 0 6px 24px rgba(26,111,212,0.25);
+  }
+  .btn-hero:hover { transform: translateY(-2px); box-shadow: 0 0 48px rgba(26,111,212,0.6); }
+  .btn-hero:active { transform: scale(0.97); }
+  .btn-outline-hero {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 15px 32px; border-radius: 16px;
+    border: 1px solid var(--border); background: rgba(26,111,212,0.04);
+    color: var(--blueL); font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .16em;
+    cursor: pointer; transition: all .2s; text-decoration: none;
+  }
+  .btn-outline-hero:hover { background: rgba(26,111,212,0.1); }
+  .hero-note { font-size: 12px; color: var(--muted); }
+
+  /* Stats */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    max-width: 680px; margin: 40px auto 0;
+  }
+  .stat-card {
+    padding: 16px 12px; border-radius: 14px; text-align: center;
+    background: rgba(26,111,212,0.07); border: 1px solid var(--border);
+  }
+  .stat-value { font-weight: 900; font-size: 26px; color: var(--cyan); line-height: 1; }
+  .stat-label { font-size: 11px; color: var(--muted); font-weight: 600; margin-top: 5px; line-height: 1.3; }
+
+  /* ── Problem ── */
+  #problem { padding: 0 24px 72px; }
+  .problem-box {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 24px;
+    padding: 48px; max-width: 1100px; margin: 0 auto;
+  }
+  .section-tag { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .2em; color: var(--blue); margin-bottom: 12px; }
+  h2 { font-size: clamp(22px, 3vw, 34px); font-weight: 900; letter-spacing: -0.5px; color: var(--white); margin-bottom: 28px; }
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .problem-card {
+    display: flex; align-items: flex-start; gap: 14px; padding: 18px;
+    border-radius: 14px; background: rgba(0,0,0,0.2); border: 1px solid rgba(26,111,212,0.13);
+  }
+  .problem-icon { font-size: 24px; margin-top: 2px; flex-shrink: 0; }
+  .problem-title { font-weight: 800; font-size: 14px; color: var(--white); margin-bottom: 4px; }
+  .problem-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* ── Modules ── */
+  #modules { padding: 72px 24px; }
+  .section-header { text-align: center; margin-bottom: 48px; }
+  .modules-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; max-width: 1100px; margin: 0 auto 18px; }
+  .module-card {
+    position: relative; padding: 24px; border-radius: 20px;
+    background: linear-gradient(145deg, var(--bg2), var(--bg));
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    transition: transform .25s;
+  }
+  .module-card:hover { transform: translateY(-4px); }
+  .module-top-line {
+    position: absolute; top: 0; left: 24px; right: 24px; height: 1px;
+  }
+  .module-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .module-icon {
+    width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  .module-title { font-weight: 900; font-size: 17px; color: var(--white); }
+  .module-items { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .module-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--muted); line-height: 1.4; }
+  .module-check { flex-shrink: 0; margin-top: 1px; font-size: 13px; }
+
+  /* Extra features */
+  .extras-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 1100px; margin: 0 auto; }
+  .extra-card {
+    display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+    border-radius: 12px; background: rgba(13,21,38,0.8); border: 1px solid var(--border);
+  }
+  .extra-icon { font-size: 16px; }
+  .extra-label { font-size: 12px; font-weight: 700; color: var(--muted); }
+
+  /* ── Pricing ── */
+  #pricing { padding: 72px 24px; }
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; max-width: 1100px; margin: 0 auto 18px; align-items: center; }
+  .pricing-card {
+    position: relative; padding: 28px; border-radius: 20px; display: flex; flex-direction: column;
+    background: linear-gradient(145deg, var(--bg2), var(--bg));
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    transition: transform .2s;
+  }
+  .pricing-card.highlighted {
+    border-color: var(--blue); border-width: 1.5px;
+    box-shadow: 0 0 40px rgba(26,111,212,0.2), 0 8px 32px rgba(0,0,0,0.4);
+    transform: scale(1.03);
+    background: linear-gradient(145deg, var(--navy), var(--bg2));
+  }
+  .pricing-badge {
+    position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+    padding: 4px 16px; border-radius: 100px; background: var(--blue);
+    color: #fff; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .12em;
+    white-space: nowrap;
+  }
+  .plan-name { font-weight: 900; font-size: 13px; text-transform: uppercase; letter-spacing: .2em; margin-bottom: 8px; }
+  .plan-price { font-weight: 900; font-size: 40px; color: var(--white); line-height: 1; }
+  .plan-period { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .plan-divider { height: 1px; background: var(--border); margin-bottom: 20px; }
+  .plan-features { list-style: none; flex: 1; margin-bottom: 24px; display: flex; flex-direction: column; gap: 10px; }
+  .plan-feature { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--white); }
+  .plan-feature-check { flex-shrink: 0; }
+  .plan-btn {
+    width: 100%; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 12px;
+    text-transform: uppercase; letter-spacing: .18em; cursor: pointer; transition: all .2s; border: none;
+  }
+  .plan-btn.solid { background: var(--blue); color: #fff; box-shadow: 0 0 24px rgba(26,111,212,0.4); }
+  .plan-btn.solid:hover { background: var(--blueL); }
+  .plan-btn.outline { background: transparent; color: var(--blueL); border: 1px solid var(--border); }
+  .plan-btn.outline:hover { background: rgba(26,111,212,0.08); }
+  .promo-bar {
+    display: flex; align-items: center; gap: 12px; padding: 16px 22px;
+    border-radius: 16px; background: rgba(245,166,35,0.07); border: 1px solid rgba(245,166,35,0.22);
+    max-width: 1100px; margin: 0 auto;
+  }
+  .promo-icon { font-size: 20px; }
+  .promo-text { font-size: 14px; color: var(--white); }
+  .promo-text strong { color: var(--gold); }
+
+  /* ── FAQ ── */
+  #faq { padding: 72px 24px; }
+  .faq-container { max-width: 720px; margin: 0 auto; }
+  .faq-item {
+    border-radius: 14px; overflow: hidden; margin-bottom: 10px;
+    border: 1px solid var(--border); transition: border-color .2s;
+  }
+  .faq-item.open { border-color: var(--blue); }
+  .faq-btn {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 20px; background: var(--bg2); border: none; cursor: pointer;
+    font-size: 14px; font-weight: 700; color: var(--white); text-align: left; gap: 12px;
+    transition: background .2s;
+  }
+  .faq-item.open .faq-btn { background: rgba(26,111,212,0.08); }
+  .faq-chevron { font-size: 12px; color: var(--muted); transition: transform .2s; flex-shrink: 0; }
+  .faq-item.open .faq-chevron { transform: rotate(180deg); }
+  .faq-answer {
+    max-height: 0; overflow: hidden; transition: max-height .3s ease;
+    padding: 0 20px; background: rgba(26,111,212,0.03); font-size: 14px; color: var(--muted); line-height: 1.6;
+  }
+  .faq-item.open .faq-answer { max-height: 200px; padding: 14px 20px; }
+
+  /* ── CTA Final ── */
+  #cta-final { padding: 0 24px 80px; }
+  .cta-box {
+    max-width: 1100px; margin: 0 auto; position: relative; overflow: hidden;
+    border-radius: 28px; padding: 64px 40px; text-align: center;
+    background: linear-gradient(145deg, var(--navy), var(--bg2));
+    border: 1.5px solid var(--blue);
+    box-shadow: 0 0 60px rgba(26,111,212,0.14);
+  }
+  .cta-glow {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(26,111,212,0.08), transparent);
+  }
+  .cta-box h2 { font-size: clamp(26px, 4vw, 40px); font-weight: 900; letter-spacing: -1px; margin-bottom: 14px; }
+  .cta-box p { font-size: 16px; color: var(--muted); max-width: 500px; margin: 0 auto 32px; }
+  .cta-btns { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; position: relative; z-index: 1; }
+
+  /* ── Footer ── */
+  footer {
+    border-top: 1px solid var(--border); padding: 28px 24px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 12px; max-width: 1100px; margin: 0 auto;
+  }
+  .footer-logo { font-weight: 900; font-size: 18px; }
+  .footer-logo span:first-child { color: var(--white); }
+  .footer-logo span:last-child { color: var(--blueL); }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a { font-size: 12px; color: var(--muted); text-decoration: none; }
+  .footer-links a:hover { color: var(--white); }
+  .footer-copy { font-size: 12px; color: rgba(90,122,159,0.4); }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .nav-links, .nav-ctas { display: none; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .problem-grid { grid-template-columns: 1fr; }
+    .modules-grid { grid-template-columns: 1fr; }
+    .extras-grid { grid-template-columns: repeat(2, 1fr); }
+    .pricing-grid { grid-template-columns: 1fr; }
+    #pricing [style*="grid-template-columns:repeat(4"] { grid-template-columns: 1fr 1fr !important; }
+    #pricing [style*="justify-content:space-between"] { flex-direction: column; align-items: flex-start; }
+    .pricing-card.highlighted { transform: none; }
+    footer { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+<div class="grid-bg"></div>
+
+<!-- ── NAVBAR ── -->
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#">
+      <div class="logo-icon">S</div>
+      <div class="logo-text"><span>Secu</span><span>PRO</span></div>
+    </a>
+    <div class="nav-links">
+      <a href="#modules">Modules</a>
+      <a href="#pricing">Tarifs</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div class="nav-ctas">
+      <button class="btn-ghost">Connexion</button>
+      <button class="btn-primary">Démo gratuite</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <div class="hero-badge">
+    🏢 Plateforme B2B — Entreprises de sécurité privée
+  </div>
+  <h1>
+    Gérez vos équipes<br>
+    <span class="accent">sécurité</span> depuis un seul<br>
+    tableau de bord
+  </h1>
+  <p class="hero-sub">
+    Import CSV agents, conformité CNAPS en temps réel, suivi multi-sites
+    et alertes automatiques. Pensé par un ex-agent, pour les chefs d'exploitation.
+  </p>
+  <div class="hero-ctas">
+    <button class="btn-hero">Essai gratuit 7 jours →</button>
+    <a href="mailto:contact@secupro.app" class="btn-outline-hero">Demander une démo</a>
+  </div>
+  <p class="hero-note">Sans engagement · Sans carte bancaire · Résiliation en 1 clic</p>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-value">180 000</div><div class="stat-label">Agents en France</div></div>
+    <div class="stat-card"><div class="stat-value">~9 000</div><div class="stat-label">Sociétés ciblées</div></div>
+    <div class="stat-card"><div class="stat-value">7j</div><div class="stat-label">Essai gratuit</div></div>
+    <div class="stat-card"><div class="stat-value">100%</div><div class="stat-label">Mobile & PWA</div></div>
+  </div>
+</section>
+
+<!-- ── PROBLÈME ── -->
+<section id="problem">
+  <div class="problem-box">
+    <div class="section-tag">Le constat terrain</div>
+    <h2>Ce que vos chefs d'exploitation vivent chaque jour</h2>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="problem-icon">📋</div>
+        <div><div class="problem-title">Plannings PDF non structurés</div><div class="problem-desc">Conflits horaires non détectés, heures supp perdues, temps de repos IDCC 1351 non respectés</div></div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">📄</div>
+        <div><div class="problem-title">Conformité CNAPS à la main</div><div class="problem-desc">Suivi des cartes professionnelles sur Excel, alertes d'expiration manquées, risque d'audit</div></div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">👥</div>
+        <div><div class="problem-title">Onboarding agents chronophage</div><div class="problem-desc">Saisie manuelle des données agents, documents éparpillés, aucune visibilité centralisée</div></div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">📊</div>
+        <div><div class="problem-title">Zéro visibilité opérationnelle</div><div class="problem-desc">Pas de tableau de bord, pas de KPIs, pas de suivi de performance par site en temps réel</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── MODULES ── -->
+<section id="modules">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Trois modules essentiels</div>
+      <h2>Tout ce dont votre exploitation a besoin</h2>
+    </div>
+    <div class="modules-grid">
+
+      <div class="module-card">
+        <div class="module-top-line" style="background: linear-gradient(90deg, transparent, #2b8fff, transparent)"></div>
+        <div class="module-header">
+          <div class="module-icon" style="background: rgba(43,143,255,0.12); border: 1px solid rgba(43,143,255,0.2)">👥</div>
+          <div class="module-title">Module Agents</div>
+        </div>
+        <ul class="module-items">
+          <li class="module-item"><span class="module-check" style="color:#2b8fff">✓</span> Import CSV jusqu'à 50 agents</li>
+          <li class="module-item"><span class="module-check" style="color:#2b8fff">✓</span> Suivi carte pro & CNAPS</li>
+          <li class="module-item"><span class="module-check" style="color:#2b8fff">✓</span> Alertes expiration automatiques</li>
+          <li class="module-item"><span class="module-check" style="color:#2b8fff">✓</span> Coffre-fort de documents</li>
+          <li class="module-item"><span class="module-check" style="color:#2b8fff">✓</span> Historique complet par agent</li>
+        </ul>
+      </div>
+
+      <div class="module-card">
+        <div class="module-top-line" style="background: linear-gradient(90deg, transparent, #22c55e, transparent)"></div>
+        <div class="module-header">
+          <div class="module-icon" style="background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.2)">🛡️</div>
+          <div class="module-title">Module Compliance</div>
+        </div>
+        <ul class="module-items">
+          <li class="module-item"><span class="module-check" style="color:#22c55e">✓</span> Score conformité CNAPS par agent</li>
+          <li class="module-item"><span class="module-check" style="color:#22c55e">✓</span> Tableau de bord réglementaire</li>
+          <li class="module-item"><span class="module-check" style="color:#22c55e">✓</span> Détection anomalies planning</li>
+          <li class="module-item"><span class="module-check" style="color:#22c55e">✓</span> Vérification heures IDCC 1351</li>
+          <li class="module-item"><span class="module-check" style="color:#22c55e">✓</span> Rapports prêts pour audit</li>
+        </ul>
+      </div>
+
+      <div class="module-card">
+        <div class="module-top-line" style="background: linear-gradient(90deg, transparent, #f5a623, transparent)"></div>
+        <div class="module-header">
+          <div class="module-icon" style="background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.2)">📊</div>
+          <div class="module-title">Module Performance</div>
+        </div>
+        <ul class="module-items">
+          <li class="module-item"><span class="module-check" style="color:#f5a623">✓</span> KPIs en temps réel Supabase</li>
+          <li class="module-item"><span class="module-check" style="color:#f5a623">✓</span> Suivi multi-sites opérationnel</li>
+          <li class="module-item"><span class="module-check" style="color:#f5a623">✓</span> Analyse bulletins de paie IA</li>
+          <li class="module-item"><span class="module-check" style="color:#f5a623">✓</span> Assistant juridique SecuIA</li>
+          <li class="module-item"><span class="module-check" style="color:#f5a623">✓</span> Export rapports PDF</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="extras-grid">
+      <div class="extra-card"><span class="extra-icon">⚡</span><span class="extra-label">IA Anthropic intégrée</span></div>
+      <div class="extra-card"><span class="extra-icon">🔔</span><span class="extra-label">Push notifications</span></div>
+      <div class="extra-card"><span class="extra-icon">📜</span><span class="extra-label">38 articles IDCC 1351</span></div>
+      <div class="extra-card"><span class="extra-icon">🔒</span><span class="extra-label">Données sécurisées</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PRICING ── -->
+<section id="pricing">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Tarification</div>
+      <h2>Gratuit pour démarrer, puissant pour grandir</h2>
+      <p style="color:var(--muted); font-size:14px; margin-top:8px">Facturation par société · Mensuel sans engagement · Paiement sécurisé Stripe</p>
+    </div>
+
+    <!-- Toggle agents info -->
+    <div style="display:flex; justify-content:center; margin-bottom:40px;">
+      <div style="display:inline-flex; align-items:center; gap:10px; padding:10px 20px; border-radius:100px; background:rgba(26,111,212,0.08); border:1px solid var(--border); font-size:13px; color:var(--muted);">
+        💡 Prix par <strong style="color:var(--white)">société</strong> — agents illimités dans chaque tranche
+      </div>
+    </div>
+
+    <!-- 4 plans grid -->
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; max-width:1100px; margin:0 auto 20px; align-items:start;">
+
+      <!-- GRATUIT -->
+      <div class="pricing-card" style="border-color:rgba(90,122,159,0.25);">
+        <div class="plan-name" style="color:var(--muted);">Gratuit</div>
+        <div class="plan-price" style="font-size:34px;">0€</div>
+        <div class="plan-period">/mois — jusqu'à 3 agents</div>
+        <div class="plan-divider"></div>
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:12px;">Idéal pour découvrir</div>
+        <ul class="plan-features" style="margin-bottom:20px;">
+          <li class="plan-feature"><span style="color:var(--muted)">✓</span> 3 agents maximum</li>
+          <li class="plan-feature"><span style="color:var(--muted)">✓</span> Import planning PDF</li>
+          <li class="plan-feature"><span style="color:var(--muted)">✓</span> Coffre documents basique</li>
+          <li class="plan-feature"><span style="color:var(--muted)">✓</span> SecuDroit (38 articles)</li>
+          <li class="plan-feature"><span style="color:var(--muted)">✓</span> Actu Sécu</li>
+          <li class="plan-feature" style="opacity:.4;"><span>✗</span> Dashboard exploitation</li>
+          <li class="plan-feature" style="opacity:.4;"><span>✗</span> Module Compliance</li>
+          <li class="plan-feature" style="opacity:.4;"><span>✗</span> SecuIA assistant IA</li>
+        </ul>
+        <button class="plan-btn outline" style="margin-top:auto;">Démarrer gratuitement</button>
+      </div>
+
+      <!-- STARTER -->
+      <div class="pricing-card">
+        <div class="plan-name" style="color:var(--blueL);">Starter</div>
+        <div class="plan-price">49€</div>
+        <div class="plan-period">/mois — 1 à 10 agents</div>
+        <div class="plan-divider"></div>
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--blueL); margin-bottom:12px;">Petites équipes</div>
+        <ul class="plan-features" style="margin-bottom:20px;">
+          <li class="plan-feature"><span style="color:var(--blueL)">✓</span> Jusqu'à 10 agents</li>
+          <li class="plan-feature"><span style="color:var(--blueL)">✓</span> Tout Gratuit +</li>
+          <li class="plan-feature"><span style="color:var(--blueL)">✓</span> Import CSV agents</li>
+          <li class="plan-feature"><span style="color:var(--blueL)">✓</span> Alertes CNAPS automatiques</li>
+          <li class="plan-feature"><span style="color:var(--blueL)">✓</span> Module Compliance basique</li>
+          <li class="plan-feature"><span style="color:var(--blueL)">✓</span> Dashboard exploitation</li>
+          <li class="plan-feature" style="opacity:.4;"><span>✗</span> SecuIA assistant IA</li>
+          <li class="plan-feature" style="opacity:.4;"><span>✗</span> Analyse bulletins IA</li>
+        </ul>
+        <button class="plan-btn outline">Essai 7 jours gratuit</button>
+      </div>
+
+      <!-- BUSINESS — highlighted -->
+      <div class="pricing-card highlighted" style="transform:scale(1.04);">
+        <div class="pricing-badge">⭐ Le plus populaire</div>
+        <div class="plan-name" style="color:var(--cyan);">Business</div>
+        <div class="plan-price">99€</div>
+        <div class="plan-period">/mois — 11 à 30 agents</div>
+        <div class="plan-divider" style="background:rgba(0,209,255,0.25);"></div>
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--cyan); margin-bottom:12px;">Sociétés en croissance</div>
+        <ul class="plan-features" style="margin-bottom:20px;">
+          <li class="plan-feature"><span style="color:var(--cyan)">✓</span> Jusqu'à 30 agents</li>
+          <li class="plan-feature"><span style="color:var(--cyan)">✓</span> Tout Starter +</li>
+          <li class="plan-feature"><span style="color:var(--cyan)">✓</span> SecuIA assistant juridique IA</li>
+          <li class="plan-feature"><span style="color:var(--cyan)">✓</span> Analyse bulletins de paie IA</li>
+          <li class="plan-feature"><span style="color:var(--cyan)">✓</span> Suivi multi-sites</li>
+          <li class="plan-feature"><span style="color:var(--cyan)">✓</span> Module Performance KPIs</li>
+          <li class="plan-feature"><span style="color:var(--cyan)">✓</span> Export rapports PDF</li>
+          <li class="plan-feature"><span style="color:var(--cyan)">✓</span> Support prioritaire email</li>
+        </ul>
+        <button class="plan-btn solid" style="background:linear-gradient(135deg,#1a6fd4,#00d1ff); box-shadow:0 0 24px rgba(0,209,255,0.3);">Essai 7 jours gratuit</button>
+      </div>
+
+      <!-- PRO -->
+      <div class="pricing-card" style="border-color:rgba(245,166,35,0.3);">
+        <div class="plan-name" style="color:var(--gold);">Pro</div>
+        <div class="plan-price" style="font-size:34px;">199€</div>
+        <div class="plan-period">/mois — 31 à 100 agents</div>
+        <div class="plan-divider" style="background:rgba(245,166,35,0.2);"></div>
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--gold); margin-bottom:12px;">Grandes équipes</div>
+        <ul class="plan-features" style="margin-bottom:20px;">
+          <li class="plan-feature"><span style="color:var(--gold)">✓</span> Jusqu'à 100 agents</li>
+          <li class="plan-feature"><span style="color:var(--gold)">✓</span> Tout Business +</li>
+          <li class="plan-feature"><span style="color:var(--gold)">✓</span> Import massif CSV (50+ agents)</li>
+          <li class="plan-feature"><span style="color:var(--gold)">✓</span> Module Compliance avancé</li>
+          <li class="plan-feature"><span style="color:var(--gold)">✓</span> Rapports audit CNAPS</li>
+          <li class="plan-feature"><span style="color:var(--gold)">✓</span> Accès API partenaire</li>
+          <li class="plan-feature"><span style="color:var(--gold)">✓</span> Account manager dédié</li>
+          <li class="plan-feature"><span style="color:var(--gold)">✓</span> Onboarding téléphonique</li>
+        </ul>
+        <button class="plan-btn outline" style="color:var(--gold); border-color:rgba(245,166,35,0.3);">Essai 7 jours gratuit</button>
+      </div>
+
+    </div>
+
+    <!-- Enterprise -->
+    <div style="max-width:1100px; margin:0 auto 20px; padding:24px 32px; border-radius:20px; background:var(--bg2); border:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap;">
+      <div>
+        <div style="font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.2em; color:var(--blueL); margin-bottom:6px;">Enterprise — 100+ agents</div>
+        <div style="font-weight:900; font-size:20px; color:var(--white);">Sur devis · Agents illimités · Multi-sociétés · SLA garanti</div>
+        <div style="font-size:13px; color:var(--muted); margin-top:4px;">Intégration sur mesure · Formation équipe · Support dédié 7j/7</div>
+      </div>
+      <button class="btn-primary" style="white-space:nowrap; padding:14px 28px;">Nous contacter</button>
+    </div>
+
+    <!-- Promo -->
+    <div class="promo-bar" style="margin-top:4px;">
+      <div class="promo-icon">🌟</div>
+      <div class="promo-text"><strong>Offre de lancement :</strong> 1 mois offert sur tout plan Starter, Business ou Pro souscrit avant le 31 mai 2026.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── FAQ ── -->
+<section id="faq">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">FAQ</div>
+      <h2>Questions fréquentes</h2>
+    </div>
+    <div class="faq-container">
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <button class="faq-btn">Combien d'agents puis-je importer ?<span class="faq-chevron">▼</span></button>
+        <div class="faq-answer">Le plan Premium permet d'importer jusqu'à 50 agents par fichier CSV. Vous pouvez effectuer plusieurs imports successifs pour des équipes plus importantes.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <button class="faq-btn">Est-ce conforme CNAPS ?<span class="faq-chevron">▼</span></button>
+        <div class="faq-answer">Oui. SecuPRO intègre les exigences de la Convention Collective IDCC 1351 et génère des alertes automatiques avant toute expiration de carte professionnelle.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <button class="faq-btn">Comment fonctionne l'essai gratuit ?<span class="faq-chevron">▼</span></button>
+        <div class="faq-answer">7 jours sans engagement, sans carte bancaire. Toutes les fonctionnalités Premium sont accessibles. Résiliation en 1 clic depuis votre espace.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <button class="faq-btn">Peut-on gérer plusieurs sociétés ?<span class="faq-chevron">▼</span></button>
+        <div class="faq-answer">La fonctionnalité multi-sociétés est en cours de développement pour Q2 2026. Contactez-nous pour être sur la liste d'attente prioritaire.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA FINAL ── -->
+<section id="cta-final">
+  <div class="cta-box">
+    <div class="cta-glow"></div>
+    <h2>Prêt à digitaliser votre exploitation ?</h2>
+    <p>Rejoignez les premiers chefs d'exploitation qui font confiance à SecuPRO. Démo live en 15 minutes.</p>
+    <div class="cta-btns">
+      <button class="btn-hero">Démarrer l'essai gratuit →</button>
+      <a href="mailto:contact@secupro.app" class="btn-outline-hero">contact@secupro.app</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-logo"><span>Secu</span><span>PRO</span></div>
+  <div class="footer-links">
+    <a href="#">Mentions légales</a>
+    <a href="#">CGV</a>
+    <a href="mailto:contact@secupro.app">Contact</a>
+    <a href="https://secupro.app">secupro.app</a>
+  </div>
+  <div class="footer-copy">© 2026 SecuPRO · Lyon</div>
+</footer>
+
+<script>
+  function toggleFaq(el) {
+    const isOpen = el.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) el.classList.add('open');
+  }
+</script>
+</body>
+</html>

@@ -118,11 +118,15 @@ export default function MentionsLegalesPage() {
           <p>
             <strong style={{ color: "#f1f5f9" }}>Contact :</strong>{" "}
             <a
-              href="mailto:mustaphajelikhi@outlook.fr"
+              href="mailto:support@secupro.app"
               style={{ color: "#00d1ff", textDecoration: "none" }}
             >
-              mustaphajelikhi@outlook.fr
+              support@secupro.app
             </a>
+          </p>
+          <p>
+            <strong style={{ color: "#f1f5f9" }}>Site web :</strong>{" "}
+            <span style={{ color: "#00d1ff" }}>https://secupro.app</span>
           </p>
         </Section>
 
@@ -146,10 +150,10 @@ export default function MentionsLegalesPage() {
             Les données collectées lors de l'inscription (nom, prénom, adresse e-mail) sont utilisées uniquement pour la gestion des comptes utilisateurs et la fourniture du service.
             Conformément au RGPD, vous disposez d'un droit d'accès, de rectification et de suppression de vos données en contactant :{" "}
             <a
-              href="mailto:mustaphajelikhi@outlook.fr"
+              href="mailto:support@secupro.app"
               style={{ color: "#00d1ff", textDecoration: "none" }}
             >
-              mustaphajelikhi@outlook.fr
+              support@secupro.app
             </a>
           </p>
         </Section>
