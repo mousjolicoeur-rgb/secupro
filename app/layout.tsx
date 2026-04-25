@@ -17,6 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SecuPRO — Gestion opérationnelle · Sécurité privée",
   description: "SecuPRO, la plateforme de gestion pour les agents et entreprises de sécurité privée.",
+  manifest: "/manifest.json",
   icons: {
     icon: [
       { url: "/secupro-logo-official.png", type: "image/png", sizes: "512x512" },
@@ -44,6 +45,24 @@ export default function RootLayout({
           {children}
         </div>
         <Footer />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(
+                    function(registration) {
+                      console.log('ServiceWorker registration successful');
+                    },
+                    function(err) {
+                      console.log('ServiceWorker registration failed: ', err);
+                    }
+                  );
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

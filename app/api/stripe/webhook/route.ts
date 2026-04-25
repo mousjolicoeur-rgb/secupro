@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { sendWelcomeB2BEmail } from '@/lib/emails';
+import { z } from 'zod';
+
+const stripeCheckoutSchema = z.object({
+  client_reference_id: z.string().uuid("societeId invalide"),
+  subscription: z.string().min(1),
+  customer: z.string().min(1)
+});
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2023-10-16' as any,
@@ -33,14 +41,22 @@ export async function POST(req: Request) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        const societeId = session.client_reference_id;
-        const subscriptionId = session.subscription as string;
-        const customerId = session.customer as string;
+        
+        // Validation Zod des propriétés du payload Stripe
+        const validated = stripeCheckoutSchema.safeParse({
+          client_reference_id: session.client_reference_id,
+          subscription: session.subscription,
+          customer: session.customer
+        });
 
-        if (!societeId) {
-          console.error('No societeId found in checkout session');
+        if (!validated.success) {
+          console.error('Payload Stripe invalide :', validated.error.errors);
           break;
         }
+
+        const societeId = validated.data.client_reference_id;
+        const subscriptionId = validated.data.subscription;
+        const customerId = validated.data.customer;
 
         // Récupérer le plan à partir du produit/prix souscrit
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
@@ -68,6 +84,24 @@ export async function POST(req: Request) {
         }
         
         console.log(`[Stripe] Societe ${societeId} updated to plan ${plan}`);
+
+        // ENVOI EMAIL DE BIENVENUE
+        try {
+          // On récupère le nom et l'email de la société pour l'email
+          const { data: soc } = await supabaseAdmin
+            .from('societes')
+            .select('nom, email_contact')
+            .eq('id', societeId)
+            .single();
+
+          if (soc && soc.email_contact) {
+            await sendWelcomeB2BEmail(soc.email_contact, soc.nom, plan);
+            console.log(`[Email] Bienvenue envoyé à ${soc.email_contact}`);
+          }
+        } catch (emailErr) {
+          console.error('[Email] Erreur envoi bienvenue:', emailErr);
+        }
+
         break;
       }
       

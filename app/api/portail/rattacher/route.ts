@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient'; // Make sure we have a service role client or use standard if we rely on RLS. Actually, for update, we might need admin privileges.
-// Wait, the project has SUPABASE_SERVICE_ROLE_KEY?
-// In AGENTS.md: SUPABASE_SERVICE_ROLE_KEY is required. Let's create an admin client.
 import { createClient } from '@supabase/supabase-js';
+import { sendAgentAccessEmail } from '@/lib/emails';
+import { z } from 'zod';
+
+const rattachementSchema = z.object({
+  code: z.string().length(6, "Le code doit faire exactement 6 caractères"),
+  agentId: z.string().uuid("Agent ID invalide"),
+});
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,11 +20,17 @@ const rateLimitMap = new Map<string, { count: number, resetAt: number }>();
 
 export async function POST(req: Request) {
   try {
-    const { code, agentId } = await req.json();
+    const body = await req.json();
+    const validated = rattachementSchema.safeParse(body);
 
-    if (!code || !agentId) {
-      return NextResponse.json({ success: false, error: "Code ou Agent manquant" }, { status: 400 });
+    if (!validated.success) {
+      return NextResponse.json(
+        { success: false, error: "Données invalides : " + validated.error.errors[0].message },
+        { status: 400 }
+      );
     }
+
+    const { code, agentId } = validated.data;
 
     // --- 1. Rate Limiting (5 tentatives max par heure) ---
     const ip = req.headers.get('x-forwarded-for') || 'unknown';
@@ -84,6 +94,22 @@ export async function POST(req: Request) {
         nb_erreurs: 0,
         erreurs: { agentId, action: "rattachement", date: new Date().toISOString() }
       });
+
+    // --- 6. Envoi Email Agent ---
+    try {
+      const { data: agent } = await supabaseAdmin
+        .from('agents')
+        .select('email, prenom')
+        .eq('id', agentId)
+        .single();
+        
+      if (agent && agent.email) {
+        await sendAgentAccessEmail(agent.email, agent.prenom, societe.nom);
+        console.log(`[Email] Accès Agent envoyé à ${agent.email}`);
+      }
+    } catch (emailErr) {
+      console.error('[Email] Erreur envoi agent:', emailErr);
+    }
 
     return NextResponse.json({ success: true, nomSociete: societe.nom });
 

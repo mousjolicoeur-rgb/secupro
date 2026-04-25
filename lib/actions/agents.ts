@@ -29,7 +29,7 @@ export async function createAgent(data: z.infer<typeof agentSchema>) {
       .single();
 
     if (error) {
-      console.error('[SecuPRO] Erreur Supabase lors de la création de l\\'agent:', error);
+      console.error("[SecuPRO] Erreur Supabase lors de la création de l'agent:", error);
       return { success: false, error: error.message };
     }
 
@@ -44,7 +44,7 @@ export async function createAgent(data: z.infer<typeof agentSchema>) {
       return { success: false, error: `Erreur de validation : ${errorMessage}` };
     }
     
-    return { success: false, error: 'Une erreur est survenue lors de la création de l\\'agent.' };
+    return { success: false, error: "Une erreur est survenue lors de la création de l'agent." };
   }
 }
 

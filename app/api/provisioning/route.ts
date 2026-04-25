@@ -1,17 +1,26 @@
 import { NextResponse } from 'next/server';
 import { importAgentsCSV } from '@/lib/actions/provisioning';
+import { z } from 'zod';
+
+const provisioningSchema = z.object({
+  societeId: z.string().uuid("L'identifiant de société doit être un UUID valide"),
+  filename: z.string().optional(),
+  csvContent: z.string().min(1, "Le contenu CSV ne peut pas être vide")
+});
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { societeId, filename, csvContent } = body;
+    const validated = provisioningSchema.safeParse(body);
 
-    if (!societeId || !csvContent) {
+    if (!validated.success) {
       return NextResponse.json(
-        { success: false, error: 'societeId et csvContent sont requis.' },
+        { success: false, error: 'Données invalides : ' + validated.error.errors[0].message },
         { status: 400 }
       );
     }
+
+    const { societeId, filename, csvContent } = validated.data;
 
     // Appel à l'action serveur qui gère le parsing, l'insertion et l'audit
     const result = await importAgentsCSV(societeId, filename || 'import.csv', csvContent);

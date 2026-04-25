@@ -202,7 +202,7 @@ export default function ProvisioningInterface() {
   const handleConfirmImport = async () => {
     console.log('Submitting with societeId:', societeId);
     console.log('Agents count:', agents.length);
-    if (!societeId) { alert('societeId manquant — veuillez recommencer depuis l\\'étape organisation'); return; }
+    if (!societeId) { alert("societeId manquant — veuillez recommencer depuis l'étape organisation"); return; }
     if (!csvFile) { alert('Fichier CSV manquant'); return; }
     setUploading(true);
     setProgress(0);

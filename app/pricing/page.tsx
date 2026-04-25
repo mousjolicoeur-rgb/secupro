@@ -10,7 +10,7 @@ const PLANS = [
     name: 'Essentiel',
     price: 49.99,
     description: 'Pour les petites sociétés de sécurité',
-    features: ['Gestion jusqu\\'à 25 agents', 'Import CSV', 'Support par email', 'Base de données sécurisée'],
+    features: ["Gestion jusqu'à 25 agents", 'Import CSV', 'Support par email', 'Base de données sécurisée'],
     icon: ShieldAlert,
     priceId: 'price_essentiel_mock', // Remplacer par le vrai ID Stripe
     color: 'blue'
@@ -20,7 +20,7 @@ const PLANS = [
     name: 'Pro',
     price: 99.99,
     description: 'Pour les entreprises en croissance',
-    features: ['Gestion jusqu\\'à 100 agents', 'Dashboard de performances complet', 'Assistant SecuIA', 'Support prioritaire'],
+    features: ["Gestion jusqu'à 100 agents", 'Dashboard de performances complet', 'Assistant SecuIA', 'Support prioritaire'],
     icon: Zap,
     priceId: 'price_pro_mock', // Remplacer par le vrai ID Stripe
     color: 'emerald',

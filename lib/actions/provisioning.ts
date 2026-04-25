@@ -144,7 +144,7 @@ export async function importAgentsCSV(
       });
 
     if (auditError) {
-      console.error('[SecuPRO] Erreur lors de la sauvegarde de l\\'audit d\\'import:', auditError);
+      console.error("[SecuPRO] Erreur lors de la sauvegarde de l'audit d'import:", auditError);
       // On ne throw pas l'erreur pour ne pas bloquer le retour d'information à l'utilisateur
     }
 
@@ -162,7 +162,7 @@ export async function importAgentsCSV(
     console.error('[SecuPRO] Erreur importAgentsCSV:', error);
     return { 
       success: false, 
-      error: error.message || 'Une erreur inattendue est survenue lors de l\\'importation.' 
+      error: error.message || "Une erreur inattendue est survenue lors de l'importation." 
     };
   }
 }
