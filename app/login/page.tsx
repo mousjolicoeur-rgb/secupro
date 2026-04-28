@@ -144,7 +144,7 @@ function LoginContent() {
                 <p style={{ textAlign: 'center', color: '#3a5a7a', fontSize: 12, marginTop: 18 }}>
                   Pas encore de compte ?{' '}
                   <Link href="/register" style={{ color: '#2b8fff', fontWeight: 700, textDecoration: 'none' }}>
-                    Essai gratuit 7 jours →
+                    Essai gratuit 1 mois →
                   </Link>
                 </p>
               )}

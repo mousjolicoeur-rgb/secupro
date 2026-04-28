@@ -30,7 +30,7 @@ function CallbackInner() {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (session) {
-        router.replace('/agent/hub');
+        router.replace(session?.user ? (async () => { const { data } = await supabase.from('profiles').select('role').eq('id', session.user.id).single(); return ['societe','manager','admin'].includes(data?.role) ? '/espace-societe/dashboard' : '/agent/hub'; })() : '/login');
         return;
       }
 
@@ -38,7 +38,7 @@ function CallbackInner() {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
         if (s) {
           subscription.unsubscribe();
-          router.replace('/agent/hub');
+          router.replace(session?.user ? (async () => { const { data } = await supabase.from('profiles').select('role').eq('id', session.user.id).single(); return ['societe','manager','admin'].includes(data?.role) ? '/espace-societe/dashboard' : '/agent/hub'; })() : '/login');
         }
       });
 
