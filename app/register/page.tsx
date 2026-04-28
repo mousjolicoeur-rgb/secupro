@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
@@ -24,7 +24,7 @@ export default function RegisterPage() {
     }
 
     if (password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères');
+      setError('Le mot de passe doit contenir au moins 6 caractÃ¨res');
       setLoading(false);
       return;
     }
@@ -47,8 +47,9 @@ export default function RegisterPage() {
         });
         setError(error.message);
       } else {
-        console.info('[SecuPRO] signUp OK — email de confirmation envoyé à', email);
-        setRegistrationSuccess(true);
+        console.info('[SecuPRO] signUp OK â€” email de confirmation envoyÃ© Ã ', email);
+        await supabase.from('profiles').upsert({ id: (await supabase.auth.getUser()).data.user?.id, role: 'societe' });
+          setRegistrationSuccess(true);
       }
     } catch (err) {
       console.error('[SecuPRO] signUp exception:', err);
@@ -58,13 +59,13 @@ export default function RegisterPage() {
     }
   };
 
-  // ── Écran de confirmation envoyée ──────────────────────────
+  // â”€â”€ Ã‰cran de confirmation envoyÃ©e â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (registrationSuccess) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-cyan-500 tracking-tighter">SECUPRO</h1>
-          <p className="text-slate-400 uppercase text-xs tracking-[0.2em]">Système de Gestion Agents</p>
+          <p className="text-slate-400 uppercase text-xs tracking-[0.2em]">SystÃ¨me de Gestion Agents</p>
         </div>
 
         <div className="w-full max-w-md bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-2xl text-center">
@@ -74,16 +75,16 @@ export default function RegisterPage() {
             </svg>
           </div>
 
-          <h2 className="text-xl font-semibold text-white mb-3">Enrôlement initié</h2>
+          <h2 className="text-xl font-semibold text-white mb-3">EnrÃ´lement initiÃ©</h2>
           <p className="text-slate-400 text-sm mb-6">
-            Un email de confirmation a été envoyé à{' '}
+            Un email de confirmation a Ã©tÃ© envoyÃ© Ã {' '}
             <span className="text-cyan-400 font-medium">{email}</span>.<br />
-            Cliquez sur le lien pour activer votre accès.
+            Cliquez sur le lien pour activer votre accÃ¨s.
           </p>
 
           <div className="bg-slate-950 border border-slate-800 rounded-lg p-4 mb-6 text-left">
             <p className="text-xs text-slate-500">
-              Email non reçu ? Vérifiez votre dossier spam ou{' '}
+              Email non reÃ§u ? VÃ©rifiez votre dossier spam ou{' '}
               <button
                 onClick={() => setRegistrationSuccess(false)}
                 className="text-cyan-500 hover:text-cyan-400 transition-colors"
@@ -98,27 +99,27 @@ export default function RegisterPage() {
             href="/login"
             className="block w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-3 rounded-lg transition-colors text-sm"
           >
-            Retour à la connexion
+            Retour Ã  la connexion
           </Link>
 
           <p className="text-center text-slate-500 text-xs mt-6">
-            🔒 Serveur sécurisé - Protocole de cryptage AES-256
+            ðŸ”’ Serveur sÃ©curisÃ© - Protocole de cryptage AES-256
           </p>
         </div>
       </div>
     );
   }
 
-  // ── Formulaire d'inscription ───────────────────────────────
+  // â”€â”€ Formulaire d'inscription â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4">
       <div className="mb-8 text-center">
         <h1 className="text-4xl font-bold text-cyan-500 tracking-tighter">SECUPRO</h1>
-        <p className="text-slate-400 uppercase text-xs tracking-[0.2em]">Système de Gestion Agents</p>
+        <p className="text-slate-400 uppercase text-xs tracking-[0.2em]">SystÃ¨me de Gestion Agents</p>
       </div>
 
       <div className="w-full max-w-md bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-2xl">
-        <h2 className="text-xl font-semibold text-white mb-6">Créer un compte Agent</h2>
+        <h2 className="text-xl font-semibold text-white mb-6">CrÃ©er un compte Agent</h2>
 
         {error && (
           <div className="mb-4 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 text-red-400 text-sm">
@@ -149,7 +150,7 @@ export default function RegisterPage() {
               disabled={loading}
               required
               className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-cyan-500 outline-none transition-all disabled:opacity-50 mt-1"
-              placeholder="••••••••"
+              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
             />
           </div>
 
@@ -162,7 +163,7 @@ export default function RegisterPage() {
               disabled={loading}
               required
               className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-cyan-500 outline-none transition-all disabled:opacity-50 mt-1"
-              placeholder="••••••••"
+              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
             />
           </div>
 
@@ -171,21 +172,22 @@ export default function RegisterPage() {
             disabled={loading}
             className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg transition-colors shadow-lg shadow-cyan-900/20"
           >
-            {loading ? 'Enrôlement en cours...' : 'Démarrer l\'enrôlement'}
+            {loading ? 'EnrÃ´lement en cours...' : 'DÃ©marrer l\'enrÃ´lement'}
           </button>
         </form>
 
         <p className="text-center text-slate-500 text-xs mt-6">
-          Déjà inscrit ?{' '}
+          DÃ©jÃ  inscrit ?{' '}
           <Link href="/login" className="text-cyan-500 hover:text-cyan-400 transition-colors">
             Se connecter
           </Link>
         </p>
 
         <p className="text-center text-slate-600 text-xs mt-4">
-          🔒 Serveur sécurisé - Protocole de cryptage AES-256
+          ðŸ”’ Serveur sÃ©curisÃ© - Protocole de cryptage AES-256
         </p>
       </div>
     </div>
   );
 }
+
