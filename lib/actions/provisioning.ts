@@ -120,7 +120,7 @@ export async function importAgentsCSV(
         
         // Formatage clair des erreurs Zod
         if (err instanceof z.ZodError) {
-          message = err.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(' | ');
+          message = err.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(' | ');
         }
         
         erreurs.push({

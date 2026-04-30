@@ -40,7 +40,7 @@ export async function createAgent(data: z.infer<typeof agentSchema>) {
     
     // Traitement spécifique des erreurs de validation Zod
     if (error instanceof z.ZodError) {
-      const errorMessage = error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
+      const errorMessage = error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
       return { success: false, error: `Erreur de validation : ${errorMessage}` };
     }
     

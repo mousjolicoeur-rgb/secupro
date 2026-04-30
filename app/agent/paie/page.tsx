@@ -378,6 +378,7 @@ export default function PaiePage() {
             </div>
 
             <div className="space-y-2">
+              {fiches.map((f) => (
                 <div
                   key={f.id}
                   className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-4 hover:border-blue-500/20 transition-colors"

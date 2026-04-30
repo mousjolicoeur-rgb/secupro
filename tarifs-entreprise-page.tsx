@@ -270,13 +270,15 @@ export default function TarifsEntreprise() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur lors du paiement");
 
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+
+      // Fallback: legacy redirectToCheckout (sessionId only)
       const stripe = await stripePromise;
       if (!stripe) throw new Error("Stripe non chargé");
-
-      const { error: stripeError } = await stripe.redirectToCheckout({
-        sessionId: data.sessionId,
-      });
-
+      const { error: stripeError } = await (stripe as any).redirectToCheckout({ sessionId: data.sessionId });
       if (stripeError) throw new Error(stripeError.message);
     } catch (err: any) {
       setError(err.message);

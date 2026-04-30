@@ -16,6 +16,13 @@ function LoginContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const errorParam   = searchParams.get('error');
+  // Paramètre injecté par le middleware lors d'un accès sans session.
+  // Sécurité : on accepte uniquement les chemins internes (commençant par /)
+  // pour éviter une faille open-redirect vers un domaine externe.
+  const nextPath     = (() => {
+    const raw = searchParams.get('next') ?? '';
+    return raw.startsWith('/') ? raw : '/dashboard';
+  })();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +30,7 @@ function LoginContent() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) { setError(error.message); }
-      else { router.replace('/dashboard'); }
+      else { router.replace(nextPath); }
     } catch { setError('Une erreur est survenue. Réessayez.'); }
     finally { setLoading(false); }
   };

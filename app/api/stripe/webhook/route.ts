@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
@@ -50,7 +52,7 @@ export async function POST(req: Request) {
         });
 
         if (!validated.success) {
-          console.error('Payload Stripe invalide :', validated.error.errors);
+          console.error('Payload Stripe invalide :', validated.error.issues);
           break;
         }
 

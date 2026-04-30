@@ -36,7 +36,7 @@ export default function PortailProPage() {
         setAgentId(agent.id);
         if (agent.societes) {
           // Déjà rattaché
-          setSocieteNom(agent.societes.nom);
+          setSocieteNom((agent.societes as { nom: any }[])[0]?.nom ?? null);
         }
       }
       setLoading(false);

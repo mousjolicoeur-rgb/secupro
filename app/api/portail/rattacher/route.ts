@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendAgentAccessEmail } from '@/lib/emails';
@@ -25,7 +27,7 @@ export async function POST(req: Request) {
 
     if (!validated.success) {
       return NextResponse.json(
-        { success: false, error: "Données invalides : " + validated.error.errors[0].message },
+        { success: false, error: "Données invalides : " + validated.error.issues[0].message },
         { status: 400 }
       );
     }
