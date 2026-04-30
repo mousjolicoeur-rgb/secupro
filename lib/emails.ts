@@ -89,7 +89,7 @@ export const sendCarteProAlertEmail = async (email: string, agentNom: string, pr
   return resend.emails.send({
     from: 'SecuPRO Alertes <contact@secupro.app>',
     to: email,
-    subject: \`Alerte CNAPS : Carte pro expirant à J-\${jRestant} (\${prenom} \${agentNom})\`,
+    subject: `Alerte CNAPS : Carte pro expirant à J-${jRestant} (${prenom} ${agentNom})`,
     html: `
       <div style="${BASE_STYLES}">
         <div style="${CONTAINER_STYLES}; border-color: ${isCritique ? '#ef4444' : '#1f2937'};">

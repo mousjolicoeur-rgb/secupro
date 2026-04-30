@@ -108,7 +108,7 @@ export default function SecuIAPage() {
     const lines = content.split('\\n');
     return lines.map((line, i) => {
       // Remplacement rudimentaire de **texte** en gras
-      const parts = line.split(/(\\*{2}[^*]+\\*{2})/g);
+      const parts = line.split(/(\*{2}[^*]+\*{2})/g);
       return (
         <React.Fragment key={i}>
           {parts.map((part, j) => {
