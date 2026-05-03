@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -9,12 +9,6 @@ const rattachementSchema = z.object({
   code: z.string().length(6, "Le code doit faire exactement 6 caractères"),
   agentId: z.string().uuid("Agent ID invalide"),
 });
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { persistSession: false } }
-);
 
 // Basic in-memory rate limiting map
 // Key: IP or agentId, Value: { count: number, resetAt: number }
@@ -33,6 +27,12 @@ export async function POST(req: Request) {
     }
 
     const { code, agentId } = validated.data;
+
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } }
+    );
 
     // --- 1. Rate Limiting (5 tentatives max par heure) ---
     const ip = req.headers.get('x-forwarded-for') || 'unknown';

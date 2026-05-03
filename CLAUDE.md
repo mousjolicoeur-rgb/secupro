@@ -83,6 +83,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## Environment Variables
+
+Variables required in `.env.local` (never commit this file):
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `STRIPE_SECRET_KEY`
+- `ANTHROPIC_API_KEY`
+- `RESEND_API_KEY`
+- `SENTRY_DSN`
+
+---
+
 ## Security
 
 - **CSP:** Defined in `next.config.ts` only — never duplicate in `vercel.json`
@@ -99,6 +113,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 3. **Deployment:** Run `vercel --prod` after changes
 4. **Stripe:** Live link at 9.99€/mois — don't recreate without confirmation
 5. **Theme:** Use cyan primary, dark backgrounds — no other primary colors
+
+---
+
+## ⚠️ Never Do
+
+- Never modify `vercel.json` for CSP — use `next.config.ts` only
+- Never recreate the Stripe payment link without explicit confirmation
+- Never expose `SUPABASE_SERVICE_ROLE_KEY` client-side
+- Never change the primary color away from cyan `#00d1ff`
+- Never add implicit `any` types in TypeScript
 
 ---
 
@@ -124,7 +148,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Context
 
-**Target:** French security agents (ADS) and security companies (gardiennage).
-**Launch:** Early May 2026.
-**Market:** ~180,000 French security agents.
-**Founder:** Mustapha, Lyon (auto-entrepreneur APE 6201Z).
+**Product:** SecuPRO — SaaS/PWA for French private security sector (IDCC 1351).
+**Target:** Security agents (ADS) and security companies (gardiennage).
+**Market:** 300,000 agents in France, in 12,500 companies.
+**Domain:** secupro.app
+**Launch:** End of May 2026.
+**Founder:** Mustapha, Lyon (entrepreneur APE 6201Z).
