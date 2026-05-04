@@ -326,7 +326,8 @@ export default function PaiePage() {
       </div>
 
       {/* Section historique (masquée jusqu'au clic) */}
-      {showHistory && <div className="px-4">
+      {showHistory && (
+      <div className="px-4">
         <p className="text-[10px] text-slate-500 uppercase tracking-[0.25em] font-bold mb-4">Historique des fiches</p>
 
         {/* Loading spinner */}
@@ -459,7 +460,8 @@ export default function PaiePage() {
             </div>
           </>
         )}
-      </div>}
+      </div>
+      )}
 
       {/* ── AI tip badge ─────────────────────────────────────────────────────── */}
       <div className="flex justify-center px-4 pt-4 pb-6">
