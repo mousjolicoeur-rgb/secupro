@@ -1,8 +1,10 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 
 /**
  * Client navigateur / composants "use client" : clé **anon** uniquement.
- * Schéma **public** uniquement (`db.schema`), pas d’autre schéma custom.
+ * Utilise createBrowserClient (@supabase/ssr) pour stocker la session dans
+ * les cookies — indispensable pour que le middleware Next.js (qui lit les
+ * cookies, pas localStorage) puisse valider la session côté serveur.
  */
 const url =
   process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://placeholder.local.supabase.co";
@@ -20,11 +22,4 @@ if (
   }
 }
 
-export const supabase: SupabaseClient = createClient(url, anon, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-  },
-  db: { schema: "public" },
-});
+export const supabase = createBrowserClient(url, anon);

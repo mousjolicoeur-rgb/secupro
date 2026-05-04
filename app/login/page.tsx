@@ -28,9 +28,31 @@ function LoginContent() {
     e.preventDefault();
     setError(''); setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) { setError(error.message); }
-      else { router.replace(nextPath); }
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) { setError(error.message); return; }
+
+      // Si un ?next= est fourni (ex: middleware qui redirige), on l'honore.
+      if (nextPath !== '/dashboard') { router.replace(nextPath); return; }
+
+      // Sinon routing basé sur le profil (is_approved + role).
+      const userId = data.session?.user?.id;
+      if (userId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_approved, role')
+          .eq('id', userId)
+          .single();
+        const role = profile?.role as string | undefined;
+        if (role === 'admin' || profile?.is_approved) {
+          router.replace('/dashboard');
+        } else if (['societe', 'manager'].includes(role ?? '')) {
+          router.replace('/espace-societe/dashboard');
+        } else {
+          router.replace('/agent/hub');
+        }
+      } else {
+        router.replace('/dashboard');
+      }
     } catch { setError('Une erreur est survenue. Réessayez.'); }
     finally { setLoading(false); }
   };

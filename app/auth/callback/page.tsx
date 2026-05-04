@@ -13,11 +13,18 @@ function CallbackInner() {
     if (!session) { router.replace('/login'); return; }
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('is_approved, role')
       .eq('id', session.user.id)
       .single();
-    if (['societe','manager','admin'].includes(profile?.role)) {
+    // role existe si la colonne a été ajoutée ; is_approved est toujours présent.
+    const role = profile?.role as string | undefined;
+    if (role === 'admin') {
+      router.replace('/dashboard');
+    } else if (['societe', 'manager'].includes(role ?? '')) {
       router.replace('/espace-societe/dashboard');
+    } else if (profile?.is_approved) {
+      // Utilisateur approuvé sans rôle explicite → dashboard par défaut
+      router.replace('/dashboard');
     } else {
       router.replace('/agent/hub');
     }
