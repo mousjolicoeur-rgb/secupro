@@ -41,6 +41,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
+        <meta charSet="utf-8" />
         <AgenticSEO />
       </head>
       <body className="min-h-full flex flex-col">
