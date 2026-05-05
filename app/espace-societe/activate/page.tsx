@@ -275,10 +275,10 @@ export default function ActivateEnterprisePage() {
                 }}
               />
               <Image
-                src="/secupro-logo-official.png"
+                src="/logo-secupro.jpg"
                 alt="SecuPRO"
-                width={58}
-                height={58}
+                width={100}
+                height={30}
                 priority
                 style={{ filter: "drop-shadow(0 0 16px rgba(0,209,255,0.45))", position: "relative" }}
               />

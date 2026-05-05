@@ -103,10 +103,10 @@ export default function BusinessConnexionPage() {
               }}
             />
             <Image
-              src="/secupro-logo-official.png"
+              src="/logo-secupro.jpg"
               alt="SecuPRO"
-              width={62}
-              height={62}
+              width={100}
+              height={30}
               priority
               style={{
                 filter: "drop-shadow(0 0 16px rgba(0,209,255,0.5))",

@@ -591,7 +591,7 @@ export default function ChefExploitationDashboard() {
         </button>
 
         <div className="flex items-center gap-2.5">
-          <Image src="/secupro-logo-official.png" alt="SecuPRO" width={26} height={26}
+          <Image src="/logo-secupro.jpg" alt="SecuPRO" width={200} height={60}
             style={{ filter: "drop-shadow(0 0 7px rgba(0,209,255,0.4))" }} />
           <div>
             <p className="text-[8px] font-black uppercase tracking-[0.48em]"

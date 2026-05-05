@@ -872,10 +872,10 @@ export default function EntreprisesPage() {
             onClick={() => router.push("/")}
           >
             <Image
-              src="/secupro-logo-official.png"
+              src="/logo-secupro.jpg"
               alt="SecuPRO Tech"
-              width={38}
-              height={38}
+              width={200}
+              height={60}
               priority
               style={{
                 filter: `drop-shadow(0 0 14px rgba(0,200,240,0.5))`,
@@ -1570,10 +1570,10 @@ export default function EntreprisesPage() {
                 }}
               >
                 <Image
-                  src="/secupro-logo-official.png"
+                  src="/logo-secupro.jpg"
                   alt="SecuPRO"
-                  width={34}
-                  height={34}
+                  width={100}
+                  height={30}
                   style={{
                     filter: `drop-shadow(0 0 10px rgba(0,200,240,0.4))`,
                   }}

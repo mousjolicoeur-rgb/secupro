@@ -69,7 +69,7 @@ function LoginContent() {
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <Image src="/secupro-logo-official.png" alt="SecuPRO" width={56} height={56} style={{ margin: '0 auto 8px', filter: 'drop-shadow(0 0 16px rgba(0,209,255,0.3))' }} />
+          <Image src="/logo-secupro.jpg" alt="SecuPRO" width={100} height={30} style={{ margin: '0 auto 8px', filter: 'drop-shadow(0 0 16px rgba(0,209,255,0.3))' }} />
           <p style={{ color: 'rgba(0,209,255,0.5)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.3em' }}>
             Gestion opérationnelle · Sécurité privée
           </p>

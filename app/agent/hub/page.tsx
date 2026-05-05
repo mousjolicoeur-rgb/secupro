@@ -404,10 +404,10 @@ export default function AgentHubPage() {
           }}
         >
           <Image
-            src="/secupro-logo-official.png"
+            src="/logo-secupro.jpg"
             alt="SecuPRO"
-            width={52}
-            height={52}
+            width={100}
+            height={30}
             priority
             style={{
               filter:

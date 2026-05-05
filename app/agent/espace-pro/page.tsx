@@ -814,7 +814,7 @@ function LockScreen({ userEmail, onUnlock }: { userEmail: string; onUnlock: () =
               border:"1px solid rgba(0,209,255,0.2)",
               boxShadow:"0 0 40px rgba(0,120,255,0.2)",
             }}>
-            <Image src="/secupro-logo-official.png" alt="SecuPRO" width={36} height={36}
+            <Image src="/logo-secupro.jpg" alt="SecuPRO" width={100} height={30}
               style={{ filter:"drop-shadow(0 0 8px rgba(0,209,255,0.6))" }} />
           </div>
           <p className="text-[8px] font-black uppercase tracking-[0.5em]"
@@ -1107,7 +1107,7 @@ export default function EspaceProPage() {
         </button>
 
         <div className="flex items-center gap-2">
-          <Image src="/secupro-logo-official.png" alt="SecuPRO" width={22} height={22}
+          <Image src="/logo-secupro.jpg" alt="SecuPRO" width={200} height={60}
             style={{ filter:`drop-shadow(0 0 6px ${phase === "alerte" ? "rgba(255,140,0,0.5)" : "rgba(0,209,255,0.4)"})`}} />
           <div>
             <p className="text-[7px] font-black uppercase tracking-[0.4em]"

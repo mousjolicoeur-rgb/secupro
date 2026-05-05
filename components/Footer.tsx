@@ -26,10 +26,10 @@ export default function Footer() {
       >
         {/* Logo */}
         <Image
-          src="/secupro-logo-official.png"
+          src="/logo-secupro.jpg"
           alt="SecuPRO"
-          width={48}
-          height={48}
+          width={140}
+          height={42}
           style={{ opacity: 0.85 }}
         />
 
