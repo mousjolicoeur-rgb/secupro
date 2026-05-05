@@ -3,16 +3,19 @@
 /**
  * Dashboard Cockpit B2B — Chefs d'exploitation SecuPRO
  *
- * ⚠️  Pour activer les KPIs CNAPS/SST, exécuter dans Supabase SQL Editor :
+ * ⚠️  Migration SQL requise — exécuter dans Supabase SQL Editor :
  *   ALTER TABLE public.agents ADD COLUMN IF NOT EXISTS carte_pro_expiration date;
  *   ALTER TABLE public.agents ADD COLUMN IF NOT EXISTS sst_expiration date;
+ *   ALTER TABLE public.agents ADD COLUMN IF NOT EXISTS sst boolean DEFAULT false;
  *   ALTER TABLE public.agents ADD COLUMN IF NOT EXISTS site_actuel text;
  *   ALTER TABLE public.agents ADD COLUMN IF NOT EXISTS en_vacation boolean DEFAULT false;
  *   ALTER TABLE public.agents ADD COLUMN IF NOT EXISTS prime_urgence numeric(8,2) DEFAULT 0;
+ *   ALTER TABLE public.agents ADD COLUMN IF NOT EXISTS date_recrutement date;
+ *   ALTER TABLE public.agents ADD COLUMN IF NOT EXISTS adresse text;
  *   ALTER TABLE public.societes ADD COLUMN IF NOT EXISTS code_societe text;
  */
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import {
@@ -20,6 +23,7 @@ import {
   MapPin, Bell, FileText, Calendar, Download,
   RefreshCw, Shield, Activity, Euro, ChevronRight,
   BadgeAlert, BarChart3, LogOut, Circle,
+  Upload, Plus, Trash2, X, Check, ChevronDown,
 } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -34,11 +38,38 @@ type AgentRow = {
   carte_pro: string | null;
   carte_pro_expiration: string | null;
   sst_expiration: string | null;
+  sst: boolean | null;
   site_actuel: string | null;
   en_vacation: boolean | null;
   prime_urgence: number | null;
   societe_id: string;
   coefficient: number | null;
+  telephone: string | null;
+  adresse: string | null;
+  date_recrutement: string | null;
+};
+
+// ── Import / Formulaire ──────────────────────────────────────────────────────
+
+type AgentFormData = {
+  nom: string;
+  prenom: string;
+  date_recrutement: string;
+  carte_pro: string;
+  carte_pro_expiration: string;
+  sst: boolean;
+  sst_expiration: string;
+  adresse: string;
+  telephone: string;
+  site_actuel: string;
+};
+
+type PreviewAgent = Partial<AgentFormData> & { _idx?: number };
+
+const EMPTY_FORM: AgentFormData = {
+  nom: "", prenom: "", date_recrutement: "", carte_pro: "",
+  carte_pro_expiration: "", sst: false, sst_expiration: "",
+  adresse: "", telephone: "", site_actuel: "",
 };
 
 type SocieteRow = {
@@ -187,6 +218,23 @@ export default function DashboardExploitation() {
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState("");
 
+  // ── Import IA ──────────────────────────────────────────────────────────────
+  const [importStep, setImportStep]       = useState<"idle" | "analyzing" | "preview" | "saving">("idle");
+  const [importPreview, setImportPreview] = useState<PreviewAgent[]>([]);
+  const [importError, setImportError]     = useState("");
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // ── Formulaire manuel ──────────────────────────────────────────────────────
+  const [showForm, setShowForm]     = useState(false);
+  const [formData, setFormData]     = useState<AgentFormData>(EMPTY_FORM);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError]   = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
+
+  // ── Suppression ────────────────────────────────────────────────────────────
+  const [deleteTarget, setDeleteTarget]   = useState<AgentRow | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   // ── Chargement des données ────────────────────────────────────────────────
 
   const loadData = useCallback(async (isManual = false) => {
@@ -296,6 +344,102 @@ export default function DashboardExploitation() {
       `${a.nom} ${a.prenom} ${a.statut ?? ""} ${a.site_actuel ?? ""}`.toLowerCase().includes(q)
     );
   }, [agents, searchQuery]);
+
+  // ── Analyse IA d'un fichier importé ────────────────────────────────────────
+
+  const handleFileAnalyze = async (file: File) => {
+    setImportError("");
+    setImportStep("analyzing");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/espace-societe/analyze-import", { method: "POST", body: fd });
+      const json = await res.json() as { agents?: PreviewAgent[]; error?: string };
+      if (!res.ok || json.error) throw new Error(json.error ?? "Erreur serveur");
+      const rows = (json.agents ?? []).map((a, i) => ({ ...a, _idx: i }));
+      if (rows.length === 0) throw new Error("Aucune donnée extractible dans ce fichier.");
+      setImportPreview(rows);
+      setImportStep("preview");
+    } catch (e: unknown) {
+      setImportError(e instanceof Error ? e.message : "Erreur analyse");
+      setImportStep("idle");
+    }
+  };
+
+  const handleImportConfirm = async () => {
+    if (!societe) return;
+    setImportStep("saving");
+    let ok = 0;
+    for (const ag of importPreview) {
+      const { error } = await supabase.from("agents").insert({
+        societe_id:            societe.id,
+        nom:                   ag.nom?.toUpperCase() ?? "",
+        prenom:                ag.prenom ?? "",
+        carte_pro:             ag.carte_pro ?? null,
+        carte_pro_expiration:  ag.carte_pro_expiration || null,
+        sst:                   ag.sst ?? false,
+        sst_expiration:        ag.sst_expiration || null,
+        date_recrutement:      ag.date_recrutement || null,
+        adresse:               ag.adresse || null,
+        telephone:             ag.telephone || null,
+        site_actuel:           ag.site_actuel || null,
+        statut:                "actif",
+      });
+      if (!error) ok++;
+    }
+    setImportStep("idle");
+    setImportPreview([]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    await loadData(true);
+    alert(`${ok} agent(s) importé(s) avec succès.`);
+  };
+
+  // ── Formulaire agent manuel ─────────────────────────────────────────────────
+
+  const handleFormChange = (field: keyof AgentFormData, value: string | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.nom || !formData.prenom || !formData.carte_pro) {
+      setFormError("Nom, Prénom et Numéro CNAPS sont obligatoires.");
+      return;
+    }
+    if (!societe) { setFormError("Société non identifiée."); return; }
+    setFormLoading(true); setFormError(""); setFormSuccess("");
+    const { error } = await supabase.from("agents").insert({
+      societe_id:           societe.id,
+      nom:                  formData.nom.toUpperCase(),
+      prenom:               formData.prenom,
+      carte_pro:            formData.carte_pro || null,
+      carte_pro_expiration: formData.carte_pro_expiration || null,
+      sst:                  formData.sst,
+      sst_expiration:       formData.sst_expiration || null,
+      date_recrutement:     formData.date_recrutement || null,
+      adresse:              formData.adresse || null,
+      telephone:            formData.telephone || null,
+      site_actuel:          formData.site_actuel || null,
+      statut:               "actif",
+    });
+    setFormLoading(false);
+    if (error) { setFormError(error.message); return; }
+    setFormSuccess("Agent ajouté avec succès !");
+    setFormData(EMPTY_FORM);
+    setShowForm(false);
+    await loadData(true);
+  };
+
+  // ── Suppression agent ──────────────────────────────────────────────────────
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    await supabase.from("agents").delete().eq("id", deleteTarget.id);
+    setDeleteLoading(false);
+    setDeleteTarget(null);
+    await loadData(true);
+  };
 
   // ── Export PDF ─────────────────────────────────────────────────────────────
 
@@ -783,18 +927,440 @@ export default function DashboardExploitation() {
         )}
 
         {/* ═══════════ ONGLET : PLANNINGS ═══════════ */}
+        {/* ═══════════ ONGLET : PLANNINGS / GESTION AGENTS ═══════════ */}
         {tab === "plannings" && (
-          <section
-            className="rounded-2xl p-10 flex flex-col items-center justify-center text-center min-h-64"
-            style={{ background: "rgba(10,15,30,0.9)", border: `1px solid ${S.border}` }}
-          >
-            <Calendar size={32} className="text-[#4da6ff] mb-4 opacity-60" />
-            <h2 className="text-sm font-black text-white uppercase tracking-wide mb-2">Plannings opérationnels</h2>
-            <p className="text-xs text-slate-500 max-w-sm">
-              Connecté à la table <code className="text-[#4da6ff]">plannings</code>. Module en cours de déploiement — disponible dans la prochaine version.
-            </p>
-            <ChevronRight size={14} className="text-slate-600 mt-4" />
-          </section>
+          <div className="space-y-6">
+
+            {/* ── SECTION 1 : Import fichier ──────────────────────────────── */}
+            <section
+              className="rounded-2xl p-6 space-y-4"
+              style={{ background: "rgba(10,15,30,0.9)", border: `1px solid ${S.border}` }}
+            >
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <h2 className="text-sm font-black text-white uppercase tracking-wide flex items-center gap-2">
+                  <Upload size={14} className="text-[#4da6ff]" /> Import agents (CSV · Excel · PDF)
+                </h2>
+                {importStep === "preview" && (
+                  <span className="text-[11px] text-[#4da6ff] font-bold">
+                    {importPreview.length} agent(s) détecté(s) — vérifiez avant de confirmer
+                  </span>
+                )}
+              </div>
+
+              {/* Drop zone / bouton upload */}
+              {importStep === "idle" && (
+                <div
+                  className="relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center gap-3 cursor-pointer transition-colors hover:border-[#4da6ff]/60 hover:bg-[#4da6ff]/5"
+                  style={{ borderColor: `${S.border}` }}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => {
+                    e.preventDefault();
+                    const f = e.dataTransfer.files[0];
+                    if (f) void handleFileAnalyze(f);
+                  }}
+                >
+                  <Upload size={24} className="text-[#4da6ff] opacity-60" />
+                  <p className="text-sm text-slate-300 font-semibold">Glissez un fichier ou cliquez pour parcourir</p>
+                  <p className="text-[11px] text-slate-500">Formats acceptés : .csv · .xlsx · .xls · .pdf</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv,.xlsx,.xls,.pdf"
+                    className="hidden"
+                    onChange={e => {
+                      const f = e.target.files?.[0];
+                      if (f) void handleFileAnalyze(f);
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Analyse en cours */}
+              {importStep === "analyzing" && (
+                <div className="flex flex-col items-center gap-3 py-8">
+                  <div className="w-8 h-8 border-2 border-[#4da6ff] border-t-transparent rounded-full animate-spin" />
+                  <p className="text-sm text-[#4da6ff] font-bold">Analyse IA en cours…</p>
+                  <p className="text-xs text-slate-500">Claude extrait les données des agents</p>
+                </div>
+              )}
+
+              {/* Sauvegarde en cours */}
+              {importStep === "saving" && (
+                <div className="flex flex-col items-center gap-3 py-8">
+                  <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-sm text-emerald-400 font-bold">Enregistrement en cours…</p>
+                </div>
+              )}
+
+              {/* Erreur */}
+              {importError && (
+                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+                  <AlertTriangle size={12} />
+                  {importError}
+                  <button onClick={() => setImportError("")} className="ml-auto"><X size={12} /></button>
+                </div>
+              )}
+
+              {/* Tableau de prévisualisation */}
+              {importStep === "preview" && importPreview.length > 0 && (
+                <div className="space-y-3">
+                  <div className="overflow-x-auto rounded-xl border" style={{ borderColor: S.border }}>
+                    <table className="w-full text-[11px]">
+                      <thead>
+                        <tr style={{ background: "rgba(77,166,255,0.08)" }}>
+                          {["Nom", "Prénom", "Carte Pro CNAPS", "Expiry CNAPS", "SST", "Expiry SST", "Date recrutement", "Site", "Téléphone"].map(h => (
+                            <th key={h} className="px-3 py-2 text-left text-[10px] font-black uppercase tracking-widest text-slate-400">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importPreview.map((ag, i) => (
+                          <tr key={i} className="border-t" style={{ borderColor: S.border }}>
+                            <td className="px-3 py-2 font-bold text-white">{ag.nom ?? "—"}</td>
+                            <td className="px-3 py-2 text-slate-300">{ag.prenom ?? "—"}</td>
+                            <td className="px-3 py-2 text-slate-400 font-mono text-[10px]">{ag.carte_pro ?? "—"}</td>
+                            <td className="px-3 py-2">
+                              {ag.carte_pro_expiration
+                                ? <ExpiryBadge days={daysUntil(ag.carte_pro_expiration)} />
+                                : <span className="text-slate-600">—</span>}
+                            </td>
+                            <td className="px-3 py-2">
+                              {ag.sst
+                                ? <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">OUI</span>
+                                : <span className="text-slate-600 text-[10px]">NON</span>}
+                            </td>
+                            <td className="px-3 py-2">
+                              {ag.sst_expiration
+                                ? <ExpiryBadge days={daysUntil(ag.sst_expiration)} />
+                                : <span className="text-slate-600">—</span>}
+                            </td>
+                            <td className="px-3 py-2 text-slate-400">{ag.date_recrutement ?? "—"}</td>
+                            <td className="px-3 py-2 text-slate-300">{ag.site_actuel ?? "—"}</td>
+                            <td className="px-3 py-2 text-slate-400">{ag.telephone ?? "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex gap-3 pt-1">
+                    <button
+                      onClick={() => void handleImportConfirm()}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all active:scale-95"
+                      style={{ background: "#4da6ff22", color: "#4da6ff", border: "1px solid #4da6ff44" }}
+                    >
+                      <Check size={12} /> Confirmer l&apos;import ({importPreview.length} agents)
+                    </button>
+                    <button
+                      onClick={() => { setImportStep("idle"); setImportPreview([]); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-colors"
+                      style={{ border: `1px solid ${S.border}` }}
+                    >
+                      <X size={12} /> Annuler
+                    </button>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {/* ── SECTION 2 : Formulaire agent manuel ────────────────────── */}
+            <section
+              className="rounded-2xl overflow-hidden"
+              style={{ background: "rgba(10,15,30,0.9)", border: `1px solid ${S.border}` }}
+            >
+              <button
+                onClick={() => setShowForm(v => !v)}
+                className="w-full flex items-center justify-between px-6 py-4 text-sm font-black text-white uppercase tracking-wide hover:bg-white/5 transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  <Plus size={14} className="text-[#4da6ff]" /> Ajouter un agent manuellement
+                </span>
+                <ChevronDown size={14} className={`text-slate-500 transition-transform ${showForm ? "rotate-180" : ""}`} />
+              </button>
+
+              {showForm && (
+                <form onSubmit={e => void handleFormSubmit(e)} className="px-6 pb-6 space-y-4 border-t" style={{ borderColor: S.border }}>
+                  <p className="text-[11px] text-slate-500 pt-4">Champs obligatoires marqués *</p>
+
+                  {/* Identité */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Nom *</label>
+                      <input
+                        required value={formData.nom}
+                        onChange={e => handleFormChange("nom", e.target.value)}
+                        placeholder="DUPONT"
+                        className="w-full px-3 py-2 rounded-xl text-sm text-white placeholder-slate-600 outline-none focus:ring-1 focus:ring-[#4da6ff]/50"
+                        style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}` }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Prénom *</label>
+                      <input
+                        required value={formData.prenom}
+                        onChange={e => handleFormChange("prenom", e.target.value)}
+                        placeholder="Jean"
+                        className="w-full px-3 py-2 rounded-xl text-sm text-white placeholder-slate-600 outline-none focus:ring-1 focus:ring-[#4da6ff]/50"
+                        style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}` }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Date de recrutement</label>
+                      <input
+                        type="date" value={formData.date_recrutement}
+                        onChange={e => handleFormChange("date_recrutement", e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl text-sm text-white outline-none focus:ring-1 focus:ring-[#4da6ff]/50"
+                        style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, colorScheme: "dark" }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Téléphone</label>
+                      <input
+                        type="tel" value={formData.telephone}
+                        onChange={e => handleFormChange("telephone", e.target.value)}
+                        placeholder="06 00 00 00 00"
+                        className="w-full px-3 py-2 rounded-xl text-sm text-white placeholder-slate-600 outline-none focus:ring-1 focus:ring-[#4da6ff]/50"
+                        style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* CNAPS */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">N° Carte Pro CNAPS *</label>
+                      <input
+                        required value={formData.carte_pro}
+                        onChange={e => handleFormChange("carte_pro", e.target.value)}
+                        placeholder="AUT-XXX-XXXX-20240101-X-XXXXX-XXXXX-X"
+                        className="w-full px-3 py-2 rounded-xl text-xs font-mono text-white placeholder-slate-600 outline-none focus:ring-1 focus:ring-[#4da6ff]/50"
+                        style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}` }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Expiration Carte Pro</label>
+                      <input
+                        type="date" value={formData.carte_pro_expiration}
+                        onChange={e => handleFormChange("carte_pro_expiration", e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl text-sm text-white outline-none focus:ring-1 focus:ring-[#4da6ff]/50"
+                        style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, colorScheme: "dark" }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* SST */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">SST — Sauveteur Secouriste du Travail</label>
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => handleFormChange("sst", true)}
+                          className="flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wide transition-all"
+                          style={formData.sst
+                            ? { background: "#10b98122", color: "#10b981", border: "1px solid #10b98144" }
+                            : { background: "rgba(255,255,255,0.03)", color: "#64748b", border: `1px solid ${S.border}` }}
+                        >
+                          ✓ Oui
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleFormChange("sst", false)}
+                          className="flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wide transition-all"
+                          style={!formData.sst
+                            ? { background: "#ef444422", color: "#ef4444", border: "1px solid #ef444444" }
+                            : { background: "rgba(255,255,255,0.03)", color: "#64748b", border: `1px solid ${S.border}` }}
+                        >
+                          ✗ Non
+                        </button>
+                      </div>
+                    </div>
+                    {formData.sst && (
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Expiration SST (recyclage 24 mois)</label>
+                        <input
+                          type="date" value={formData.sst_expiration}
+                          onChange={e => handleFormChange("sst_expiration", e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl text-sm text-white outline-none focus:ring-1 focus:ring-[#4da6ff]/50"
+                          style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, colorScheme: "dark" }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Adresse + Site */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Adresse complète</label>
+                      <input
+                        value={formData.adresse}
+                        onChange={e => handleFormChange("adresse", e.target.value)}
+                        placeholder="12 rue de la Paix, 69001 Lyon"
+                        className="w-full px-3 py-2 rounded-xl text-sm text-white placeholder-slate-600 outline-none focus:ring-1 focus:ring-[#4da6ff]/50"
+                        style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}` }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Site d&apos;affectation</label>
+                      <input
+                        value={formData.site_actuel}
+                        onChange={e => handleFormChange("site_actuel", e.target.value)}
+                        placeholder="Site Lyon Centre"
+                        className="w-full px-3 py-2 rounded-xl text-sm text-white placeholder-slate-600 outline-none focus:ring-1 focus:ring-[#4da6ff]/50"
+                        style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Feedback */}
+                  {formError && (
+                    <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+                      <AlertTriangle size={12} /> {formError}
+                    </div>
+                  )}
+                  {formSuccess && (
+                    <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs">
+                      <CheckCircle2 size={12} /> {formSuccess}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="submit" disabled={formLoading}
+                      className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50"
+                      style={{ background: "#4da6ff22", color: "#4da6ff", border: "1px solid #4da6ff44" }}
+                    >
+                      {formLoading ? <div className="w-3 h-3 border border-[#4da6ff] border-t-transparent rounded-full animate-spin" /> : <Plus size={12} />}
+                      Enregistrer l&apos;agent
+                    </button>
+                    <button
+                      type="button" onClick={() => { setShowForm(false); setFormData(EMPTY_FORM); setFormError(""); }}
+                      className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-colors"
+                      style={{ border: `1px solid ${S.border}` }}
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </form>
+              )}
+            </section>
+
+            {/* ── SECTION 3 : Tableau des agents ─────────────────────────── */}
+            <section
+              className="rounded-2xl overflow-hidden"
+              style={{ background: "rgba(10,15,30,0.9)", border: `1px solid ${S.border}` }}
+            >
+              <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: S.border }}>
+                <h2 className="text-sm font-black text-white uppercase tracking-wide flex items-center gap-2">
+                  <Users size={14} className="text-[#4da6ff]" /> Agents enregistrés
+                  <span className="text-xs font-normal text-slate-500">({agents.length})</span>
+                </h2>
+                <div className="relative">
+                  <input
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Rechercher…"
+                    className="pl-3 pr-8 py-1.5 rounded-xl text-xs text-white placeholder-slate-600 outline-none focus:ring-1 focus:ring-[#4da6ff]/50"
+                    style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${S.border}`, width: 160 }}
+                  />
+                  {searchQuery && (
+                    <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+                      <X size={10} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="p-8 flex justify-center">
+                  <div className="w-6 h-6 border-2 border-[#4da6ff] border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : filteredAgents.length === 0 ? (
+                <div className="p-10 text-center text-slate-600 text-xs">
+                  {searchQuery ? "Aucun résultat pour cette recherche." : "Aucun agent enregistré. Utilisez l'import ou le formulaire ci-dessus."}
+                </div>
+              ) : (
+                <>
+                  {/* Desktop table */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr style={{ background: "rgba(77,166,255,0.06)" }}>
+                          {["Nom", "Prénom", "Carte Pro CNAPS", "Expiry CNAPS", "SST", "Expiry SST", "Site", "Actions"].map(h => (
+                            <th key={h} className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-400">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredAgents.map((ag) => {
+                          const cnapsDays = daysUntil(ag.carte_pro_expiration);
+                          const sstDays   = daysUntil(ag.sst_expiration);
+                          return (
+                            <tr key={ag.id} className="border-t hover:bg-white/[0.02] transition-colors" style={{ borderColor: S.border }}>
+                              <td className="px-4 py-3 font-bold text-white">{ag.nom}</td>
+                              <td className="px-4 py-3 text-slate-300">{ag.prenom}</td>
+                              <td className="px-4 py-3 font-mono text-[10px] text-slate-400">{ag.carte_pro ?? "—"}</td>
+                              <td className="px-4 py-3">
+                                <div className="flex flex-col gap-0.5">
+                                  <ExpiryBadge days={cnapsDays} />
+                                  {ag.carte_pro_expiration && <span className="text-[9px] text-slate-600">{fmtDate(ag.carte_pro_expiration)}</span>}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                {ag.sst
+                                  ? <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">OUI</span>
+                                  : <span className="text-slate-600 text-[10px]">NON</span>}
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex flex-col gap-0.5">
+                                  <ExpiryBadge days={sstDays} />
+                                  {ag.sst_expiration && <span className="text-[9px] text-slate-600">{fmtDate(ag.sst_expiration)}</span>}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-slate-400 max-w-[120px] truncate">{ag.site_actuel ?? "—"}</td>
+                              <td className="px-4 py-3">
+                                <button
+                                  onClick={() => setDeleteTarget(ag)}
+                                  className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                  title={`Supprimer ${ag.prenom} ${ag.nom}`}
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile cards */}
+                  <div className="sm:hidden divide-y" style={{ borderColor: S.border }}>
+                    {filteredAgents.map((ag) => (
+                      <div key={ag.id} className="px-4 py-3 flex items-start justify-between gap-3">
+                        <div className="space-y-1 min-w-0">
+                          <p className="text-sm font-bold text-white truncate">{ag.prenom} {ag.nom}</p>
+                          <p className="text-[10px] font-mono text-slate-500 truncate">{ag.carte_pro ?? "—"}</p>
+                          <div className="flex flex-wrap gap-1">
+                            <ExpiryBadge days={daysUntil(ag.carte_pro_expiration)} />
+                            {ag.sst && <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">SST</span>}
+                            {ag.site_actuel && <span className="text-[10px] text-slate-500">{ag.site_actuel}</span>}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setDeleteTarget(ag)}
+                          className="shrink-0 p-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
+
+          </div>
         )}
 
         {/* ═══════════ ONGLET : EXPORT COMPTA ═══════════ */}
@@ -848,6 +1414,53 @@ export default function DashboardExploitation() {
         )}
 
       </main>
+
+      {/* ── MODAL CONFIRMATION SUPPRESSION ────────────────────────────────── */}
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
+          onClick={e => { if (e.target === e.currentTarget) setDeleteTarget(null); }}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl p-6 space-y-4"
+            style={{ background: "#0a1120", border: `1px solid ${S.border}`, boxShadow: "0 24px 64px rgba(0,0,0,0.6)" }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-red-500/15">
+                <Trash2 size={16} className="text-red-400" />
+              </div>
+              <h3 className="text-sm font-black text-white">Confirmer la suppression</h3>
+            </div>
+            <p className="text-sm text-slate-300">
+              Supprimer l&apos;agent <strong className="text-white">{deleteTarget.prenom} {deleteTarget.nom}</strong> ?
+            </p>
+            <p className="text-xs text-slate-500">Cette action est irréversible. Toutes les données associées à cet agent seront supprimées.</p>
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => void handleDelete()}
+                disabled={deleteLoading}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50"
+                style={{ background: "#ef444422", color: "#ef4444", border: "1px solid #ef444444" }}
+              >
+                {deleteLoading
+                  ? <div className="w-3 h-3 border border-red-400 border-t-transparent rounded-full animate-spin" />
+                  : <Trash2 size={12} />}
+                Supprimer
+              </button>
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleteLoading}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-colors"
+                style={{ border: `1px solid ${S.border}` }}
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
