@@ -31,10 +31,9 @@ function LoginContent() {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) { setError(error.message); return; }
 
-      // Si un ?next= est fourni (ex: middleware qui redirige), on l'honore.
-      if (nextPath !== '/dashboard') { router.replace(nextPath); return; }
-
-      // Sinon routing basé sur le profil (is_approved + role).
+      // Routing basé sur le profil — priorité absolue sur ?next=
+      // pour éviter qu'un ?next= capturé antérieurement envoie un admin
+      // vers le mauvais espace.
       const userId = data.session?.user?.id;
       if (userId) {
         const { data: profile } = await supabase
@@ -48,7 +47,8 @@ function LoginContent() {
         } else if (['societe', 'manager'].includes(role ?? '')) {
           router.replace('/espace-societe/dashboard');
         } else {
-          router.replace('/agent/hub');
+          // Agent sans approbation : honorer ?next= si présent, sinon hub
+          router.replace(nextPath !== '/dashboard' ? nextPath : '/agent/hub');
         }
       } else {
         router.replace('/dashboard');

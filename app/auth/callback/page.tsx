@@ -16,15 +16,13 @@ function CallbackInner() {
       .select('is_approved, role')
       .eq('id', session.user.id)
       .single();
-    // role existe si la colonne a été ajoutée ; is_approved est toujours présent.
+    // is_approved est prioritaire : un utilisateur approuvé va toujours sur
+    // /dashboard, quel que soit le contenu éventuel de la colonne role.
     const role = profile?.role as string | undefined;
-    if (role === 'admin') {
+    if (profile?.is_approved || role === 'admin') {
       router.replace('/dashboard');
     } else if (['societe', 'manager'].includes(role ?? '')) {
       router.replace('/espace-societe/dashboard');
-    } else if (profile?.is_approved) {
-      // Utilisateur approuvé sans rôle explicite → dashboard par défaut
-      router.replace('/dashboard');
     } else {
       router.replace('/agent/hub');
     }
