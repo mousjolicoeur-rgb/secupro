@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Script from 'next/script';
 
 export default function HomePage() {
   const chartGrowthRef = useRef<HTMLCanvasElement>(null);
@@ -12,16 +11,14 @@ export default function HomePage() {
   useEffect(() => {
     if (chartsInitialized.current) return;
 
-    const initCharts = () => {
-      // @ts-ignore
-      const Chart = (window as any).Chart;
-      if (!Chart || !chartGrowthRef.current || !chartInfraRef.current) return;
-
+    import('chart.js/auto').then((ChartModule) => {
+      const Chart = ChartModule.default;
+      if (!chartGrowthRef.current || !chartInfraRef.current) return;
       chartsInitialized.current = true;
 
       Chart.defaults.color = 'rgba(255,255,255,0.4)';
       Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
-      Chart.defaults.font = { family: "'DM Sans', sans-serif", size: 11 };
+      Chart.defaults.font = { family: "'DM Sans', sans-serif", size: 11 } as any;
 
       new Chart(chartGrowthRef.current, {
         type: 'line',
@@ -82,26 +79,11 @@ export default function HomePage() {
           },
         },
       });
-    };
-
-    // @ts-ignore
-    if ((window as any).Chart) {
-      initCharts();
-    } else {
-      window.addEventListener('chartjs-ready', initCharts);
-      return () => window.removeEventListener('chartjs-ready', initCharts);
-    }
+    });
   }, []);
 
   return (
     <>
-      <Script
-        src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"
-        onLoad={() => {
-          window.dispatchEvent(new Event('chartjs-ready'));
-        }}
-      />
-
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
         .sp-root { background: #060c18; color: #fff; font-family: 'DM Sans', sans-serif; min-height: 100vh; }
