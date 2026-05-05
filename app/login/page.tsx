@@ -3,7 +3,6 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import Image from 'next/image';
 import Link from 'next/link';
 
 function LoginContent() {
@@ -69,7 +68,10 @@ function LoginContent() {
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <Image src="/logo-secupro.jpg" alt="SecuPRO" width={100} height={30} style={{ margin: '0 auto 8px', filter: 'drop-shadow(0 0 16px rgba(0,209,255,0.3))' }} />
+          <span style={{display:'block', textAlign:'center', marginBottom:8, fontFamily:"'Rajdhani', sans-serif", fontWeight:700, fontSize:'1.5rem', letterSpacing:'2px'}}>
+            <span style={{color:'#fff'}}>Secu</span>
+            <span style={{color:'#00aaff'}}>PRO</span>
+          </span>
           <p style={{ color: 'rgba(0,209,255,0.5)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.3em' }}>
             Gestion opérationnelle · Sécurité privée
           </p>

@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Users, AlertTriangle, Building2, Bell, Bot,
@@ -591,8 +590,10 @@ export default function ChefExploitationDashboard() {
         </button>
 
         <div className="flex items-center gap-2.5">
-          <Image src="/logo-secupro.jpg" alt="SecuPRO" width={200} height={60}
-            style={{ filter: "drop-shadow(0 0 7px rgba(0,209,255,0.4))" }} />
+          <span style={{fontFamily:"'Rajdhani', sans-serif", fontWeight:700, fontSize:'1.5rem', letterSpacing:'2px'}}>
+            <span style={{color:'#fff'}}>Secu</span>
+            <span style={{color:'#00aaff'}}>PRO</span>
+          </span>
           <div>
             <p className="text-[8px] font-black uppercase tracking-[0.48em]"
               style={{ color: "rgba(0,209,255,0.4)" }}>SecuPRO Business</p>

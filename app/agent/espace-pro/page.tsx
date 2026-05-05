@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import {
   Shield, MapPin, Clock, AlertTriangle, CheckCircle2,
   Zap, ArrowLeft, FileText, Send, Radio, Phone,
@@ -814,8 +813,10 @@ function LockScreen({ userEmail, onUnlock }: { userEmail: string; onUnlock: () =
               border:"1px solid rgba(0,209,255,0.2)",
               boxShadow:"0 0 40px rgba(0,120,255,0.2)",
             }}>
-            <Image src="/logo-secupro.jpg" alt="SecuPRO" width={100} height={30}
-              style={{ filter:"drop-shadow(0 0 8px rgba(0,209,255,0.6))" }} />
+            <span style={{fontFamily:"'Rajdhani', sans-serif", fontWeight:700, fontSize:'1.5rem', letterSpacing:'2px'}}>
+              <span style={{color:'#fff'}}>Secu</span>
+              <span style={{color:'#00aaff'}}>PRO</span>
+            </span>
           </div>
           <p className="text-[8px] font-black uppercase tracking-[0.5em]"
             style={{ color:"rgba(0,209,255,0.4)" }}>
@@ -1107,8 +1108,10 @@ export default function EspaceProPage() {
         </button>
 
         <div className="flex items-center gap-2">
-          <Image src="/logo-secupro.jpg" alt="SecuPRO" width={200} height={60}
-            style={{ filter:`drop-shadow(0 0 6px ${phase === "alerte" ? "rgba(255,140,0,0.5)" : "rgba(0,209,255,0.4)"})`}} />
+          <span style={{fontFamily:"'Rajdhani', sans-serif", fontWeight:700, fontSize:'1.5rem', letterSpacing:'2px'}}>
+            <span style={{color:'#fff'}}>Secu</span>
+            <span style={{color:'#00aaff'}}>PRO</span>
+          </span>
           <div>
             <p className="text-[7px] font-black uppercase tracking-[0.4em]"
               style={{ color: phase === "alerte" ? "rgba(255,140,0,0.55)" : "rgba(0,209,255,0.4)" }}>

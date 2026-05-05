@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -403,17 +402,10 @@ export default function AgentHubPage() {
             borderBottom: "1px solid rgba(0,209,255,0.08)",
           }}
         >
-          <Image
-            src="/logo-secupro.jpg"
-            alt="SecuPRO"
-            width={100}
-            height={30}
-            priority
-            style={{
-              filter:
-                "drop-shadow(0 0 14px rgba(41,212,245,0.35))",
-            }}
-          />
+          <span style={{fontFamily:"'Rajdhani', sans-serif", fontWeight:700, fontSize:'1.5rem', letterSpacing:'2px'}}>
+            <span style={{color:'#fff'}}>Secu</span>
+            <span style={{color:'#00aaff'}}>PRO</span>
+          </span>
           <div style={{ flex: 1 }}>
             <p
               style={{

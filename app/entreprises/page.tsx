@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -871,16 +870,10 @@ export default function EntreprisesPage() {
             }}
             onClick={() => router.push("/")}
           >
-            <Image
-              src="/logo-secupro.jpg"
-              alt="SecuPRO Tech"
-              width={200}
-              height={60}
-              priority
-              style={{
-                filter: `drop-shadow(0 0 14px rgba(0,200,240,0.5))`,
-              }}
-            />
+            <span style={{fontFamily:"'Rajdhani', sans-serif", fontWeight:700, fontSize:'1.5rem', letterSpacing:'2px'}}>
+              <span style={{color:'#fff'}}>Secu</span>
+              <span style={{color:'#00aaff'}}>PRO</span>
+            </span>
             <div>
               <div
                 style={{
@@ -1569,15 +1562,10 @@ export default function EntreprisesPage() {
                   marginBottom: "18px",
                 }}
               >
-                <Image
-                  src="/logo-secupro.jpg"
-                  alt="SecuPRO"
-                  width={100}
-                  height={30}
-                  style={{
-                    filter: `drop-shadow(0 0 10px rgba(0,200,240,0.4))`,
-                  }}
-                />
+                <span style={{fontFamily:"'Rajdhani', sans-serif", fontWeight:700, fontSize:'1.5rem', letterSpacing:'2px'}}>
+                  <span style={{color:'#fff'}}>Secu</span>
+                  <span style={{color:'#00aaff'}}>PRO</span>
+                </span>
                 <span
                   style={{
                     fontFamily: "'Rajdhani', sans-serif",

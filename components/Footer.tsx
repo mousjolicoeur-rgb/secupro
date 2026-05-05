@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -25,13 +24,10 @@ export default function Footer() {
         }}
       >
         {/* Logo */}
-        <Image
-          src="/logo-secupro.jpg"
-          alt="SecuPRO"
-          width={140}
-          height={42}
-          style={{ opacity: 0.85 }}
-        />
+        <span style={{fontFamily:"'Rajdhani', sans-serif", fontWeight:700, fontSize:'1.5rem', letterSpacing:'2px'}}>
+          <span style={{color:'#fff'}}>Secu</span>
+          <span style={{color:'#00aaff'}}>PRO</span>
+        </span>
 
         {/* Liens légaux */}
         <nav

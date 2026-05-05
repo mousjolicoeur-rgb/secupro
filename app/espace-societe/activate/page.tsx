@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Building2, ShieldCheck, ArrowLeft, Lock, MoveRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -274,14 +273,10 @@ export default function ActivateEnterprisePage() {
                     "radial-gradient(circle, rgba(0,209,255,0.14) 0%, transparent 70%)",
                 }}
               />
-              <Image
-                src="/logo-secupro.jpg"
-                alt="SecuPRO"
-                width={100}
-                height={30}
-                priority
-                style={{ filter: "drop-shadow(0 0 16px rgba(0,209,255,0.45))", position: "relative" }}
-              />
+              <span style={{fontFamily:"'Rajdhani', sans-serif", fontWeight:700, fontSize:'1.5rem', letterSpacing:'2px', position:'relative'}}>
+                <span style={{color:'#fff'}}>Secu</span>
+                <span style={{color:'#00aaff'}}>PRO</span>
+              </span>
             </div>
 
             {/* Titre */}
