@@ -48,7 +48,8 @@ export default function RegisterPage() {
         setError(error.message);
       } else {
         console.info('[SecuPRO] signUp OK — email de confirmation envoyé à', email);
-        setRegistrationSuccess(true);
+        await supabase.from('profiles').upsert({ id: (await supabase.auth.getUser()).data.user?.id, role: 'societe' });
+          setRegistrationSuccess(true);
       }
     } catch (err) {
       console.error('[SecuPRO] signUp exception:', err);
@@ -58,7 +59,7 @@ export default function RegisterPage() {
     }
   };
 
-  // ── Écran de confirmation envoyée ──────────────────────────
+  // ── Écran de confirmation envoyée ──────────────────────────────
   if (registrationSuccess) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4">
@@ -88,7 +89,7 @@ export default function RegisterPage() {
                 onClick={() => setRegistrationSuccess(false)}
                 className="text-cyan-500 hover:text-cyan-400 transition-colors"
               >
-                recommencez l'inscription
+                recommencez l&apos;inscription
               </button>
               .
             </p>
@@ -109,7 +110,7 @@ export default function RegisterPage() {
     );
   }
 
-  // ── Formulaire d'inscription ───────────────────────────────
+  // ── Formulaire d'inscription ───────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4">
       <div className="mb-8 text-center">

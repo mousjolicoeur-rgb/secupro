@@ -16,17 +16,17 @@ type Doc = {
   url: string;
   expiration: string | null;
   created_at: string;
-  entreprise_id: string;
+  agent_id: string;
 };
 
 type OcrStatus = 'idle' | 'compressing' | 'scanning' | 'done' | 'failed';
 
 // ─── Zone config ──────────────────────────────────────────────────────────────
 const ZONES = [
-  { key: 'cni',       label: "CNI / TITRE DE SÉJOUR",   icon: '🪪', accent: '#60a5fa', ringCls: 'border-blue-500/30',    badgeCls: 'text-blue-300 bg-blue-500/10 border-blue-500/25' },
-  { key: 'carte_pro', label: 'CARTE PRO CNAPS',          icon: '🔰', accent: '#a78bfa', ringCls: 'border-violet-500/30', badgeCls: 'text-violet-300 bg-violet-500/10 border-violet-500/25' },
-  { key: 'sst',       label: 'SST / HABILITATION',       icon: '🎓', accent: '#34d399', ringCls: 'border-emerald-500/30', badgeCls: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/25' },
-  { key: 'autre',     label: 'AUTRES DOCUMENTS',          icon: '📎', accent: '#94a3b8', ringCls: 'border-slate-500/30',  badgeCls: 'text-slate-300 bg-slate-500/10 border-slate-500/25' },
+  { key: 'cni',       label: "CNI / TITRE DE SÉJOUR",   icon: '🪪', accent: '#3B82F6', ringCls: 'border-blue-500/30',    badgeCls: 'text-blue-300 bg-blue-500/10 border-blue-500/25' },
+  { key: 'carte_pro', label: 'CARTE PRO CNAPS',          icon: '🔰', accent: '#3B82F6', ringCls: 'border-blue-500/30', badgeCls: 'text-blue-300 bg-blue-500/10 border-blue-500/25' },
+  { key: 'sst',       label: 'SST / HABILITATION',       icon: '🎓', accent: '#3B82F6', ringCls: 'border-blue-500/30', badgeCls: 'text-blue-300 bg-blue-500/10 border-blue-500/25' },
+  { key: 'autre',     label: 'AUTRES DOCUMENTS',          icon: '📎', accent: '#3B82F6', ringCls: 'border-blue-500/30',  badgeCls: 'text-blue-300 bg-blue-500/10 border-blue-500/25' },
 ] as const;
 
 type ZoneKey = (typeof ZONES)[number]['key'];
@@ -39,10 +39,11 @@ function isPdf(url: string) { return /\.pdf($|\?)/i.test(url); }
 function isImg(url: string) { return /\.(jpe?g|png|webp|gif)($|\?)/i.test(url); }
 
 function isExpired(d: string | null)      { return !!d && new Date(d).getTime() < Date.now(); }
-function isExpiringSoon(d: string | null) {
+function isExpiringSoon(d: string | null, isCnaps = false) {
   if (!d) return false;
   const diff = new Date(d).getTime() - Date.now();
-  return diff > 0 && diff < 86_400_000 * 60;
+  const threshold = isCnaps ? 90 : 30; // 90 jours pour CNAPS, 30 jours pour le reste
+  return diff > 0 && diff < 86_400_000 * threshold;
 }
 
 /** Try to find a DD/MM/YYYY or YYYY-MM-DD date in OCR text */
@@ -163,18 +164,22 @@ export default function DocsPage() {
     const { data } = await supabase
       .from('documents')
       .select('*')
-      .eq('entreprise_id', id)
+      .eq('agent_id', id)
       .order('created_at', { ascending: false });
     setDocs((data as Doc[]) ?? []);
     setLoading(false);
   }, []);
 
   useEffect(() => {
-    const id = localStorage.getItem('entreprise_id');
-    if (!id) { router.push('/agent'); return; }
-    setUid(id);
-    fetchDocs(id);
-  }, [router, fetchDocs]);
+    async function loadUser() {
+      const { data } = await supabase.auth.getUser();
+      // On utilise un mock agentId si la session n'est pas active pour la démo
+      const agentId = data.user?.id || '11111111-1111-1111-1111-111111111111';
+      setUid(agentId);
+      fetchDocs(agentId);
+    }
+    loadUser();
+  }, [fetchDocs]);
 
   // ── open add modal ──────────────────────────────────────────────────────────
   const openAdd = (zone: ZoneKey) => {
@@ -268,7 +273,7 @@ export default function DocsPage() {
         nom: addNom,
         type: addZone,
         expiration: addExpiry || null,
-        entreprise_id: uid,
+        agent_id: uid,
         url: file_url,
       }]);
       if (error) throw error;
@@ -314,10 +319,11 @@ export default function DocsPage() {
 
   // ─── Render ──────────────────────────────────────────────────────────────────
   const byZone = (key: string) => docs.filter(d => d.type === key);
-  const anyExpiry = docs.some(d => isExpiringSoon(d.expiration) || isExpired(d.expiration));
+  const cnapsExpiring = docs.some(d => d.type === 'carte_pro' && (isExpiringSoon(d.expiration, true) || isExpired(d.expiration)));
+  const anyExpiry = docs.some(d => isExpiringSoon(d.expiration, d.type === 'carte_pro') || isExpired(d.expiration));
 
   return (
-    <div className="min-h-screen bg-[#060D18] text-white flex flex-col pb-12">
+    <div className="min-h-screen bg-slate-900 text-white flex flex-col pb-12">
       {/* Header */}
       <div className="px-5 pt-10 pb-5">
         <button onClick={() => router.push('/agent/hub')}
@@ -332,10 +338,18 @@ export default function DocsPage() {
       </div>
 
       {/* Expiry alert */}
-      {anyExpiry && (
+      {cnapsExpiring && (
+        <div className="mx-4 mb-5 rounded-xl bg-red-500/10 border border-red-500/25 p-4 flex items-center gap-3">
+          <AlertTriangle className="text-red-500 w-6 h-6 animate-pulse" />
+          <p className="text-red-300 text-sm font-bold">
+            ALERTE : Votre Carte Professionnelle CNAPS expire dans moins de 90 jours (ou est déjà expirée). Veuillez initier son renouvellement immédiatement.
+          </p>
+        </div>
+      )}
+      {!cnapsExpiring && anyExpiry && (
         <div className="mx-4 mb-5 rounded-xl bg-amber-500/10 border border-amber-500/25 p-3 flex items-center gap-3">
           <span>⚠️</span>
-          <p className="text-amber-300 text-xs font-bold">Un ou plusieurs documents arrivent à expiration.</p>
+          <p className="text-amber-300 text-xs font-bold">Un ou plusieurs de vos documents arrivent à expiration.</p>
         </div>
       )}
 
@@ -386,14 +400,15 @@ export default function DocsPage() {
                   {zoneDocs.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-8 gap-2">
                       <span className="text-2xl opacity-15">{zone.icon}</span>
-                      <p className="text-slate-600 text-[10px] uppercase tracking-widest font-bold text-center">
-                        Aucun document
+                      <p className="text-red-400/80 text-[10px] uppercase tracking-widest font-bold text-center flex items-center gap-1">
+                        <AlertCircle size={12} /> Document Manquant
                       </p>
                     </div>
                   ) : (
                     zoneDocs.map((doc) => {
+                      const isCnaps = doc.type === 'carte_pro';
                       const expired  = isExpired(doc.expiration);
-                      const expiring = isExpiringSoon(doc.expiration);
+                      const expiring = isExpiringSoon(doc.expiration, isCnaps);
                       const hasFile  = !!doc.url;
                       return (
                         <div

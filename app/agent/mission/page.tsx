@@ -83,7 +83,7 @@ export default function MissionPage() {
           );
           return;
         }
-        router.push("/dashboard");
+        router.push("/espace-societe/dashboard");
       },
       () => {
         alert(

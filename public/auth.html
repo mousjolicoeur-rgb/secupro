@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SecuPRO — Créer mon compte</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --blue:#3B82F6;--blue2:#60A5FA;--blue3:#1D4ED8;
+  --cyan:#06B6D4;--cyan2:#22D3EE;
+  --bg:#030712;--bg2:#050D1F;--bg3:#060F24;
+  --br:rgba(59,130,246,.2);--br2:rgba(255,255,255,.07);
+  --t:#F1F5FF;--t2:#6B7FA3;--t3:#94A3C8;
+  --green:#10B981;--red:#EF4444;
+  --rad:12px;--rad2:8px;
+}
+html,body{height:100%;background:var(--bg);color:var(--t);font-family:'Inter',sans-serif}
+body{display:grid;grid-template-columns:1fr 1fr;min-height:100vh}
+
+/* LEFT PANEL */
+.left{background:var(--bg2);border-right:1px solid var(--br2);display:flex;flex-direction:column;justify-content:space-between;padding:3rem;position:relative;overflow:hidden}
+.left::before{content:'';position:absolute;top:-200px;left:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(29,78,216,.25),transparent 70%);pointer-events:none}
+.left::after{content:'';position:absolute;bottom:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(6,182,212,.12),transparent 70%);pointer-events:none}
+.left-logo{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:1.4rem;text-decoration:none;color:var(--t);position:relative;z-index:2}
+.left-logo span{background:linear-gradient(135deg,var(--blue2),var(--cyan2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.left-body{position:relative;z-index:2}
+.left-body h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:2.2rem;font-weight:800;letter-spacing:-.04em;line-height:1.1;margin-bottom:1rem}
+.left-body h2 span{background:linear-gradient(135deg,var(--blue2),var(--cyan2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.left-body p{font-size:.9rem;color:var(--t3);line-height:1.8;margin-bottom:2rem;font-weight:300}
+.feature-list{display:flex;flex-direction:column;gap:.75rem}
+.feat-row{display:flex;align-items:center;gap:.75rem;font-size:.85rem;color:var(--t3)}
+.feat-check{width:22px;height:22px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--green);flex-shrink:0}
+.left-footer{font-size:.75rem;color:var(--t2);position:relative;z-index:2}
+
+/* RIGHT PANEL */
+.right{display:flex;align-items:center;justify-content:center;padding:3rem 2rem;background:var(--bg)}
+.form-box{width:100%;max-width:420px}
+.form-tabs{display:flex;background:rgba(255,255,255,.04);border:1px solid var(--br2);border-radius:var(--rad2);padding:4px;margin-bottom:2rem}
+.form-tab{flex:1;text-align:center;padding:.55rem;font-size:.85rem;font-weight:600;border-radius:6px;cursor:pointer;color:var(--t2);transition:all .2s}
+.form-tab.on{background:linear-gradient(135deg,var(--blue3),var(--blue));color:#fff}
+.form-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:-.03em;margin-bottom:.4rem}
+.form-sub{font-size:.83rem;color:var(--t2);margin-bottom:1.75rem;font-weight:300}
+
+/* FORM */
+.field{margin-bottom:1.1rem}
+.field label{display:block;font-size:.78rem;font-weight:600;color:var(--t3);margin-bottom:.45rem;letter-spacing:.03em}
+.field input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--br2);border-radius:var(--rad2);padding:.75rem 1rem;font-size:.9rem;color:var(--t);font-family:'Inter',sans-serif;outline:none;transition:all .2s}
+.field input::placeholder{color:var(--t2)}
+.field input:focus{border-color:rgba(59,130,246,.5);background:rgba(59,130,246,.05);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+.field input.err{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.04)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.field-hint{font-size:.72rem;color:var(--t2);margin-top:.35rem}
+.field-hint.err-msg{color:#FCA5A5;display:none}
+.field-hint.err-msg.show{display:block}
+
+/* PASSWORD EYE TOGGLE */
+.pw-wrap{position:relative;display:block}
+.pw-wrap input{padding-right:2.75rem!important}
+.eye-btn{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--t2);padding:0;display:flex;align-items:center;transition:color .2s}
+.eye-btn:hover{color:var(--t3)}
+
+/* REMEMBER ME */
+.remember-row{display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem;font-size:.8rem;color:var(--t3);cursor:pointer;user-select:none}
+.remember-row input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:pointer;flex-shrink:0}
+
+/* FORGOT MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:2000;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-box{background:#0D1830;border:1px solid rgba(59,130,246,.25);border-radius:var(--rad);padding:2rem;width:90%;max-width:380px;transform:translateY(16px);transition:transform .25s;position:relative}
+.modal-overlay.open .modal-box{transform:translateY(0)}
+.modal-box h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.2rem;font-weight:800;margin-bottom:.4rem}
+.modal-box p{font-size:.82rem;color:var(--t3);margin-bottom:1.25rem;line-height:1.6}
+.modal-close{position:absolute;top:.85rem;right:.85rem;background:none;border:none;color:var(--t2);cursor:pointer;font-size:1rem;padding:.25rem .4rem;border-radius:4px;transition:color .2s}
+.modal-close:hover{color:var(--t)}
+.modal-confirm{font-size:.82rem;color:var(--green);text-align:center;margin-top:.75rem;display:none;line-height:1.5}
+.modal-confirm.show{display:block}
+
+/* PASSWORD STRENGTH */
+.pw-strength{margin-top:.4rem}
+.pw-bars{display:flex;gap:3px;margin-bottom:.3rem}
+.pw-bar{height:3px;flex:1;border-radius:2px;background:var(--br2);transition:background .3s}
+.pw-bar.weak{background:var(--red)}
+.pw-bar.medium{background:var(--blue2)}
+.pw-bar.strong{background:var(--green)}
+.pw-label{font-size:.68rem;color:var(--t2)}
+
+/* PLAN SELECTOR */
+.plan-select{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1.25rem}
+.plan-opt{border:1px solid var(--br2);border-radius:var(--rad2);padding:.65rem .5rem;text-align:center;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.02)}
+.plan-opt:hover{border-color:rgba(59,130,246,.3)}
+.plan-opt.on{border-color:var(--blue);background:rgba(59,130,246,.08)}
+.plan-opt .pn{font-size:.72rem;font-weight:700;margin-bottom:.25rem}
+.plan-opt .pp{font-size:.65rem;color:var(--t2)}
+.plan-opt.on .pn{color:var(--blue2)}
+.plan-recommended{position:relative}
+.plan-recommended::before{content:'Recommandé';position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--blue3),var(--blue));color:#fff;font-size:.55rem;font-weight:700;padding:.15rem .5rem;border-radius:100px;white-space:nowrap}
+
+/* TRIAL BADGE */
+.trial-badge{background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);border-radius:var(--rad2);padding:.65rem 1rem;display:flex;align-items:center;gap:.6rem;margin-bottom:1.5rem}
+.trial-ico{font-size:.9rem}
+.trial-txt{font-size:.78rem;color:#6EE7B7;font-weight:500}
+.trial-txt span{font-weight:700}
+
+/* SUBMIT */
+.submit-btn{width:100%;background:linear-gradient(135deg,var(--blue3),var(--blue));color:#fff;font-weight:700;font-size:.95rem;padding:.85rem;border-radius:var(--rad2);border:none;cursor:pointer;font-family:'Inter',sans-serif;transition:all .25s;letter-spacing:.01em;margin-bottom:1rem}
+.submit-btn:hover{filter:brightness(1.12);transform:translateY(-2px);box-shadow:0 12px 32px rgba(59,130,246,.3)}
+.submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.divider{display:flex;align-items:center;gap:.75rem;margin:.75rem 0;color:var(--t2);font-size:.75rem}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--br2)}
+.legal{font-size:.72rem;color:var(--t2);text-align:center;line-height:1.6}
+.legal a{color:var(--blue2);text-decoration:none}
+
+/* SUCCESS STATE */
+.success-state{display:none;text-align:center;padding:2rem 0}
+.success-ico{width:64px;height:64px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 1.25rem}
+.success-state h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.4rem;font-weight:800;margin-bottom:.5rem}
+.success-state p{font-size:.85rem;color:var(--t3);line-height:1.7;margin-bottom:1.5rem}
+.success-btn{display:block;background:linear-gradient(135deg,var(--blue3),var(--blue));color:#fff;font-weight:700;font-size:.9rem;padding:.8rem 2rem;border-radius:var(--rad2);text-decoration:none;transition:all .25s;text-align:center}
+.success-btn:hover{filter:brightness(1.1)}
+
+/* LOGIN FORM */
+#loginForm{display:none}
+#signupForm{display:block}
+
+/* TOAST */
+.toast{position:fixed;bottom:2rem;right:2rem;background:#111827;border:1px solid var(--br2);border-radius:10px;padding:.9rem 1.25rem;font-size:.83rem;color:var(--t);display:flex;align-items:center;gap:.6rem;transform:translateY(100px);opacity:0;transition:all .4s;z-index:1000;max-width:300px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.toast.ok .toast-dot{background:var(--green)}
+.toast.err .toast-dot{background:var(--red)}
+
+@media(max-width:768px){
+  body{grid-template-columns:1fr}
+  .left{display:none}
+  .right{padding:2rem 1.25rem;align-items:flex-start;padding-top:4rem}
+}
+</style>
+</head>
+<body>
+
+<!-- LEFT -->
+<div class="left">
+  <a href="secupro-site.html" class="left-logo">Secu<span>PRO</span></a>
+  <div class="left-body">
+    <h2>7 jours pour<br>tout <span>découvrir</span></h2>
+    <p>Rejoignez les premiers professionnels de la sécurité privée qui gèrent leurs équipes avec SecuPRO. Aucune carte bancaire requise.</p>
+    <div class="feature-list">
+      <div class="feat-row"><div class="feat-check">✓</div>Gestion agents & conformité CNAPS</div>
+      <div class="feat-row"><div class="feat-check">✓</div>Import plannings PDF automatique</div>
+      <div class="feat-row"><div class="feat-check">✓</div>Assistant juridique SecuIA — IDCC 1351</div>
+      <div class="feat-row"><div class="feat-check">✓</div>Analyse bulletins de paie</div>
+      <div class="feat-row"><div class="feat-check">✓</div>Alertes CNAPS proactives</div>
+      <div class="feat-row"><div class="feat-check">✓</div>PWA mobile — iOS & Android</div>
+    </div>
+  </div>
+  <div class="left-footer">© 2026 SecuPRO · Lyon · contact@secupro.app</div>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+  <div class="form-box">
+
+    <!-- TABS -->
+    <div class="form-tabs">
+      <div class="form-tab on" id="tab-signup" onclick="switchTab('signup')">Créer mon compte</div>
+      <div class="form-tab" id="tab-login" onclick="switchTab('login')">Se connecter</div>
+    </div>
+
+    <!-- SIGNUP -->
+    <div id="signupForm">
+      <div class="form-title">Essai gratuit 7 jours</div>
+      <p class="form-sub">Aucune carte bancaire · Résiliation en 1 clic</p>
+
+      <div class="trial-badge">
+        <span class="trial-ico">🎁</span>
+        <div class="trial-txt"><span>7 jours offerts</span> — Toutes fonctionnalités débloquées</div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Prénom</label>
+          <input type="text" id="prenom" placeholder="Jean" autocomplete="given-name">
+        </div>
+        <div class="field">
+          <label>Nom</label>
+          <input type="text" id="nom" placeholder="Dupont" autocomplete="family-name">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Email professionnel</label>
+        <input type="email" id="email" placeholder="vous@societe-securite.fr" autocomplete="email">
+        <div class="field-hint err-msg" id="emailErr">Email invalide</div>
+      </div>
+
+      <div class="field">
+        <label>Société</label>
+        <input type="text" id="societe" placeholder="Sécurité Pro Lyon SAS">
+      </div>
+
+      <div class="field">
+        <label>Mot de passe</label>
+        <div class="pw-wrap">
+          <input type="password" id="pwd" placeholder="Minimum 8 caractères" oninput="checkPwd(this.value)">
+          <button type="button" class="eye-btn" onclick="toggleEye('pwd',this)" aria-label="Voir le mot de passe">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="pw-strength">
+          <div class="pw-bars">
+            <div class="pw-bar" id="pb1"></div>
+            <div class="pw-bar" id="pb2"></div>
+            <div class="pw-bar" id="pb3"></div>
+            <div class="pw-bar" id="pb4"></div>
+          </div>
+          <div class="pw-label" id="pwLabel">Entrez un mot de passe</div>
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:1.25rem">
+        <label>Choisir votre formule</label>
+        <div class="plan-select">
+          <div class="plan-opt" onclick="selectPlan(this,'essentiel')">
+            <div class="pn">Essentiel</div>
+            <div class="pp">49,99€/mois</div>
+          </div>
+          <div class="plan-opt plan-recommended on" onclick="selectPlan(this,'pro')">
+            <div class="pn">Pro</div>
+            <div class="pp">99,99€/mois</div>
+          </div>
+          <div class="plan-opt" onclick="selectPlan(this,'premium')">
+            <div class="pn">Premium</div>
+            <div class="pp">199,99€/mois</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="submit-btn" onclick="submitSignup()">Démarrer mon essai gratuit →</button>
+      <p class="legal">En créant votre compte vous acceptez nos <a href="#">Conditions d'utilisation</a> et notre <a href="#">Politique de confidentialité</a>.</p>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="loginForm">
+      <div class="form-title">Bon retour 👋</div>
+      <p class="form-sub">Connectez-vous à votre espace SecuPRO</p>
+
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="lemail" placeholder="vous@societe-securite.fr">
+        <div class="field-hint err-msg" id="loginErr">Email ou mot de passe incorrect</div>
+      </div>
+
+      <div class="field">
+        <label>Mot de passe</label>
+        <div class="pw-wrap">
+          <input type="password" id="lpwd" placeholder="Votre mot de passe">
+          <button type="button" class="eye-btn" onclick="toggleEye('lpwd',this)" aria-label="Voir le mot de passe">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div style="text-align:right;margin-top:.35rem"><a href="#" onclick="openForgotModal();return false" style="font-size:.72rem;color:var(--blue2);text-decoration:none">Mot de passe oublié ?</a></div>
+      </div>
+
+      <label class="remember-row">
+        <input type="checkbox" id="rememberMe">
+        Se souvenir de moi
+      </label>
+
+      <button class="submit-btn" onclick="submitLogin()">Se connecter →</button>
+      <div class="divider">ou</div>
+      <p class="legal">Pas encore de compte ? <a href="#" onclick="switchTab('signup')">Créer mon compte gratuit</a></p>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="success-state" id="successState">
+      <div class="success-ico">✓</div>
+      <h3>Compte créé !</h3>
+      <p>Bienvenue sur SecuPRO. Votre essai gratuit de 7 jours démarre maintenant. Un email de confirmation vous a été envoyé.</p>
+      <a href="dashboard-v3.html" class="success-btn">Accéder à mon dashboard →</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div class="modal-overlay" id="forgotModal" onclick="if(event.target===this)closeForgotModal()">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeForgotModal()">✕</button>
+    <h3>Mot de passe oublié</h3>
+    <p>Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.</p>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="forgotEmail" placeholder="vous@societe-securite.fr">
+    </div>
+    <button class="submit-btn" id="forgotBtn" style="margin-bottom:0" onclick="sendResetLink()">Envoyer le lien</button>
+    <div class="modal-confirm" id="forgotConfirm">✓ Un lien de réinitialisation a été envoyé à votre adresse email</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span class="toast-dot"></span><span id="toastTxt"></span></div>
+
+<script>
+let selectedPlan='pro';
+
+function switchTab(t){
+  document.getElementById('tab-signup').classList.toggle('on',t==='signup');
+  document.getElementById('tab-login').classList.toggle('on',t==='login');
+  document.getElementById('signupForm').style.display=t==='signup'?'block':'none';
+  document.getElementById('loginForm').style.display=t==='login'?'block':'none';
+  document.getElementById('successState').style.display='none';
+}
+
+function selectPlan(el,plan){
+  document.querySelectorAll('.plan-opt').forEach(o=>o.classList.remove('on'));
+  el.classList.add('on');
+  selectedPlan=plan;
+}
+
+function checkPwd(v){
+  const bars=[document.getElementById('pb1'),document.getElementById('pb2'),document.getElementById('pb3'),document.getElementById('pb4')];
+  const lbl=document.getElementById('pwLabel');
+  bars.forEach(b=>{b.className='pw-bar'});
+  if(!v){lbl.textContent='Entrez un mot de passe';return}
+  let score=0;
+  if(v.length>=8)score++;
+  if(/[A-Z]/.test(v))score++;
+  if(/[0-9]/.test(v))score++;
+  if(/[^A-Za-z0-9]/.test(v))score++;
+  const cls=['weak','weak','medium','strong','strong'][score];
+  const txts=['','Très faible','Faible','Moyen','Fort'][score]||'Fort';
+  for(let i=0;i<score;i++)bars[i].classList.add(cls);
+  lbl.textContent='Force : '+txts;
+  lbl.style.color=score>=3?'var(--green)':score>=2?'var(--blue2)':'var(--red)';
+}
+
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.className='toast '+type;
+  document.getElementById('toastTxt').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+function validateEmail(e){return/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)}
+
+function submitSignup(){
+  const prenom=document.getElementById('prenom').value.trim();
+  const nom=document.getElementById('nom').value.trim();
+  const email=document.getElementById('email').value.trim();
+  const societe=document.getElementById('societe').value.trim();
+  const pwd=document.getElementById('pwd').value;
+
+  document.getElementById('email').classList.remove('err');
+  document.getElementById('emailErr').classList.remove('show');
+
+  if(!prenom||!nom){showToast('Veuillez renseigner votre prénom et nom','err');return}
+  if(!validateEmail(email)){
+    document.getElementById('email').classList.add('err');
+    document.getElementById('emailErr').classList.add('show');
+    return;
+  }
+  if(!societe){showToast('Veuillez renseigner votre société','err');return}
+  if(pwd.length<8){showToast('Le mot de passe doit contenir au moins 8 caractères','err');return}
+
+  const btn=document.querySelector('#signupForm .submit-btn');
+  btn.disabled=true;btn.textContent='Création en cours...';
+  setTimeout(()=>{
+    document.getElementById('signupForm').style.display='none';
+    document.getElementById('successState').style.display='block';
+    showToast('Compte créé avec succès !','ok');
+  },1400);
+}
+
+function submitLogin(){
+  const email=document.getElementById('lemail').value.trim();
+  const pwd=document.getElementById('lpwd').value;
+  document.getElementById('loginErr').classList.remove('show');
+  if(!validateEmail(email)||!pwd){showToast('Veuillez remplir tous les champs','err');return}
+  if(document.getElementById('rememberMe').checked)localStorage.setItem('secupro_email',email);
+  else localStorage.removeItem('secupro_email');
+  const btn=document.querySelector('#loginForm .submit-btn');
+  btn.disabled=true;btn.textContent='Connexion...';
+  setTimeout(()=>{
+    btn.disabled=false;btn.textContent='Se connecter →';
+    document.getElementById('loginErr').classList.add('show');
+    showToast('Identifiants incorrects','err');
+  },1200);
+}
+
+function toggleEye(id,btn){
+  const inp=document.getElementById(id);
+  const svg=btn.querySelector('svg');
+  if(inp.type==='password'){
+    inp.type='text';
+    svg.innerHTML='<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  }else{
+    inp.type='password';
+    svg.innerHTML='<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
+function openForgotModal(){
+  document.getElementById('forgotModal').classList.add('open');
+  document.getElementById('forgotConfirm').classList.remove('show');
+  document.getElementById('forgotBtn').disabled=false;
+  document.getElementById('forgotBtn').textContent='Envoyer le lien';
+  const cur=document.getElementById('lemail').value.trim();
+  if(cur)document.getElementById('forgotEmail').value=cur;
+}
+function closeForgotModal(){
+  document.getElementById('forgotModal').classList.remove('open');
+}
+function sendResetLink(){
+  const email=document.getElementById('forgotEmail').value.trim();
+  if(!validateEmail(email)){showToast('Email invalide','err');return}
+  const btn=document.getElementById('forgotBtn');
+  btn.disabled=true;btn.textContent='Envoi...';
+  setTimeout(()=>{
+    document.getElementById('forgotConfirm').classList.add('show');
+    btn.textContent='Lien envoyé';
+  },900);
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved=localStorage.getItem('secupro_email');
+  if(saved){
+    document.getElementById('lemail').value=saved;
+    document.getElementById('rememberMe').checked=true;
+  }
+});
+</script>
+</body>
+</html>

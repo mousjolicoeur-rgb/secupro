@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SecuPRO — La plateforme des professionnels de la sécurité privée</title>
+<meta name="description" content="SecuPRO unifie la gestion de vos agents, plannings, conformité CNAPS et paie en temps réel. Essai gratuit 7 jours.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --blue:#3B82F6;--blue2:#60A5FA;--blue3:#1D4ED8;
+  --cyan:#06B6D4;--cyan2:#22D3EE;
+  --bg:#030712;--bg2:#050D1F;--bg3:#060F24;
+  --surf:rgba(255,255,255,.03);--surf2:rgba(255,255,255,.06);
+  --br:rgba(59,130,246,.2);--br2:rgba(255,255,255,.07);--br3:rgba(255,255,255,.04);
+  --t:#F1F5FF;--t2:#6B7FA3;--t3:#94A3C8;
+  --green:#10B981;--red:#EF4444;--orange:#F97316;--yellow:#EAB308;
+  --rad:12px;--rad2:8px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--t);font-family:'Inter',sans-serif;line-height:1.6;overflow-x:hidden}
+
+/* ── MESH BACKGROUND ─────────────────────── */
+.mesh{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.mesh-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.18}
+.mesh-blob.a{width:600px;height:600px;background:radial-gradient(circle,#1D4ED8,transparent 70%);top:-200px;left:-100px}
+.mesh-blob.b{width:500px;height:500px;background:radial-gradient(circle,#0E7490,transparent 70%);top:100px;right:-150px}
+.mesh-blob.c{width:400px;height:400px;background:radial-gradient(circle,#1E3A8A,transparent 70%);bottom:0;left:30%}
+.grid-lines{position:absolute;inset:0;background-image:linear-gradient(rgba(59,130,246,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.06) 1px,transparent 1px);background-size:72px 72px}
+.grid-fade{position:absolute;inset:0;background:radial-gradient(ellipse 70% 70% at 50% 0%,transparent 40%,var(--bg) 100%)}
+
+/* ── NAV ─────────────────────────────────── */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;align-items:center;justify-content:space-between;padding:.9rem 3rem;background:rgba(3,7,18,.75);backdrop-filter:blur(24px);border-bottom:1px solid var(--br2)}
+.logo{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:1.2rem;text-decoration:none;color:var(--t)}
+.logo span{background:linear-gradient(135deg,var(--blue2),var(--cyan2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;align-items:center;gap:2rem}
+.nav-links a{font-size:.85rem;color:var(--t2);text-decoration:none;transition:color .2s;font-weight:500}
+.nav-links a:hover{color:var(--t)}
+.nav-cta{background:linear-gradient(135deg,var(--blue3),var(--blue));color:#fff;font-size:.83rem;font-weight:600;padding:.5rem 1.4rem;border-radius:var(--rad2);text-decoration:none;transition:all .25s;border:1px solid rgba(96,165,250,.3)}
+.nav-cta:hover{filter:brightness(1.15);transform:translateY(-1px);box-shadow:0 8px 24px rgba(59,130,246,.3)}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:.25rem}
+.hamburger span{display:block;width:22px;height:2px;background:var(--t);border-radius:2px;transition:all .3s}
+.mobile-menu{display:none;position:fixed;top:60px;left:0;right:0;background:rgba(5,13,31,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--br2);padding:1.5rem 2rem;flex-direction:column;gap:1.25rem;z-index:499}
+.mobile-menu.open{display:flex}
+.mobile-menu a{font-size:.95rem;color:var(--t3);text-decoration:none;font-weight:500}
+
+/* ── HERO ────────────────────────────────── */
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:7rem 2rem 5rem;position:relative;overflow:hidden}
+.hero-inner{position:relative;z-index:2;max-width:860px}
+.badge{display:inline-flex;align-items:center;gap:.5rem;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:100px;padding:.3rem 1rem;font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--blue2);margin-bottom:2rem}
+.badge-pulse{width:6px;height:6px;background:var(--cyan2);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.hero h1{font-family:'Plus Jakarta Sans',sans-serif;font-size:clamp(2.8rem,6.5vw,5.8rem);font-weight:800;line-height:1;letter-spacing:-.04em;margin-bottom:1.75rem}
+.hero h1 .grad{background:linear-gradient(135deg,var(--blue2) 0%,var(--cyan2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:1.1rem;color:var(--t3);line-height:1.8;max-width:580px;margin:0 auto 2.75rem;font-weight:400}
+.hero-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:4rem}
+.btn-primary{background:linear-gradient(135deg,var(--blue3),var(--blue));color:#fff;font-weight:700;font-size:.95rem;padding:.85rem 2.4rem;border-radius:var(--rad2);text-decoration:none;transition:all .25s;border:1px solid rgba(96,165,250,.2)}
+.btn-primary:hover{filter:brightness(1.12);transform:translateY(-3px);box-shadow:0 16px 48px rgba(59,130,246,.35)}
+.btn-outline{border:1px solid var(--br2);color:var(--t3);font-size:.95rem;font-weight:500;padding:.85rem 2.4rem;border-radius:var(--rad2);text-decoration:none;transition:all .25s;background:rgba(255,255,255,.02)}
+.btn-outline:hover{border-color:rgba(59,130,246,.4);color:var(--blue2);background:rgba(59,130,246,.05)}
+.hero-social{display:flex;align-items:center;justify-content:center;gap:.75rem;font-size:.8rem;color:var(--t2)}
+.avatars{display:flex}
+.av{width:32px;height:32px;border-radius:50%;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;margin-left:-8px}
+.av:first-child{margin-left:0}
+.av.a{background:linear-gradient(135deg,#1D4ED8,#3B82F6)}
+.av.b{background:linear-gradient(135deg,#0E7490,#06B6D4)}
+.av.c{background:linear-gradient(135deg,#6D28D9,#8B5CF6)}
+.av.d{background:linear-gradient(135deg,#047857,#10B981)}
+
+/* ── STATS ───────────────────────────────── */
+.stats-strip{border-top:1px solid var(--br2);border-bottom:1px solid var(--br2);padding:2.75rem 2rem;display:flex;justify-content:center;align-items:center;gap:0;flex-wrap:wrap;background:rgba(5,13,31,.6)}
+.stat-item{text-align:center;padding:0 3.5rem}
+.stat-item+.stat-item{border-left:1px solid var(--br2)}
+.stat-v{font-family:'Plus Jakarta Sans',sans-serif;font-size:2.2rem;font-weight:800;background:linear-gradient(135deg,var(--blue2),var(--cyan2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+.stat-l{font-size:.72rem;color:var(--t2);letter-spacing:.07em;text-transform:uppercase;margin-top:.4rem;font-weight:500}
+
+/* ── SECTIONS ────────────────────────────── */
+.section{padding:6rem 2rem;position:relative}
+.section-inner{max-width:1140px;margin:0 auto}
+.sec-eyebrow{font-size:.7rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--blue2);font-family:'JetBrains Mono',monospace;margin-bottom:.75rem}
+.sec-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:clamp(1.8rem,3.5vw,3rem);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:.9rem}
+.sec-sub{font-size:1rem;color:var(--t3);line-height:1.8;max-width:520px;font-weight:400}
+
+/* ── DEMO ────────────────────────────────── */
+.demo-section{background:var(--bg2);position:relative;overflow:hidden}
+.demo-section::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:80%;height:1px;background:linear-gradient(90deg,transparent,var(--blue),var(--cyan),var(--blue),transparent)}
+.demo-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:3.5rem;gap:2rem;flex-wrap:wrap}
+.demo-label{display:flex;align-items:center;gap:.5rem;font-size:.72rem;color:var(--blue2);font-family:'JetBrains Mono',monospace;margin-bottom:1rem}
+.demo-label::before{content:'';width:20px;height:1px;background:var(--blue2)}
+/* Action bar */
+.ab{background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.15);border-radius:var(--rad2);padding:.5rem 1.1rem;font-size:.75rem;color:var(--cyan2);display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem;font-family:'JetBrains Mono',monospace;max-width:1140px;margin-left:auto;margin-right:auto}
+.ab-blink{width:7px;height:7px;background:var(--cyan2);border-radius:50%;animation:pulse 1s infinite;flex-shrink:0}
+/* Alert */
+.demo-alert{max-width:1140px;margin:.75rem auto;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:var(--rad2);padding:.5rem 1.1rem;font-size:.75rem;color:#FCA5A5;display:flex;align-items:center;gap:.6rem;opacity:0;transition:opacity .4s}
+.demo-alert.show{opacity:1}
+/* Progress */
+.demo-prog{max-width:1140px;margin:0 auto .75rem;height:2px;background:var(--br3);border-radius:2px}
+.demo-prog-inner{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--blue),var(--cyan2));width:0;transition:width .5s cubic-bezier(.4,0,.2,1)}
+
+/* LAPTOP FRAME */
+.laptop-outer{max-width:1000px;margin:0 auto}
+.lp-body{background:linear-gradient(180deg,#1C2340 0%,#151C35 50%,#111828 100%);border-radius:18px 18px 0 0;padding:20px 22px 0;border:1.5px solid rgba(255,255,255,.12);border-bottom:none;position:relative}
+.lp-body::before{content:'';position:absolute;top:10px;left:50%;transform:translateX(-50%);width:9px;height:9px;background:#0F1628;border-radius:50%;border:1.5px solid rgba(255,255,255,.15)}
+.lp-screen{background:#040810;border-radius:8px;overflow:hidden;border:2px solid rgba(0,0,0,.6);aspect-ratio:16/9;position:relative}
+.lp-bot{background:linear-gradient(180deg,#151C35,#0F1424);height:20px;border-radius:0 0 6px 6px;border:1.5px solid rgba(255,255,255,.08);border-top:none}
+.lp-hinge{width:160px;height:12px;background:linear-gradient(180deg,#0F1424,#090D1C);margin:0 auto;border-radius:0 0 10px 10px;border:1px solid rgba(255,255,255,.06);border-top:none}
+.lp-desk{width:340px;height:8px;background:linear-gradient(180deg,#090D1C,#060912);margin:0 auto;border-radius:0 0 12px 12px;border:1px solid rgba(255,255,255,.04);border-top:none}
+
+/* DASHBOARD INSIDE */
+.db{width:100%;height:100%;background:#040810;display:grid;grid-template-rows:auto 1fr}
+.db-bar{background:#060C1C;border-bottom:1px solid rgba(59,130,246,.12);padding:.45rem 1rem;display:flex;align-items:center;gap:1rem;justify-content:space-between}
+.db-logo{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:.75rem}
+.db-logo span{background:linear-gradient(135deg,#60A5FA,#22D3EE);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.db-tabs{display:flex;gap:.1rem}
+.dbt{padding:.22rem .55rem;font-size:.58rem;color:var(--t2);border-radius:4px;cursor:pointer;font-weight:500;transition:all .15s}
+.dbt.on{background:rgba(59,130,246,.12);color:var(--blue2)}
+.db-live{display:flex;align-items:center;gap:.3rem;font-size:.52rem;color:var(--green);font-family:'JetBrains Mono',monospace}
+.db-live-dot{width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite}
+.db-inner{display:grid;grid-template-columns:130px 1fr;overflow:hidden}
+.db-side{background:#030810;border-right:1px solid rgba(255,255,255,.04);padding:.5rem 0}
+.sn{display:flex;align-items:center;gap:.4rem;padding:.32rem .65rem;font-size:.58rem;color:var(--t2);cursor:pointer;border-left:2px solid transparent;transition:all .15s;font-weight:500}
+.sn.on{color:var(--blue2);background:rgba(59,130,246,.07);border-left-color:var(--blue2)}
+.sn-ico{width:10px;height:10px;border-radius:2px;background:currentColor;opacity:.5;flex-shrink:0}
+.db-main{padding:.75rem;background:#040810;overflow:hidden}
+/* KPI row */
+.krow{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-bottom:.55rem}
+.kc{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:6px;padding:.5rem .65rem}
+.kv{font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:500;line-height:1}
+.kv.bl{color:var(--blue2)}.kv.gr{color:var(--green)}.kv.or{color:var(--orange)}.kv.rd{color:var(--red)}
+.kl{font-size:.5rem;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;margin-top:.18rem}
+.kd{font-size:.48rem;margin-top:.18rem;color:var(--green)}
+.kd.neg{color:var(--red)}
+/* Table */
+.dt{width:100%;border-collapse:collapse;font-size:.57rem}
+.dt th{color:var(--t2);text-transform:uppercase;letter-spacing:.05em;padding:.28rem .4rem;border-bottom:1px solid rgba(255,255,255,.05);font-weight:500}
+.dt td{padding:.28rem .4rem;border-bottom:1px solid rgba(255,255,255,.03)}
+.dt tr.hi td{background:rgba(59,130,246,.05)}
+.tag{display:inline-block;padding:.1rem .3rem;border-radius:3px;font-size:.5rem;font-weight:600}
+.tag.on{background:rgba(16,185,129,.1);color:#6EE7B7}
+.tag.al{background:rgba(239,68,68,.1);color:#FCA5A5}
+.tag.off{background:rgba(255,255,255,.05);color:var(--t2)}
+/* Ghost cursor */
+#cur{position:absolute;width:11px;height:11px;background:var(--cyan2);border-radius:50%;pointer-events:none;z-index:60;transform:translate(-50%,-50%);transition:left .75s cubic-bezier(.25,.46,.45,.94),top .75s cubic-bezier(.25,.46,.45,.94);box-shadow:0 0 12px rgba(34,211,238,.6)}
+#curR{position:absolute;width:26px;height:26px;border:1px solid rgba(34,211,238,.4);border-radius:50%;pointer-events:none;z-index:59;transform:translate(-50%,-50%);transition:left .9s cubic-bezier(.25,.46,.45,.94),top .9s cubic-bezier(.25,.46,.45,.94)}
+.ripple{position:absolute;width:32px;height:32px;border-radius:50%;border:1.5px solid var(--cyan2);transform:translate(-50%,-50%) scale(0);animation:rip .55s ease-out forwards;pointer-events:none;z-index:58}
+@keyframes rip{to{transform:translate(-50%,-50%) scale(2.8);opacity:0}}
+
+/* ── FEATURES ────────────────────────────── */
+.feat-section{background:var(--bg)}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-top:3.5rem}
+.feat-card{background:var(--surf);border:1px solid var(--br3);border-radius:var(--rad);padding:1.75rem;transition:all .3s;position:relative;overflow:hidden}
+.feat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(59,130,246,.3),transparent);opacity:0;transition:opacity .3s}
+.feat-card:hover{border-color:rgba(59,130,246,.25);background:rgba(59,130,246,.03);transform:translateY(-4px)}
+.feat-card:hover::before{opacity:1}
+.feat-ico{width:44px;height:44px;background:linear-gradient(135deg,rgba(29,78,216,.3),rgba(6,182,212,.2));border:1px solid rgba(59,130,246,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin-bottom:1.25rem}
+.feat-card h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:1rem;font-weight:700;margin-bottom:.6rem}
+.feat-card p{font-size:.83rem;color:var(--t2);line-height:1.7;font-weight:400}
+.feat-tag{display:inline-block;margin-top:1rem;font-size:.65rem;font-weight:600;color:var(--blue2);font-family:'JetBrains Mono',monospace}
+
+/* ── TESTIMONIALS ────────────────────────── */
+.testi-section{background:var(--bg2);position:relative;overflow:hidden}
+.testi-section::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:80%;height:1px;background:linear-gradient(90deg,transparent,rgba(59,130,246,.3),transparent)}
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3.5rem}
+.tc{background:rgba(255,255,255,.025);border:1px solid var(--br2);border-radius:var(--rad);padding:1.75rem;transition:border-color .3s}
+.tc:hover{border-color:rgba(59,130,246,.25)}
+.stars{display:flex;gap:3px;margin-bottom:1rem}
+.star{width:14px;height:14px;background:#EAB308;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.tc-text{font-size:.88rem;line-height:1.8;color:var(--t3);margin-bottom:1.5rem;font-style:italic;font-weight:300}
+.tc-text::before{content:'\201C';font-size:2rem;color:var(--blue2);line-height:0;vertical-align:-.5rem;margin-right:.3rem;font-style:normal}
+.tc-author{display:flex;align-items:center;gap:.75rem}
+.tc-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0;color:#fff}
+.tc-name{font-weight:600;font-size:.85rem}
+.tc-role{font-size:.75rem;color:var(--t2)}
+
+/* ── NEWS ────────────────────────────────── */
+.news-section{background:var(--bg)}
+.news-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3.5rem}
+.nc{background:var(--surf);border:1px solid var(--br3);border-radius:var(--rad);padding:1.75rem;transition:all .3s;cursor:default}
+.nc:hover{border-color:rgba(59,130,246,.25);background:rgba(59,130,246,.03);transform:translateY(-4px)}
+.nc-eyebrow{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan2);font-family:'JetBrains Mono',monospace;margin-bottom:.9rem}
+.nc h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:.95rem;font-weight:700;line-height:1.5;margin-bottom:.75rem}
+.nc p{font-size:.82rem;color:var(--t2);line-height:1.7;font-weight:400}
+.nc-footer{display:flex;align-items:center;justify-content:space-between;margin-top:1.25rem;padding-top:.9rem;border-top:1px solid var(--br3)}
+.nc-date{font-size:.65rem;color:var(--t2);font-family:'JetBrains Mono',monospace}
+.nc-badge{font-size:.6rem;font-weight:600;padding:.2rem .55rem;border-radius:100px;background:rgba(6,182,212,.1);color:var(--cyan2);border:1px solid rgba(6,182,212,.15)}
+
+/* ── CTA ─────────────────────────────────── */
+.cta-section{background:var(--bg2);text-align:center;padding:8rem 2rem;position:relative;overflow:hidden}
+.cta-section::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:700px;height:350px;background:radial-gradient(ellipse,rgba(29,78,216,.15),transparent 70%);pointer-events:none}
+.cta-section::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:80%;height:1px;background:linear-gradient(90deg,transparent,rgba(59,130,246,.4),transparent)}
+.cta-inner{position:relative;z-index:2}
+.cta-section h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:clamp(2.2rem,5vw,4rem);font-weight:800;letter-spacing:-.04em;line-height:1.05;margin-bottom:1rem}
+.cta-section h2 span{background:linear-gradient(135deg,var(--blue2),var(--cyan2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.cta-section p{color:var(--t3);font-size:1rem;margin-bottom:2.75rem;font-weight:400;max-width:460px;margin-left:auto;margin-right:auto}
+.cta-btn{background:linear-gradient(135deg,var(--blue3),var(--blue));color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:1.05rem;padding:1rem 3rem;border-radius:10px;text-decoration:none;display:inline-block;transition:all .25s;border:1px solid rgba(96,165,250,.3);letter-spacing:.01em}
+.cta-btn:hover{filter:brightness(1.12);transform:translateY(-4px);box-shadow:0 20px 60px rgba(59,130,246,.35)}
+.cta-trust{display:flex;align-items:center;justify-content:center;gap:1.5rem;margin-top:2.5rem;flex-wrap:wrap}
+.trust-item{display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--t2)}
+.trust-check{width:16px;height:16px;background:rgba(16,185,129,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--green)}
+
+/* ── FOOTER ──────────────────────────────── */
+footer{background:var(--bg);border-top:1px solid var(--br2);padding:4rem 2rem 2rem}
+.footer-inner{max-width:1140px;margin:0 auto}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:3rem}
+.footer-brand .logo-f{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:1.3rem;margin-bottom:.9rem;display:block;text-decoration:none;color:var(--t)}
+.footer-brand .logo-f span{background:linear-gradient(135deg,var(--blue2),var(--cyan2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.footer-brand p{font-size:.82rem;color:var(--t2);line-height:1.7;max-width:280px;margin-bottom:1.25rem}
+.footer-email{display:inline-flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--blue2);text-decoration:none;font-family:'JetBrains Mono',monospace;transition:color .2s}
+.footer-email:hover{color:var(--cyan2)}
+.footer-col h4{font-size:.8rem;font-weight:600;color:var(--t);margin-bottom:1rem;letter-spacing:.04em}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:.6rem}
+.footer-col ul li a{font-size:.8rem;color:var(--t2);text-decoration:none;transition:color .2s}
+.footer-col ul li a:hover{color:var(--blue2)}
+.footer-bottom{border-top:1px solid var(--br2);padding-top:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.footer-bottom p{font-size:.75rem;color:var(--t2);font-family:'JetBrains Mono',monospace}
+.footer-badges{display:flex;gap:.6rem}
+.fbadge{font-size:.65rem;font-weight:600;padding:.2rem .6rem;border-radius:4px;border:1px solid var(--br2);color:var(--t2)}
+
+/* ── RESPONSIVE ──────────────────────────── */
+@media(max-width:900px){
+  nav{padding:.8rem 1.5rem}
+  .nav-links{display:none}
+  .hamburger{display:flex}
+  .feat-grid,.testi-grid,.news-grid{grid-template-columns:1fr}
+  .footer-top{grid-template-columns:1fr 1fr}
+  .stat-item{padding:0 2rem}
+  .db-inner{grid-template-columns:1fr}
+  .db-side{display:none}
+  .krow{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:600px){
+  .hero h1{font-size:2.5rem}
+  .stats-strip{gap:1.5rem}
+  .stat-item{padding:.75rem 1.5rem;border-left:none;border-top:1px solid var(--br2)}
+  .stat-item:first-child{border-top:none}
+  .footer-top{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">Secu<span>PRO</span></a>
+  <div class="nav-links">
+    <a href="#demo">Démo</a>
+    <a href="#features">Fonctionnalités</a>
+    <a href="#temoignages">Témoignages</a>
+    <a href="#actualites">Actualités</a>
+    <a href="auth.html" class="nav-cta">Essai gratuit →</a>
+  </div>
+  <div class="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#demo" onclick="toggleMenu()">Démo</a>
+  <a href="#features" onclick="toggleMenu()">Fonctionnalités</a>
+  <a href="#temoignages" onclick="toggleMenu()">Témoignages</a>
+  <a href="#actualites" onclick="toggleMenu()">Actualités</a>
+  <a href="auth.html" onclick="toggleMenu()" style="color:var(--blue2);font-weight:600">Essai gratuit →</a>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="mesh">
+    <div class="mesh-blob a"></div>
+    <div class="mesh-blob b"></div>
+    <div class="mesh-blob c"></div>
+  </div>
+  <div class="grid-lines"></div>
+  <div class="grid-fade"></div>
+  <div class="hero-inner">
+    <div class="badge"><span class="badge-pulse"></span>Lancement · Mai 2026 · Lyon</div>
+    <h1>Gérez vos agents<br>avec <span class="grad">précision</span><br>et sérénité</h1>
+    <p class="hero-sub">SecuPRO est la première plateforme dédiée aux 180 000 agents de sécurité privée en France — conformité CNAPS, plannings, paie et alertes en temps réel.</p>
+    <div class="hero-btns">
+      <a href="#demo" class="btn-primary">Voir la démo live ↓</a>
+      <a href="auth.html" class="btn-outline">Essai gratuit 7 jours</a>
+    </div>
+    <div class="hero-social">
+      <div class="avatars">
+        <div class="av a">JD</div>
+        <div class="av b">ML</div>
+        <div class="av c">AK</div>
+        <div class="av d">SF</div>
+      </div>
+      <span>Rejoignez les premiers clients · Bêta privée ouverte</span>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="stat-item"><div class="stat-v">180K</div><div class="stat-l">Agents en France</div></div>
+  <div class="stat-item"><div class="stat-v">IDCC 1351</div><div class="stat-l">100% Conforme</div></div>
+  <div class="stat-item"><div class="stat-v">-60%</div><div class="stat-l">Temps administratif</div></div>
+  <div class="stat-item"><div class="stat-v">7 jours</div><div class="stat-l">Essai gratuit</div></div>
+</div>
+
+<!-- DEMO -->
+<section class="section demo-section" id="demo">
+  <div class="section-inner">
+    <div class="demo-top">
+      <div>
+        <div class="demo-label">démo interactive</div>
+        <h2 class="sec-title">Le dashboard s'anime<br><span style="background:linear-gradient(135deg,var(--blue2),var(--cyan2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">sous vos yeux</span></h2>
+      </div>
+      <p class="sec-sub">Regardez SecuPRO détecter une alerte CNAPS, naviguer entre les modules et analyser vos performances — en automatique.</p>
+    </div>
+  </div>
+
+  <div class="ab" id="ab"><span class="ab-blink"></span><span id="abTxt" style="font-family:'JetBrains Mono',monospace">Connexion au tableau de bord en cours...</span></div>
+  <div class="demo-alert" id="dAlert">⚠&nbsp; CNAPS — M. Diallo K. &nbsp;|&nbsp; Carte professionnelle expire dans <strong style="margin-left:3px">12 jours</strong> — action requise</div>
+  <div class="demo-prog"><div class="demo-prog-inner" id="dprog"></div></div>
+
+  <div class="laptop-outer">
+    <div class="lp-body">
+      <div class="lp-screen" id="lpScreen">
+        <div id="cur"></div>
+        <div id="curR"></div>
+        <div class="db">
+          <div class="db-bar">
+            <div class="db-logo">Secu<span>PRO</span></div>
+            <div class="db-tabs">
+              <div class="dbt on" id="dbt-a">Agents</div>
+              <div class="dbt" id="dbt-p">Planning</div>
+              <div class="dbt" id="dbt-al">Alertes</div>
+              <div class="dbt" id="dbt-pf">Performance</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:1rem">
+              <div class="db-live"><span class="db-live-dot"></span>LIVE</div>
+              <div style="font-size:.5rem;color:var(--t2);font-family:'JetBrains Mono',monospace">SPL · 24.04.2026</div>
+            </div>
+          </div>
+          <div class="db-inner">
+            <div class="db-side">
+              <div class="sn on" id="sn-a"><span class="sn-ico"></span>Agents</div>
+              <div class="sn" id="sn-p"><span class="sn-ico"></span>Planning</div>
+              <div class="sn" id="sn-al"><span class="sn-ico"></span>Alertes</div>
+              <div class="sn" id="sn-pf"><span class="sn-ico"></span>Performance</div>
+              <div class="sn" id="sn-d"><span class="sn-ico"></span>Documents</div>
+              <div class="sn" id="sn-ia"><span class="sn-ico"></span>SecuIA</div>
+            </div>
+            <div class="db-main" id="dbMain"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lp-bot"></div>
+    <div class="lp-hinge"></div>
+    <div class="lp-desk"></div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section feat-section" id="features">
+  <div class="section-inner">
+    <div style="max-width:600px">
+      <div class="sec-eyebrow">fonctionnalités</div>
+      <h2 class="sec-title">Tout ce dont une société<br>de sécurité a besoin</h2>
+      <p class="sec-sub">Conçu par un ancien agent de terrain, pour les professionnels du secteur.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-ico">📋</div>
+        <h3>Import planning PDF</h3>
+        <p>Comète SQL, Winpres, ou PDF manuel — importez vos plannings en un clic. Détection automatique des conflits, violations de repos et dépassements d'heures.</p>
+        <span class="feat-tag">→ Zéro resaisie</span>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico">🛡️</div>
+        <h3>Conformité CNAPS proactive</h3>
+        <p>Alertes automatiques 30 jours avant expiration des cartes professionnelles. Plus jamais un agent en poste sans habilitation valide.</p>
+        <span class="feat-tag">→ Zéro infraction</span>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico">⚖️</div>
+        <h3>SecuDroit — IDCC 1351</h3>
+        <p>38 articles de la convention collective intégrés. L'assistant IA SecuIA répond aux questions juridiques de vos agents en 3 secondes.</p>
+        <span class="feat-tag">→ Droit accessible</span>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico">💰</div>
+        <h3>Analyse des bulletins de paie</h3>
+        <p>Détection automatique des déductions injustifiées, majorations manquantes et anomalies de paie. Vos agents sont protégés.</p>
+        <span class="feat-tag">→ Paie juste</span>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico">📊</div>
+        <h3>Dashboard temps réel</h3>
+        <p>Taux de présence, heures effectuées vs planifiées, alertes actives, performance par site. Vue complète d'un coup d'œil.</p>
+        <span class="feat-tag">→ Décision rapide</span>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico">📱</div>
+        <h3>PWA — Mobile first</h3>
+        <p>Installable sur iPhone et Android sans passer par un store. Vos chefs de site et agents gèrent depuis le terrain en temps réel.</p>
+        <span class="feat-tag">→ Partout, toujours</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section testi-section" id="temoignages">
+  <div class="section-inner">
+    <div style="text-align:center;max-width:540px;margin:0 auto">
+      <div class="sec-eyebrow">témoignages</div>
+      <h2 class="sec-title">Ce que disent<br>nos premiers clients</h2>
+    </div>
+    <div class="testi-grid">
+      <div class="tc">
+        <div class="stars"><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div></div>
+        <p class="tc-text">Avant SecuPRO je passais 3 heures par semaine à vérifier les cartes CNAPS manuellement. Maintenant j'ai une alerte automatique 30 jours avant. Inestimable.</p>
+        <div class="tc-author">
+          <div class="tc-av" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6)">JD</div>
+          <div><div class="tc-name">Jean-Pierre D.</div><div class="tc-role">Chef d'exploitation · Lyon</div></div>
+        </div>
+      </div>
+      <div class="tc">
+        <div class="stars"><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div></div>
+        <p class="tc-text">L'import des plannings Comète SQL directement dans SecuPRO a changé notre quotidien. Les conflits d'horaires sont détectés avant même qu'on les voie.</p>
+        <div class="tc-author">
+          <div class="tc-av" style="background:linear-gradient(135deg,#0E7490,#06B6D4)">ML</div>
+          <div><div class="tc-name">Mohammed L.</div><div class="tc-role">Directeur opérations · Rhône</div></div>
+        </div>
+      </div>
+      <div class="tc">
+        <div class="stars"><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div></div>
+        <p class="tc-text">SecuIA m'a répondu en quelques secondes sur une question d'heures supplémentaires IDCC. J'aurais dû appeler un avocat. Le ROI est évident dès le premier mois.</p>
+        <div class="tc-author">
+          <div class="tc-av" style="background:linear-gradient(135deg,#6D28D9,#8B5CF6)">SF</div>
+          <div><div class="tc-name">Samira F.</div><div class="tc-role">Responsable RH · Grenoble</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NEWS -->
+<section class="section news-section" id="actualites">
+  <div class="section-inner">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1.5rem">
+      <div>
+        <div class="sec-eyebrow">secteur · avril 2026</div>
+        <h2 class="sec-title">Ce qui change<br>pour votre métier</h2>
+      </div>
+      <p class="sec-sub" style="max-width:400px">Les enjeux qui poussent les sociétés de sécurité à se digitaliser maintenant.</p>
+    </div>
+    <div class="news-grid">
+      <div class="nc">
+        <div class="nc-eyebrow">CNAPS · Réglementation</div>
+        <h3>Contrôles CNAPS 2026 : amendes et suspensions en hausse de 40%</h3>
+        <p>Les sociétés sans traçabilité numérique des habilitations sont désormais les premières cibles. Le défaut de carte pro coûte en moyenne 4 500 € d'amende.</p>
+        <div class="nc-footer">
+          <span class="nc-date">Avril 2026</span>
+          <span class="nc-badge">Urgent</span>
+        </div>
+      </div>
+      <div class="nc">
+        <div class="nc-eyebrow">Convention IDCC 1351</div>
+        <h3>Avenant 2026 : majorations nuit et jours fériés obligatoirement tracées</h3>
+        <p>Le nouvel avenant impose un suivi numérique des majorations. Les contentieux prud'homaux liés aux heures non payées ont bondi de 27% en 2025.</p>
+        <div class="nc-footer">
+          <span class="nc-date">Mars 2026</span>
+          <span class="nc-badge">RH</span>
+        </div>
+      </div>
+      <div class="nc">
+        <div class="nc-eyebrow">Marché · Digital</div>
+        <h3>+34% de PME sécurité adoptent un logiciel RH spécialisé en 12 mois</h3>
+        <p>Face aux pénuries d'agents et à la pression réglementaire, la digitalisation s'accélère. Les sociétés de moins de 50 agents sont le segment qui croît le plus vite.</p>
+        <div class="nc-footer">
+          <span class="nc-date">Fév. 2026</span>
+          <span class="nc-badge">Marché</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+  <div class="cta-inner">
+    <div class="sec-eyebrow" style="text-align:center">sans carte bancaire · sans engagement</div>
+    <h2>Prêt à transformer<br>votre <span>gestion sécurité</span> ?</h2>
+    <p>7 jours d'essai gratuit — toutes fonctionnalités incluses. Installation en moins de 5 minutes.</p>
+    <a href="auth.html" class="cta-btn">Démarrer mon essai gratuit →</a>
+    <div class="cta-trust">
+      <div class="trust-item"><div class="trust-check">✓</div> Aucune carte bancaire</div>
+      <div class="trust-item"><div class="trust-check">✓</div> Résiliation en 1 clic</div>
+      <div class="trust-item"><div class="trust-check">✓</div> Support réactif Lyon</div>
+      <div class="trust-item"><div class="trust-check">✓</div> Données en France</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="#" class="logo-f">Secu<span>PRO</span></a>
+        <p>La première plateforme dédiée aux professionnels de la sécurité privée en France. Conçue par un ancien agent, pour les agents.</p>
+        <a href="mailto:contact@secupro.app" class="footer-email">✉ contact@secupro.app</a>
+      </div>
+      <div class="footer-col">
+        <h4>Produit</h4>
+        <ul>
+          <li><a href="#features">Fonctionnalités</a></li>
+          <li><a href="#demo">Démo live</a></li>
+          <li><a href="auth.html">Tarifs</a></li>
+          <li><a href="auth.html">Essai gratuit</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Ressources</h4>
+        <ul>
+          <li><a href="#">SecuDroit</a></li>
+          <li><a href="#">IDCC 1351</a></li>
+          <li><a href="#">Guide CNAPS</a></li>
+          <li><a href="#actualites">Actualités</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Société</h4>
+        <ul>
+          <li><a href="#">À propos</a></li>
+          <li><a href="mailto:contact@secupro.app">Contact</a></li>
+          <li><a href="#">Mentions légales</a></li>
+          <li><a href="#">Politique de confidentialité</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 SecuPRO · Lyon, France · <a href="https://secupro.app" style="color:var(--blue2);text-decoration:none">secupro.app</a></p>
+      <div class="footer-badges">
+        <span class="fbadge">IDCC 1351</span>
+        <span class="fbadge">CNAPS</span>
+        <span class="fbadge">RGPD</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+function toggleMenu(){document.getElementById('mobileMenu').classList.toggle('open')}
+
+const lpScreen=document.getElementById('lpScreen');
+const cur=document.getElementById('cur');
+const curR=document.getElementById('curR');
+const dbMain=document.getElementById('dbMain');
+const abTxt=document.getElementById('abTxt');
+const dAlert=document.getElementById('dAlert');
+const dprog=document.getElementById('dprog');
+
+const TABS={a:'dbt-a',p:'dbt-p',al:'dbt-al',pf:'dbt-pf'};
+const SNS={a:'sn-a',p:'sn-p',al:'sn-al',pf:'sn-pf'};
+
+function setActive(k){
+  Object.values(TABS).forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('on')});
+  Object.values(SNS).forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('on')});
+  if(TABS[k]){const e=document.getElementById(TABS[k]);if(e)e.classList.add('on')}
+  if(SNS[k]){const e=document.getElementById(SNS[k]);if(e)e.classList.add('on')}
+}
+
+function moveCur(px,py){
+  const r=lpScreen.getBoundingClientRect();
+  cur.style.left=(r.left+r.width*px)+'px';
+  cur.style.top=(r.top+r.height*py)+'px';
+  curR.style.left=(r.left+r.width*px)+'px';
+  curR.style.top=(r.top+r.height*py)+'px';
+}
+
+function clickAt(px,py){
+  const r=lpScreen.getBoundingClientRect();
+  const d=document.createElement('div');
+  d.className='ripple';
+  d.style.left=(r.left+r.width*px)+'px';
+  d.style.top=(r.top+r.height*py)+'px';
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(),650);
+}
+
+const HTML={
+  a:`<div class="krow">
+    <div class="kc"><div class="kv bl">24</div><div class="kl">Agents</div><div class="kd">+2 ce mois</div></div>
+    <div class="kc"><div class="kv gr">21</div><div class="kl">En poste</div><div class="kd">87%</div></div>
+    <div class="kc"><div class="kv or">2</div><div class="kl">Congés</div></div>
+    <div class="kc"><div class="kv rd">3</div><div class="kl">Alertes</div><div class="kd neg">Urgent</div></div>
+  </div>
+  <table class="dt">
+    <thead><tr><th>Agent</th><th>Site</th><th>Statut</th><th>Carte pro</th></tr></thead>
+    <tbody>
+      <tr class="hi"><td>M. Diallo K.</td><td>Musée Confluences</td><td><span class="tag al">Alerte</span></td><td style="color:var(--orange);font-family:'JetBrains Mono',monospace;font-size:.52rem">Exp. 12j</td></tr>
+      <tr><td>A. Bernard</td><td>CIRC Lyon</td><td><span class="tag on">Actif</span></td><td style="color:var(--green);font-family:'JetBrains Mono',monospace;font-size:.52rem">Valide</td></tr>
+      <tr><td>S. Traoré</td><td>Pierre Martinet</td><td><span class="tag on">Actif</span></td><td style="color:var(--green);font-family:'JetBrains Mono',monospace;font-size:.52rem">Valide</td></tr>
+      <tr><td>F. Martin</td><td>Gare Part-Dieu</td><td><span class="tag off">Repos</span></td><td style="color:var(--green);font-family:'JetBrains Mono',monospace;font-size:.52rem">Valide</td></tr>
+      <tr><td>L. Nguyen</td><td>Carré de Soie</td><td><span class="tag on">Actif</span></td><td style="color:var(--green);font-family:'JetBrains Mono',monospace;font-size:.52rem">Valide</td></tr>
+    </tbody>
+  </table>`,
+  al:`<div style="font-size:.62rem;font-weight:600;margin-bottom:.55rem;color:var(--blue2);font-family:'JetBrains Mono',monospace">// 3 alertes actives</div>
+  <div style="display:flex;flex-direction:column;gap:.38rem">
+    <div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.18);border-radius:5px;padding:.5rem .6rem">
+      <div style="font-size:.6rem;color:#FCA5A5;font-weight:600">CNAPS — M. Diallo K.</div>
+      <div style="font-size:.55rem;color:var(--t2);margin-top:.12rem">Carte expire dans <span style="color:var(--orange);font-family:'JetBrains Mono',monospace">12 jours</span> — renouvellement requis avant tout poste</div>
+    </div>
+    <div style="background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.18);border-radius:5px;padding:.5rem .6rem">
+      <div style="font-size:.6rem;color:#FED7AA;font-weight:600">Conflit planning — 28 avril</div>
+      <div style="font-size:.55rem;color:var(--t2);margin-top:.12rem">A. Bernard assigné 2 sites simultanément — repos légal IDCC 1351 non respecté</div>
+    </div>
+    <div style="background:rgba(234,179,8,.05);border:1px solid rgba(234,179,8,.15);border-radius:5px;padding:.5rem .6rem">
+      <div style="font-size:.6rem;color:#FEF08A;font-weight:600">SST — F. Martin</div>
+      <div style="font-size:.55rem;color:var(--t2);margin-top:.12rem">Formation Sauveteur Secouriste du Travail à renouveler avant fin mai 2026</div>
+    </div>
+  </div>`,
+  pf:`<div class="krow">
+    <div class="kc"><div class="kv bl">94%</div><div class="kl">Présence</div><div class="kd">+2% vs mars</div></div>
+    <div class="kc"><div class="kv gr">487h</div><div class="kl">Effectuées</div><div class="kd">/ 520h</div></div>
+    <div class="kc"><div class="kv or">12h</div><div class="kl">Heures supp.</div></div>
+    <div class="kc"><div class="kv bl">0</div><div class="kl">Incidents</div><div class="kd">Excellent</div></div>
+  </div>
+  <div style="background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:5px;padding:.55rem .65rem">
+    <div style="font-size:.52rem;color:var(--t2);margin-bottom:.45rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.06em">Présence par site</div>
+    ${[['Musée Confluences',91],['CIRC Lyon',97],['Pierre Martinet',88],['Gare Part-Dieu',96]].map(([s,v])=>{
+      const c=v>93?'var(--green)':v>88?'var(--blue2)':'var(--orange)';
+      return `<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.3rem">
+        <div style="font-size:.52rem;width:95px;color:var(--t3)">${s}</div>
+        <div style="flex:1;height:3px;background:rgba(255,255,255,.05);border-radius:2px"><div style="width:${v}%;height:100%;background:${c};border-radius:2px"></div></div>
+        <div style="font-size:.52rem;color:${c};width:26px;text-align:right;font-family:'JetBrains Mono',monospace">${v}%</div>
+      </div>`;
+    }).join('')}
+  </div>`
+};
+
+const STEPS=[
+  {k:'a',h:HTML.a,txt:'> Chargement des agents — Sécurité Pro Lyon SAS...',prog:20},
+  {k:'a',h:HTML.a,txt:'> Analyse CNAPS en cours... alerte critique détectée',prog:40,fx:()=>{
+    dAlert.classList.add('show');
+    moveCur(.72,.42);setTimeout(()=>clickAt(.72,.42),650);
+    setTimeout(()=>dAlert.classList.remove('show'),4500);
+  }},
+  {k:'al',h:HTML.al,txt:'> Navigation → module Alertes — 3 urgences actives',prog:60},
+  {k:'pf',h:HTML.pf,txt:'> Rapport performance avril 2026 — analyse terminée',prog:85},
+  {k:'a',h:HTML.a,txt:'> Dashboard synchronisé — tout est sous contrôle ✓',prog:100},
+];
+
+let step=0;
+function runStep(i){
+  step=i%STEPS.length;
+  const s=STEPS[step];
+  abTxt.textContent=s.txt;
+  dprog.style.width=s.prog+'%';
+  setActive(s.k);
+  dbMain.style.opacity='0';
+  setTimeout(()=>{
+    dbMain.innerHTML=s.h;
+    dbMain.style.transition='opacity .35s';
+    dbMain.style.opacity='1';
+    if(s.fx)setTimeout(s.fx,700);
+    const cx=.25+Math.random()*.5,cy=.25+Math.random()*.5;
+    moveCur(cx,cy);
+    setTimeout(()=>{moveCur(cx+.07,cy-.05);clickAt(cx+.07,cy-.05)},1100);
+  },300);
+}
+
+window.addEventListener('load',()=>{
+  moveCur(.5,.5);
+  dbMain.innerHTML=HTML.a;
+  setTimeout(()=>runStep(0),1000);
+  setInterval(()=>runStep(step+1),5200);
+});
+
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'})}
+  });
+});
+</script>
+</body>
+</html>

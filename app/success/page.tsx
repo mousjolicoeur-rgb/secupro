@@ -1,5 +1,4 @@
-import Link from "next/link";
-import Image from "next/image";
+﻿import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -51,12 +50,11 @@ export default function SuccessPage() {
         }}
       >
         {/* Logo */}
-        <Image
-          src="/secupro-logo-official.png"
+        <img
+          src="/secupro-logo.svg"
           alt="SecuPRO"
-          width={80}
+          width={300}
           height={80}
-          priority
           style={{
             filter:
               "drop-shadow(0 0 20px rgba(41,212,245,0.4)) drop-shadow(0 0 40px rgba(41,212,245,0.15))",

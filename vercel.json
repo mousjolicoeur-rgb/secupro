@@ -1,5 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "crons": [{"path": "/api/rapport/cron", "schedule": "0 6 1 * *"}]
+  "crons": [
+    { "path": "/api/rapport/cron", "schedule": "0 6 1 * *" },
+    { "path": "/api/cron", "schedule": "0 4 * * *" },
+    { "path": "/api/cron/alertes-cartes-pro", "schedule": "0 2 * * *" }
+  ]
 }

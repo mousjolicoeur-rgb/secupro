@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecuPRO — Connexion</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(155deg, #020c1b 0%, #04182e 20%, #061f3d 45%, #051a36 70%, #020e21 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 24px; font-family: 'Segoe UI', 'Trebuchet MS', sans-serif;
+    color: #eef4ff;
+  }
+
+  /* Ambient glow */
+  .ambient {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background: radial-gradient(ellipse 60% 50% at 50% 30%, rgba(0,209,255,0.06), transparent 65%);
+  }
+  .grid {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: linear-gradient(rgba(0,209,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,209,255,0.025) 1px, transparent 1px);
+    background-size: 55px 55px;
+    mask-image: radial-gradient(ellipse 75% 65% at 50% 45%, black 15%, transparent 70%);
+  }
+
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 420px; }
+
+  /* Logo */
+  .logo-area { text-align: center; margin-bottom: 28px; }
+  .logo-icon {
+    width: 64px; height: 64px; border-radius: 18px; margin: 0 auto 12px;
+    background: linear-gradient(135deg, #0a1628, #132040);
+    border: 1px solid rgba(0,209,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 32px rgba(0,209,255,0.15), 0 0 64px rgba(0,209,255,0.07);
+  }
+  .logo-text { font-size: 28px; font-weight: 900; letter-spacing: -1px; }
+  .logo-text .secu { color: #fff; }
+  .logo-text .pro  { color: #2b8fff; text-shadow: 0 0 20px rgba(43,143,255,0.5); }
+  .logo-sub { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .35em; color: rgba(0,209,255,0.45); margin-top: 4px; }
+
+  /* Card */
+  .card {
+    background: rgba(13,24,48,0.95); border: 1px solid rgba(26,111,212,0.25);
+    border-radius: 20px; padding: 32px; backdrop-filter: blur(16px);
+  }
+  .card-title { font-size: 20px; font-weight: 900; color: #eef4ff; margin-bottom: 4px; }
+  .card-sub { font-size: 13px; color: #5a7a9f; margin-bottom: 24px; }
+
+  /* Form */
+  label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #5a7a9f; margin-bottom: 6px; }
+  .field { margin-bottom: 16px; }
+  .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .label-row label { margin-bottom: 0; }
+  .forgot { font-size: 11px; color: #2b8fff; font-weight: 700; background: none; border: none; cursor: pointer; }
+  .forgot:hover { text-decoration: underline; }
+
+  input[type="email"], input[type="password"] {
+    width: 100%; background: rgba(7,13,26,0.8);
+    border: 1px solid rgba(26,111,212,0.25); border-radius: 10px;
+    padding: 11px 14px; color: #eef4ff; font-size: 14px; outline: none;
+    transition: border-color .2s;
+  }
+  input:focus { border-color: rgba(43,143,255,0.6); }
+  input::placeholder { color: #2a3f58; }
+
+  .btn-primary {
+    width: 100%; padding: 14px; border-radius: 12px; border: none;
+    background: linear-gradient(135deg, #1a6fd4, #2b8fff);
+    color: #fff; font-size: 14px; font-weight: 900;
+    text-transform: uppercase; letter-spacing: .15em;
+    cursor: pointer; transition: all .2s; margin-bottom: 0;
+    box-shadow: 0 0 24px rgba(26,111,212,0.4), 0 4px 16px rgba(26,111,212,0.2);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 36px rgba(26,111,212,0.55); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { background: #1a3060; cursor: not-allowed; box-shadow: none; transform: none; }
+
+  .btn-outline {
+    width: 100%; padding: 12px; border-radius: 12px; margin-top: 10px;
+    border: 1px solid rgba(26,111,212,0.25); background: transparent;
+    color: #2b8fff; font-size: 13px; font-weight: 700; cursor: pointer; transition: all .2s;
+  }
+  .btn-outline:hover { background: rgba(26,111,212,0.08); }
+
+  /* Divider */
+  .sep { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+  .sep-line { flex: 1; height: 1px; background: rgba(26,111,212,0.15); }
+  .sep-text { font-size: 11px; color: #2a3f58; font-weight: 600; }
+
+  /* Register link */
+  .register-link { text-align: center; color: #3a5a7a; font-size: 12px; margin-top: 18px; }
+  .register-link a { color: #2b8fff; font-weight: 700; text-decoration: none; }
+  .register-link a:hover { text-decoration: underline; }
+
+  /* Error */
+  .error-box {
+    margin-bottom: 16px; padding: 10px 14px; border-radius: 10px;
+    background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3);
+    color: #ef4444; font-size: 13px;
+  }
+
+  /* Success */
+  .success-box { text-align: center; padding: 8px 0; }
+  .success-icon { font-size: 48px; margin-bottom: 12px; }
+  .success-title { font-size: 18px; font-weight: 900; color: #eef4ff; margin-bottom: 8px; }
+  .success-text { color: #5a7a9f; font-size: 13px; line-height: 1.6; margin-bottom: 20px; }
+
+  /* Footer */
+  .footer-note { text-align: center; color: rgba(90,122,159,0.35); font-size: 11px; margin-top: 16px; }
+
+  /* Loading spinner */
+  .spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+    border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Tabs reset/login */
+  .view { display: none; }
+  .view.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+<div class="grid"></div>
+
+<div class="wrap">
+
+  <!-- Logo -->
+  <div class="logo-area">
+    <div class="logo-icon">
+      <div class="logo-text"><span class="secu">Secu</span><span class="pro">PRO</span></div>
+    </div>
+    <p class="logo-sub">Gestion opérationnelle · Sécurité privée</p>
+  </div>
+
+  <!-- Card -->
+  <div class="card">
+
+    <!-- LOGIN VIEW -->
+    <div class="view active" id="view-login">
+      <div class="card-title">Connexion à votre espace</div>
+      <div class="card-sub">Accédez à votre dashboard SecuPRO.</div>
+
+      <div id="error-login" class="error-box" style="display:none;"></div>
+
+      <form onsubmit="handleLogin(event)">
+        <div class="field">
+          <label>Email professionnel *</label>
+          <input type="email" id="login-email" placeholder="contact@masociete.fr" required autocomplete="email">
+        </div>
+        <div class="field">
+          <div class="label-row">
+            <label>Mot de passe *</label>
+            <button type="button" class="forgot" onclick="switchView('reset')">Mot de passe oublié ?</button>
+          </div>
+          <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn-primary" id="btn-login">🔐 Se connecter</button>
+      </form>
+
+      <div class="register-link">
+        Pas encore de compte ? <a href="#">Essai gratuit 7 jours →</a>
+      </div>
+    </div>
+
+    <!-- RESET VIEW -->
+    <div class="view" id="view-reset">
+      <div class="card-title">Réinitialiser le mot de passe</div>
+      <div class="card-sub">Entrez votre email pour recevoir un lien.</div>
+
+      <div id="error-reset" class="error-box" style="display:none;"></div>
+
+      <form onsubmit="handleReset(event)">
+        <div class="field">
+          <label>Email professionnel *</label>
+          <input type="email" id="reset-email" placeholder="contact@masociete.fr" required autocomplete="email">
+        </div>
+        <button type="submit" class="btn-primary" id="btn-reset">📧 Envoyer le lien</button>
+        <button type="button" class="btn-outline" onclick="switchView('login')">← Retour à la connexion</button>
+      </form>
+    </div>
+
+    <!-- SUCCESS VIEW -->
+    <div class="view" id="view-success">
+      <div class="success-box">
+        <div class="success-icon">📧</div>
+        <div class="success-title">Email envoyé</div>
+        <div class="success-text">
+          Un lien de réinitialisation a été envoyé à<br>
+          <strong style="color:#2b8fff" id="success-email"></strong>.<br><br>
+          Vérifiez votre boîte mail et cliquez sur le lien.
+        </div>
+        <button class="btn-outline" onclick="switchView('login')" style="margin-top:0;">← Retour à la connexion</button>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="footer-note">🔒 Données sécurisées · Hébergement UE · RGPD</p>
+</div>
+
+<script>
+function switchView(view) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  // Reset errors
+  document.querySelectorAll('.error-box').forEach(e => e.style.display = 'none');
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function setLoading(btnId, loading, defaultText) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.innerHTML = loading ? '<span class="spinner"></span>En cours…' : defaultText;
+}
+
+function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  document.getElementById('error-login').style.display = 'none';
+  setLoading('btn-login', true, '🔐 Se connecter');
+
+  // Simulate — en vrai c'est supabase.auth.signInWithPassword
+  setTimeout(() => {
+    setLoading('btn-login', false, '🔐 Se connecter');
+    if (!email || !password) {
+      showError('error-login', 'Email et mot de passe requis.');
+      return;
+    }
+    if (password.length < 6) {
+      showError('error-login', 'Identifiants incorrects. Vérifiez votre email et mot de passe.');
+      return;
+    }
+    // Succès → en vrai router.replace('/dashboard')
+    document.getElementById('btn-login').innerHTML = '✅ Connexion réussie — redirection…';
+    document.getElementById('btn-login').style.background = 'linear-gradient(135deg,#16a34a,#22c55e)';
+    setTimeout(() => {
+      document.getElementById('btn-login').innerHTML = '🔐 Se connecter';
+      document.getElementById('btn-login').style.background = '';
+      setLoading('btn-login', false, '🔐 Se connecter');
+    }, 2000);
+  }, 1200);
+}
+
+function handleReset(e) {
+  e.preventDefault();
+  const email = document.getElementById('reset-email').value;
+  document.getElementById('error-reset').style.display = 'none';
+  setLoading('btn-reset', true, '📧 Envoyer le lien');
+
+  setTimeout(() => {
+    setLoading('btn-reset', false, '📧 Envoyer le lien');
+    document.getElementById('success-email').textContent = email;
+    switchView('success');
+  }, 1000);
+}
+</script>
+</body>
+</html>

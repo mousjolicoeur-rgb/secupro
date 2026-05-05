@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecuPRO — Connexion</title>
+<style>
+:root {
+  --bg:#03080f; --navy:#060e1c; --card:#080f1e;
+  --blue:#1a6fd4; --blueL:#2b8fff; --cyan:#00d1ff;
+  --white:#e8f2ff; --muted:#3d5a7a;
+  --border:rgba(0,209,255,0.15); --glow:rgba(0,209,255,0.22);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{min-height:100vh;background:var(--bg);display:flex;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;}
+.left{flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:40px 48px;background:linear-gradient(160deg,#04101f 0%,#060d1c 50%,#030810 100%);border-right:1px solid var(--border);position:relative;overflow:hidden;}
+.left-grid{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(0,209,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,209,255,0.03) 1px,transparent 1px);background-size:48px 48px;}
+.left-glow{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,209,255,0.06) 0%,transparent 65%);top:-100px;left:-100px;pointer-events:none;}
+.left-glow2{position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(26,111,212,0.08) 0%,transparent 65%);bottom:0;right:-50px;pointer-events:none;}
+.left-top{position:relative;z-index:1;}
+.brand{display:flex;align-items:center;gap:14px;margin-bottom:56px;}
+.brand-icon{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#0c1e3a,#142d52);border:1px solid rgba(0,209,255,0.25);display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(0,209,255,0.12);}
+.brand-icon span{font-size:13px;font-weight:900;}
+.brand-icon .s{color:var(--white);}
+.brand-icon .p{color:var(--cyan);}
+.brand-name{font-size:22px;font-weight:900;letter-spacing:-.5px;}
+.brand-name .s{color:var(--white);}
+.brand-name .p{color:var(--cyan);text-shadow:0 0 16px rgba(0,209,255,0.4);}
+.headline{font-size:36px;font-weight:900;line-height:1.15;letter-spacing:-1.5px;color:var(--white);margin-bottom:18px;}
+.headline .hl{color:var(--cyan);}
+.sub{font-size:15px;color:var(--muted);line-height:1.7;max-width:360px;}
+.features{margin-top:40px;display:flex;flex-direction:column;gap:14px;}
+.feat{display:flex;align-items:center;gap:12px;}
+.feat-dot{width:34px;height:34px;border-radius:9px;background:rgba(0,209,255,0.06);border:1px solid rgba(0,209,255,0.14);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.feat-txt{font-size:13px;color:var(--muted);}
+.feat-txt strong{color:rgba(232,242,255,0.8);font-weight:700;}
+.left-bottom{position:relative;z-index:1;}
+.stats{display:flex;gap:28px;}
+.stat-val{font-size:24px;font-weight:900;color:var(--cyan);line-height:1;}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:3px;}
+.right{width:480px;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:40px 48px;background:var(--card);position:relative;}
+.right-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(26,111,212,0.05),transparent);}
+.form-wrap{width:100%;position:relative;z-index:1;}
+.form-title{font-size:26px;font-weight:900;letter-spacing:-.5px;color:var(--white);margin-bottom:6px;}
+.form-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
+.field{margin-bottom:16px;}
+.field-label{display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:7px;}
+.input-wrap{position:relative;}
+.input-wrap .ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
+input{width:100%;background:rgba(3,8,15,0.8);border:1px solid var(--border);border-radius:11px;padding:13px 14px 13px 42px;color:var(--white);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s;}
+input:focus{border-color:rgba(0,209,255,0.4);box-shadow:0 0 0 3px rgba(0,209,255,0.07);}
+input.err{border-color:rgba(239,68,68,0.5);}
+input.ok-input{border-color:rgba(34,197,94,0.4);}
+input::placeholder{color:#1e3050;}
+.field-msg{font-size:11px;margin-top:5px;font-weight:600;}
+.field-msg.err{color:#ef4444;}
+.field-msg.ok{color:#22c55e;}
+.forgot-btn{font-size:11px;color:var(--blueL);background:none;border:none;cursor:pointer;font-weight:700;}
+.forgot-btn:hover{text-decoration:underline;}
+.err-box{padding:11px 14px;border-radius:10px;margin-bottom:16px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);color:#ef4444;font-size:13px;font-weight:600;display:none;}
+.btn{width:100%;padding:15px;border-radius:12px;border:none;background:linear-gradient(135deg,#1562c4,#2b8fff);color:#fff;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.2em;cursor:pointer;transition:all .25s;box-shadow:0 0 28px rgba(43,143,255,0.35);margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 0 40px rgba(43,143,255,0.5);}
+.btn:active:not(:disabled){transform:scale(0.98);}
+.btn:disabled{background:#0d1e38;cursor:not-allowed;box-shadow:none;}
+.btn.success{background:linear-gradient(135deg,#15803d,#22c55e);box-shadow:0 0 28px rgba(34,197,94,0.35);}
+.btn2{width:100%;padding:12px;border-radius:12px;margin-top:10px;border:1px solid var(--border);background:transparent;color:var(--blueL);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
+.btn2:hover{background:rgba(43,143,255,0.07);}
+.div{display:flex;align-items:center;gap:10px;margin:20px 0;}
+.div-line{flex:1;height:1px;background:var(--border);}
+.div-txt{font-size:11px;color:var(--muted);}
+.reg{text-align:center;margin-top:18px;font-size:12px;color:var(--muted);}
+.reg a{color:var(--blueL);font-weight:700;text-decoration:none;}
+.reg a:hover{text-decoration:underline;}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;animation:sp .7s linear infinite;display:inline-block;}
+@keyframes sp{to{transform:rotate(360deg)}}
+.view{display:none;}
+.view.active{display:block;}
+.suc-screen{text-align:center;padding:16px 0;}
+.suc-icon{font-size:52px;margin-bottom:14px;}
+.suc-title{font-size:20px;font-weight:900;color:var(--white);margin-bottom:8px;}
+.suc-txt{color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:20px;}
+@media(max-width:900px){.left{display:none;}.right{width:100%;}}
+</style>
+</head>
+<body>
+
+<!-- LEFT -->
+<div class="left">
+  <div class="left-grid"></div><div class="left-glow"></div><div class="left-glow2"></div>
+  <div class="left-top">
+    <div class="brand">
+      <div class="brand-icon"><span class="s">S</span><span class="p">P</span></div>
+      <div class="brand-name"><span class="s">Secu</span><span class="p">PRO</span></div>
+    </div>
+    <div class="headline">La plateforme <span class="hl">sécurité</span><br>pour les pros du terrain</div>
+    <div class="sub">Gérez vos équipes, votre conformité CNAPS et vos plannings depuis un seul tableau de bord.</div>
+    <div class="features">
+      <div class="feat"><div class="feat-dot">🛡️</div><div class="feat-txt"><strong>Conformité CNAPS temps réel</strong> — alertes avant expiration carte pro</div></div>
+      <div class="feat"><div class="feat-dot">👥</div><div class="feat-txt"><strong>Import CSV 50 agents</strong> — onboarding en moins de 2 minutes</div></div>
+      <div class="feat"><div class="feat-dot">🤖</div><div class="feat-txt"><strong>SecuIA</strong> — assistant juridique IDCC 1351 intégré</div></div>
+      <div class="feat"><div class="feat-dot">📊</div><div class="feat-txt"><strong>Dashboard chef d'exploitation</strong> — KPIs multi-sites en direct</div></div>
+    </div>
+  </div>
+  <div class="left-bottom">
+    <div class="stats">
+      <div><div class="stat-val">180k</div><div class="stat-lbl">Agents en France</div></div>
+      <div><div class="stat-val">~9k</div><div class="stat-lbl">Sociétés ciblées</div></div>
+      <div><div class="stat-val">7j</div><div class="stat-lbl">Essai gratuit</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+  <div class="right-glow"></div>
+  <div class="form-wrap">
+
+    <!-- LOGIN -->
+    <div class="view active" id="view-login">
+      <div class="form-title">Connexion</div>
+      <div class="form-sub">Accédez à votre espace entreprise SecuPRO.</div>
+      <div class="err-box" id="err-login"></div>
+      <form onsubmit="handleLogin(event)" novalidate>
+        <div class="field">
+          <div class="field-label">Société</div>
+          <div class="input-wrap"><span class="ico">🏢</span>
+            <input type="text" id="login-societe" placeholder="Nom de votre société" autocomplete="organization">
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Email professionnel *</div>
+          <div class="input-wrap"><span class="ico">✉️</span>
+            <input type="email" id="login-email" placeholder="contact@masociete.fr" required autocomplete="email" oninput="checkEmailPro(this,'msg-email')">
+          </div>
+          <div id="msg-email"></div>
+        </div>
+        <div class="field">
+          <div class="field-label">
+            <span>Mot de passe *</span>
+            <button type="button" class="forgot-btn" onclick="switchTo('reset')">Mot de passe oublié ?</button>
+          </div>
+          <div class="input-wrap"><span class="ico">🔑</span>
+            <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+        </div>
+        <button type="submit" class="btn" id="btn-login">🔐 <span>SE CONNECTER</span></button>
+      </form>
+      <div class="div"><div class="div-line"></div><div class="div-txt">Nouveau sur SecuPRO ?</div><div class="div-line"></div></div>
+      <div class="reg"><a href="/register">→ Créer votre espace — Essai gratuit 7 jours</a></div>
+    </div>
+
+    <!-- RESET -->
+    <div class="view" id="view-reset">
+      <div class="form-title">Mot de passe oublié</div>
+      <div class="form-sub">Entrez votre email professionnel pour recevoir un lien de réinitialisation.</div>
+      <div class="err-box" id="err-reset"></div>
+      <form onsubmit="handleReset(event)" novalidate>
+        <div class="field">
+          <div class="field-label">Email professionnel *</div>
+          <div class="input-wrap"><span class="ico">✉️</span>
+            <input type="email" id="reset-email" placeholder="contact@masociete.fr" required oninput="checkEmailPro(this,'msg-reset')">
+          </div>
+          <div id="msg-reset"></div>
+        </div>
+        <button type="submit" class="btn" id="btn-reset">📧 <span>ENVOYER LE LIEN</span></button>
+        <button type="button" class="btn2" onclick="switchTo('login')">← Retour à la connexion</button>
+      </form>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="view" id="view-success">
+      <div class="suc-screen">
+        <div class="suc-icon">📬</div>
+        <div class="suc-title">Email envoyé !</div>
+        <div class="suc-txt">Un lien de réinitialisation a été envoyé à<br><strong style="color:#2b8fff" id="suc-email"></strong>.<br><br>Vérifiez votre boîte mail et cliquez sur le lien.</div>
+        <button class="btn2" onclick="switchTo('login')" style="margin-top:0">← Retour à la connexion</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const FREE=['gmail.com','googlemail.com','yahoo.com','yahoo.fr','hotmail.com','hotmail.fr','outlook.com','outlook.fr','live.com','live.fr','msn.com','icloud.com','me.com','mac.com','aol.com','wanadoo.fr','orange.fr','free.fr','sfr.fr','laposte.net','bbox.fr','numericable.fr','neuf.fr','club-internet.fr','aliceadsl.fr','voila.fr','protonmail.com','tutanota.com','yopmail.com','mailinator.com','guerrillamail.com'];
+
+function checkEmailPro(inp,msgId){
+  const val=inp.value.trim(), msg=document.getElementById(msgId);
+  if(!val||!val.includes('@')){msg.innerHTML='';inp.className='';return true;}
+  const dom=val.split('@')[1]?.toLowerCase();
+  if(FREE.includes(dom)){
+    inp.className='err';
+    msg.innerHTML='<div class="field-msg err">❌ Email personnel non accepté. Utilisez votre email d\'entreprise.</div>';
+    return false;
+  }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){
+    inp.className='err';
+    msg.innerHTML='<div class="field-msg err">❌ Format d\'email invalide</div>';
+    return false;
+  }
+  inp.className='ok-input';
+  msg.innerHTML='<div class="field-msg ok">✓ Email professionnel accepté</div>';
+  return true;
+}
+
+function switchTo(v){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('.err-box').forEach(el=>{el.style.display='none';el.textContent='';});
+}
+
+function setBtn(id,loading,lbl){
+  const b=document.getElementById(id);
+  b.disabled=loading;
+  b.innerHTML=loading?'<span class="spin"></span>':lbl;
+}
+
+function handleLogin(e){
+  e.preventDefault();
+  const email=document.getElementById('login-email').value.trim();
+  const pwd=document.getElementById('login-password').value;
+  document.getElementById('err-login').style.display='none';
+  if(!checkEmailPro(document.getElementById('login-email'),'msg-email'))return;
+  setBtn('btn-login',true,'');
+  setTimeout(()=>{
+    setBtn('btn-login',false,'🔐 <span>SE CONNECTER</span>');
+    if(!pwd||pwd.length<6){
+      const el=document.getElementById('err-login');
+      el.textContent='Identifiants incorrects. Vérifiez votre email et mot de passe.';
+      el.style.display='block'; return;
+    }
+    const b=document.getElementById('btn-login');
+    b.innerHTML='✅ <span>CONNEXION RÉUSSIE — REDIRECTION…</span>';
+    b.classList.add('success'); b.disabled=true;
+    setTimeout(()=>{b.innerHTML='🔐 <span>SE CONNECTER</span>';b.classList.remove('success');b.disabled=false;},2500);
+  },1200);
+}
+
+function handleReset(e){
+  e.preventDefault();
+  const email=document.getElementById('reset-email').value.trim();
+  if(!checkEmailPro(document.getElementById('reset-email'),'msg-reset'))return;
+  setBtn('btn-reset',true,'');
+  setTimeout(()=>{
+    setBtn('btn-reset',false,'📧 <span>ENVOYER LE LIEN</span>');
+    document.getElementById('suc-email').textContent=email;
+    switchTo('success');
+  },1000);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,269 @@
+
+<style>
+.phone-wrap{display:flex;justify-content:center;gap:32px;padding:2rem 0;flex-wrap:wrap;align-items:flex-start}
+.phone-outer{display:flex;flex-direction:column;align-items:center}
+.phone-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:10px;letter-spacing:.06em;text-transform:uppercase}
+.phone{width:260px;background:#111827;border-radius:40px;border:7px solid #1F2937;padding:0;position:relative;box-shadow:0 0 0 1px #374151}
+.phone-notch{width:80px;height:22px;background:#111827;border-radius:0 0 14px 14px;position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:10;display:flex;align-items:center;justify-content:center;gap:6px}
+.notch-cam{width:8px;height:8px;background:#0D1117;border-radius:50%;border:1.5px solid #1F2937}
+.phone-screen{background:#060C1C;border-radius:33px;overflow:hidden;height:520px;position:relative}
+.phone-btn{position:absolute;right:-10px;top:100px;width:3px;height:40px;background:#374151;border-radius:2px}
+.phone-btn2{position:absolute;left:-10px;top:90px;width:3px;height:30px;background:#374151;border-radius:2px}
+.phone-btn3{position:absolute;left:-10px;top:130px;width:3px;height:50px;background:#374151;border-radius:2px}
+
+.screen{display:none;height:100%;flex-direction:column;background:#060C1C}
+.screen.active{display:flex}
+
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:32px 16px 6px;flex-shrink:0}
+.status-time{font-size:11px;font-weight:600;color:#F1F5FF}
+.status-icons{display:flex;align-items:center;gap:4px}
+.signal{display:flex;gap:2px;align-items:flex-end}
+.signal span{background:#F1F5FF;border-radius:1px;width:3px}
+.bat{width:18px;height:9px;border:1.5px solid #F1F5FF;border-radius:2px;position:relative;margin-left:2px}
+.bat::after{content:'';position:absolute;right:-4px;top:50%;transform:translateY(-50%);width:2px;height:5px;background:#F1F5FF;border-radius:1px}
+.bat-fill{position:absolute;inset:1px 1px 1px 1px;background:#10B981;border-radius:1px;width:75%}
+
+.app-header{padding:6px 16px 10px;flex-shrink:0}
+.app-header-row{display:flex;align-items:center;justify-content:space-between}
+.app-logo{font-weight:800;font-size:14px;color:#F1F5FF}
+.app-logo b{color:#60A5FA}
+.app-notif{width:28px;height:28px;background:rgba(59,130,246,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative}
+.notif-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;background:#EF4444;border-radius:50%;border:1.5px solid #060C1C}
+.notif-ico{width:14px;height:14px;color:#60A5FA}
+.app-greeting{font-size:11px;color:#6B7FA3;margin-top:2px}
+
+.scroll-area{flex:1;overflow-y:auto;padding:0 12px 8px}
+.scroll-area::-webkit-scrollbar{display:none}
+
+.section-title{font-size:10px;font-weight:600;color:#6B7FA3;text-transform:uppercase;letter-spacing:.07em;margin:10px 0 6px}
+
+.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.kpi-card{background:#0D1528;border:0.5px solid rgba(59,130,246,.15);border-radius:10px;padding:10px}
+.kpi-val{font-size:20px;font-weight:700;font-family:monospace;line-height:1}
+.kpi-val.bl{color:#60A5FA}.kpi-val.gr{color:#10B981}.kpi-val.or{color:#F97316}.kpi-val.rd{color:#EF4444}
+.kpi-lbl{font-size:9px;color:#6B7FA3;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.kpi-delta{font-size:9px;color:#10B981;margin-top:2px}
+.kpi-delta.neg{color:#EF4444}
+
+.alert-card{background:rgba(239,68,68,.07);border:0.5px solid rgba(239,68,68,.2);border-radius:10px;padding:10px;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px}
+.alert-ico-wrap{width:24px;height:24px;background:rgba(239,68,68,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.alert-ico{width:12px;height:12px;color:#FCA5A5}
+.alert-title{font-size:10px;font-weight:600;color:#FCA5A5}
+.alert-sub{font-size:9px;color:#6B7FA3;margin-top:2px;line-height:1.4}
+.alert-card.warn{background:rgba(249,115,22,.07);border-color:rgba(249,115,22,.2)}
+.alert-card.warn .alert-ico-wrap{background:rgba(249,115,22,.15)}
+.alert-card.warn .alert-title{color:#FED7AA}
+.alert-card.info{background:rgba(59,130,246,.07);border-color:rgba(59,130,246,.15)}
+.alert-card.info .alert-ico-wrap{background:rgba(59,130,246,.12)}
+.alert-card.info .alert-title{color:#93C5FD}
+
+.agent-row{display:flex;align-items:center;gap:8px;padding:8px;background:#0D1528;border:0.5px solid rgba(255,255,255,.05);border-radius:10px;margin-bottom:5px}
+.agent-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.agent-name{font-size:11px;font-weight:600;color:#F1F5FF}
+.agent-site{font-size:9px;color:#6B7FA3;margin-top:1px}
+.agent-badge{font-size:8px;font-weight:600;padding:2px 6px;border-radius:100px;margin-left:auto;flex-shrink:0}
+.agent-badge.on{background:rgba(16,185,129,.12);color:#6EE7B7}
+.agent-badge.al{background:rgba(239,68,68,.12);color:#FCA5A5}
+.agent-badge.off{background:rgba(255,255,255,.06);color:#6B7FA3}
+
+.quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.qa{background:#0D1528;border:0.5px solid rgba(255,255,255,.05);border-radius:10px;padding:8px 4px;text-align:center;cursor:pointer}
+.qa-ico{width:28px;height:28px;border-radius:8px;margin:0 auto 4px;display:flex;align-items:center;justify-content:center}
+.qa-lbl{font-size:8px;color:#6B7FA3;line-height:1.3}
+
+.planning-slot{background:#0D1528;border:0.5px solid rgba(255,255,255,.05);border-radius:10px;padding:8px 10px;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+.slot-time{font-size:9px;font-family:monospace;color:#60A5FA;font-weight:500;width:36px;flex-shrink:0}
+.slot-bar{width:3px;height:28px;border-radius:2px;flex-shrink:0}
+.slot-name{font-size:10px;font-weight:600;color:#F1F5FF}
+.slot-site{font-size:9px;color:#6B7FA3;margin-top:1px}
+
+.bottom-nav{display:flex;background:#0A1020;border-top:0.5px solid rgba(255,255,255,.06);padding:8px 4px 16px;flex-shrink:0}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;border-radius:8px;transition:background .15s}
+.nav-item.on{background:rgba(59,130,246,.1)}
+.nav-ico{width:20px;height:20px;flex-shrink:0}
+.nav-lbl{font-size:8px;color:#6B7FA3;font-weight:500}
+.nav-item.on .nav-lbl{color:#60A5FA}
+
+.perf-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.perf-site{font-size:9px;color:#94A3C8;width:80px;flex-shrink:0}
+.perf-track{flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:3px}
+.perf-fill{height:100%;border-radius:3px;transition:width .6s}
+.perf-pct{font-size:9px;font-family:monospace;width:28px;text-align:right;flex-shrink:0}
+
+.month-strip{display:flex;gap:4px;margin-bottom:10px;overflow:hidden}
+.day-pill{flex:1;text-align:center;padding:6px 2px;border-radius:8px;cursor:pointer}
+.day-pill.active{background:rgba(59,130,246,.2);border:0.5px solid rgba(59,130,246,.3)}
+.day-num{font-size:11px;font-weight:600;color:#F1F5FF}
+.day-lbl{font-size:8px;color:#6B7FA3}
+.day-pill.active .day-num{color:#60A5FA}
+</style>
+
+<h2 class="sr-only">Maquette mobile PWA SecuPRO — 5 écrans interactifs</h2>
+
+<div class="phone-wrap">
+  <div class="phone-outer">
+    <div class="phone-label">SecuPRO PWA</div>
+    <div class="phone">
+      <div class="phone-notch"><div class="notch-cam"></div></div>
+      <div class="phone-btn"></div>
+      <div class="phone-btn2"></div>
+      <div class="phone-btn3"></div>
+      <div class="phone-screen">
+
+        <!-- HOME -->
+        <div class="screen active" id="s-home">
+          <div class="status-bar">
+            <span class="status-time">09:41</span>
+            <div class="status-icons">
+              <div class="signal"><span style="height:4px"></span><span style="height:7px"></span><span style="height:10px"></span><span style="height:13px"></span></div>
+              <div class="bat"><div class="bat-fill"></div></div>
+            </div>
+          </div>
+          <div class="app-header">
+            <div class="app-header-row">
+              <div class="app-logo">Secu<b>PRO</b></div>
+              <div class="app-notif">
+                <svg class="notif-ico" viewBox="0 0 16 16" fill="#60A5FA"><path d="M8 1a5 5 0 0 0-5 5v2L1 10v1h14v-1l-2-2V6a5 5 0 0 0-5-5zm0 14a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2z"/></svg>
+                <div class="notif-dot"></div>
+              </div>
+            </div>
+            <div class="app-greeting">Bonjour, Mustapha · Lundi 24 avril</div>
+          </div>
+          <div class="scroll-area">
+            <div class="section-title">Vue d'ensemble</div>
+            <div class="kpi-row">
+              <div class="kpi-card"><div class="kpi-val bl">24</div><div class="kpi-lbl">Agents</div><div class="kpi-delta">+2 ce mois</div></div>
+              <div class="kpi-card"><div class="kpi-val gr">21</div><div class="kpi-lbl">En poste</div><div class="kpi-delta">87%</div></div>
+              <div class="kpi-card"><div class="kpi-val rd">3</div><div class="kpi-lbl">Alertes</div><div class="kpi-delta neg">Urgent</div></div>
+              <div class="kpi-card"><div class="kpi-val bl">94%</div><div class="kpi-lbl">Présence</div><div class="kpi-delta">Ce mois</div></div>
+            </div>
+            <div class="section-title">Actions rapides</div>
+            <div class="quick-actions">
+              <div class="qa" onclick="switchScreen('s-agents')"><div class="qa-ico" style="background:rgba(59,130,246,.15)"><svg width="14" height="14" viewBox="0 0 16 16" fill="#60A5FA"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg></div><div class="qa-lbl">Agents</div></div>
+              <div class="qa" onclick="switchScreen('s-planning')"><div class="qa-ico" style="background:rgba(16,185,129,.12)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#10B981" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M2 6h12M6 2v4M10 2v4"/></svg></div><div class="qa-lbl">Planning</div></div>
+              <div class="qa" onclick="switchScreen('s-alerts')"><div class="qa-ico" style="background:rgba(239,68,68,.12)"><svg width="14" height="14" viewBox="0 0 16 16" fill="#EF4444"><path d="M8 1L1 14h14L8 1zm0 4v4"/><rect x="7.2" y="10.5" width="1.6" height="1.6"/></svg></div><div class="qa-lbl">Alertes</div></div>
+              <div class="qa" onclick="switchScreen('s-perf')"><div class="qa-ico" style="background:rgba(234,179,8,.1)"><svg width="14" height="14" viewBox="0 0 16 16" fill="#EAB308"><rect x="2" y="10" width="3" height="4"/><rect x="6.5" y="7" width="3" height="7"/><rect x="11" y="4" width="3" height="10"/></svg></div><div class="qa-lbl">Stats</div></div>
+            </div>
+            <div class="section-title">Alertes récentes</div>
+            <div class="alert-card">
+              <div class="alert-ico-wrap"><svg class="alert-ico" viewBox="0 0 16 16" fill="#FCA5A5"><path d="M8 1L1 14h14L8 1zm0 4v4"/><rect x="7.2" y="10.5" width="1.6" height="1.6"/></svg></div>
+              <div><div class="alert-title">CNAPS — M. Diallo K.</div><div class="alert-sub">Carte pro expire dans 12 jours</div></div>
+            </div>
+            <div class="alert-card warn">
+              <div class="alert-ico-wrap"><svg class="alert-ico" viewBox="0 0 16 16" fill="#FED7AA"><path d="M8 2L1 13h14L8 2zm0 4v4"/></svg></div>
+              <div><div class="alert-title">Conflit planning — 28 avr.</div><div class="alert-sub">A. Bernard — 2 sites simultanés</div></div>
+            </div>
+          </div>
+          <div class="bottom-nav" id="nav-home">
+            <div class="nav-item on" onclick="switchScreen('s-home')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#60A5FA"><path d="M10 2L2 9h2v9h4v-5h4v5h4V9h2L10 2z"/></svg><span class="nav-lbl" style="color:#60A5FA">Accueil</span></div>
+            <div class="nav-item" onclick="switchScreen('s-agents')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#6B7FA3"><circle cx="10" cy="6" r="3.5"/><path d="M3 17c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg><span class="nav-lbl">Agents</span></div>
+            <div class="nav-item" onclick="switchScreen('s-planning')"><svg class="nav-ico" viewBox="0 0 20 20" fill="none" stroke="#6B7FA3" stroke-width="1.5"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 8h14M7 3v4M13 3v4"/></svg><span class="nav-lbl">Planning</span></div>
+            <div class="nav-item" onclick="switchScreen('s-alerts')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#6B7FA3"><path d="M10 2a6 6 0 0 0-6 6v2L2 13v1h16v-1l-2-3V8a6 6 0 0 0-6-6zm0 16a2.5 2.5 0 0 0 2.5-2.5h-5A2.5 2.5 0 0 0 10 18z"/></svg><span class="nav-lbl">Alertes</span></div>
+            <div class="nav-item" onclick="switchScreen('s-perf')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#6B7FA3"><rect x="3" y="12" width="3.5" height="5"/><rect x="8.25" y="8" width="3.5" height="9"/><rect x="13.5" y="4" width="3.5" height="13"/></svg><span class="nav-lbl">Stats</span></div>
+          </div>
+        </div>
+
+        <!-- AGENTS -->
+        <div class="screen" id="s-agents">
+          <div class="status-bar"><span class="status-time">09:41</span><div class="status-icons"><div class="signal"><span style="height:4px"></span><span style="height:7px"></span><span style="height:10px"></span><span style="height:13px"></span></div><div class="bat"><div class="bat-fill"></div></div></div></div>
+          <div class="app-header">
+            <div class="app-header-row">
+              <div style="font-size:13px;font-weight:700;color:#F1F5FF">Agents <span style="color:#6B7FA3;font-weight:400;font-size:11px">(24)</span></div>
+              <div style="width:24px;height:24px;background:rgba(59,130,246,.2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#60A5FA;font-weight:700;cursor:pointer">+</div>
+            </div>
+          </div>
+          <div class="scroll-area">
+            <div class="agent-row"><div class="agent-av" style="background:linear-gradient(135deg,#DC2626,#EF4444)">MD</div><div><div class="agent-name">M. Diallo K.</div><div class="agent-site">Musée Confluences</div></div><div class="agent-badge al">Alerte</div></div>
+            <div class="agent-row"><div class="agent-av" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6)">AB</div><div><div class="agent-name">A. Bernard</div><div class="agent-site">CIRC Lyon</div></div><div class="agent-badge on">Actif</div></div>
+            <div class="agent-row"><div class="agent-av" style="background:linear-gradient(135deg,#0E7490,#06B6D4)">ST</div><div><div class="agent-name">S. Traoré</div><div class="agent-site">Pierre Martinet</div></div><div class="agent-badge on">Actif</div></div>
+            <div class="agent-row"><div class="agent-av" style="background:linear-gradient(135deg,#6D28D9,#8B5CF6)">FM</div><div><div class="agent-name">F. Martin</div><div class="agent-site">Gare Part-Dieu</div></div><div class="agent-badge off">Repos</div></div>
+            <div class="agent-row"><div class="agent-av" style="background:linear-gradient(135deg,#047857,#10B981)">LN</div><div><div class="agent-name">L. Nguyen</div><div class="agent-site">Carré de Soie</div></div><div class="agent-badge on">Actif</div></div>
+            <div class="agent-row"><div class="agent-av" style="background:linear-gradient(135deg,#B45309,#F59E0B)">KB</div><div><div class="agent-name">K. Benali</div><div class="agent-site">CIRC Lyon</div></div><div class="agent-badge on">Actif</div></div>
+            <div class="agent-row"><div class="agent-av" style="background:linear-gradient(135deg,#9D174D,#EC4899)">FZ</div><div><div class="agent-name">F. Zairi</div><div class="agent-site">Pierre Martinet</div></div><div class="agent-badge on">Actif</div></div>
+          </div>
+          <div class="bottom-nav"><div class="nav-item" onclick="switchScreen('s-home')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#6B7FA3"><path d="M10 2L2 9h2v9h4v-5h4v5h4V9h2L10 2z"/></svg><span class="nav-lbl">Accueil</span></div><div class="nav-item on" onclick="switchScreen('s-agents')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#60A5FA"><circle cx="10" cy="6" r="3.5"/><path d="M3 17c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg><span class="nav-lbl" style="color:#60A5FA">Agents</span></div><div class="nav-item" onclick="switchScreen('s-planning')"><svg class="nav-ico" viewBox="0 0 20 20" fill="none" stroke="#6B7FA3" stroke-width="1.5"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 8h14M7 3v4M13 3v4"/></svg><span class="nav-lbl">Planning</span></div><div class="nav-item" onclick="switchScreen('s-alerts')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#6B7FA3"><path d="M10 2a6 6 0 0 0-6 6v2L2 13v1h16v-1l-2-3V8a6 6 0 0 0-6-6zm0 16a2.5 2.5 0 0 0 2.5-2.5h-5A2.5 2.5 0 0 0 10 18z"/></svg><span class="nav-lbl">Alertes</span></div><div class="nav-item" onclick="switchScreen('s-perf')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#6B7FA3"><rect x="3" y="12" width="3.5" height="5"/><rect x="8.25" y="8" width="3.5" height="9"/><rect x="13.5" y="4" width="3.5" height="13"/></svg><span class="nav-lbl">Stats</span></div></div>
+        </div>
+
+        <!-- PLANNING -->
+        <div class="screen" id="s-planning">
+          <div class="status-bar"><span class="status-time">09:41</span><div class="status-icons"><div class="signal"><span style="height:4px"></span><span style="height:7px"></span><span style="height:10px"></span><span style="height:13px"></span></div><div class="bat"><div class="bat-fill"></div></div></div></div>
+          <div class="app-header"><div class="app-header-row"><div style="font-size:13px;font-weight:700;color:#F1F5FF">Planning</div><div style="font-size:9px;color:#6B7FA3;background:rgba(59,130,246,.1);padding:3px 8px;border-radius:100px;border:0.5px solid rgba(59,130,246,.2);color:#93C5FD">Semaine 17</div></div></div>
+          <div class="scroll-area">
+            <div class="month-strip">
+              <div class="day-pill"><div class="day-num">21</div><div class="day-lbl">Lun</div></div>
+              <div class="day-pill"><div class="day-num">22</div><div class="day-lbl">Mar</div></div>
+              <div class="day-pill"><div class="day-num">23</div><div class="day-lbl">Mer</div></div>
+              <div class="day-pill active"><div class="day-num">24</div><div class="day-lbl">Jeu</div></div>
+              <div class="day-pill"><div class="day-num">25</div><div class="day-lbl">Ven</div></div>
+              <div class="day-pill"><div class="day-num">26</div><div class="day-lbl">Sam</div></div>
+            </div>
+            <div class="section-title">Jeudi 24 avril</div>
+            <div class="planning-slot"><div class="slot-time">06:00</div><div class="slot-bar" style="background:#3B82F6"></div><div><div class="slot-name">A. Bernard</div><div class="slot-site">CIRC Lyon · 06h–14h</div></div></div>
+            <div class="planning-slot"><div class="slot-time">06:00</div><div class="slot-bar" style="background:#10B981"></div><div><div class="slot-name">S. Traoré</div><div class="slot-site">Pierre Martinet · 06h–14h</div></div></div>
+            <div class="planning-slot"><div class="slot-time">14:00</div><div class="slot-bar" style="background:#F97316"></div><div><div class="slot-name">L. Nguyen</div><div class="slot-site">Carré de Soie · 14h–22h</div></div></div>
+            <div class="planning-slot"><div class="slot-time">14:00</div><div class="slot-bar" style="background:#8B5CF6"></div><div><div class="slot-name">K. Benali</div><div class="slot-site">CIRC Lyon · 14h–22h</div></div></div>
+            <div class="planning-slot"><div class="slot-time">22:00</div><div class="slot-bar" style="background:#06B6D4"></div><div><div class="slot-name">F. Zairi</div><div class="slot-site">Gare Part-Dieu · 22h–06h</div></div></div>
+          </div>
+          <div class="bottom-nav"><div class="nav-item" onclick="switchScreen('s-home')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#6B7FA3"><path d="M10 2L2 9h2v9h4v-5h4v5h4V9h2L10 2z"/></svg><span class="nav-lbl">Accueil</span></div><div class="nav-item" onclick="switchScreen('s-agents')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#6B7FA3"><circle cx="10" cy="6" r="3.5"/><path d="M3 17c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg><span class="nav-lbl">Agents</span></div><div class="nav-item on" onclick="switchScreen('s-planning')"><svg class="nav-ico" viewBox="0 0 20 20" fill="none" stroke="#60A5FA" stroke-width="1.5"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 8h14M7 3v4M13 3v4"/></svg><span class="nav-lbl" style="color:#60A5FA">Planning</span></div><div class="nav-item" onclick="switchScreen('s-alerts')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#6B7FA3"><path d="M10 2a6 6 0 0 0-6 6v2L2 13v1h16v-1l-2-3V8a6 6 0 0 0-6-6zm0 16a2.5 2.5 0 0 0 2.5-2.5h-5A2.5 2.5 0 0 0 10 18z"/></svg><span class="nav-lbl">Alertes</span></div><div class="nav-item" onclick="switchScreen('s-perf')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#6B7FA3"><rect x="3" y="12" width="3.5" height="5"/><rect x="8.25" y="8" width="3.5" height="9"/><rect x="13.5" y="4" width="3.5" height="13"/></svg><span class="nav-lbl">Stats</span></div></div>
+        </div>
+
+        <!-- ALERTES -->
+        <div class="screen" id="s-alerts">
+          <div class="status-bar"><span class="status-time">09:41</span><div class="status-icons"><div class="signal"><span style="height:4px"></span><span style="height:7px"></span><span style="height:10px"></span><span style="height:13px"></span></div><div class="bat"><div class="bat-fill"></div></div></div></div>
+          <div class="app-header"><div class="app-header-row"><div style="font-size:13px;font-weight:700;color:#F1F5FF">Alertes</div><div style="font-size:9px;background:rgba(239,68,68,.15);color:#FCA5A5;padding:3px 8px;border-radius:100px;border:0.5px solid rgba(239,68,68,.3);font-weight:600">3 urgentes</div></div></div>
+          <div class="scroll-area">
+            <div class="section-title">Urgentes</div>
+            <div class="alert-card">
+              <div class="alert-ico-wrap"><svg class="alert-ico" viewBox="0 0 16 16" fill="#FCA5A5"><path d="M8 1L1 14h14L8 1zm0 4v4"/><rect x="7.2" y="10.5" width="1.6" height="1.6"/></svg></div>
+              <div><div class="alert-title">CNAPS — M. Diallo K.</div><div class="alert-sub">Carte pro expire dans 12 jours · Action requise avant tout poste</div></div>
+            </div>
+            <div class="alert-card warn">
+              <div class="alert-ico-wrap"><svg class="alert-ico" viewBox="0 0 16 16" fill="#FED7AA"><path d="M8 2L1 13h14L8 2zm0 4v4"/></svg></div>
+              <div><div class="alert-title">Conflit planning — 28 avr.</div><div class="alert-sub">A. Bernard assigné 2 sites simultanément</div></div>
+            </div>
+            <div class="alert-card warn">
+              <div class="alert-ico-wrap"><svg class="alert-ico" viewBox="0 0 16 16" fill="#FED7AA"><path d="M8 2L1 13h14L8 2zm0 4v4"/></svg></div>
+              <div><div class="alert-title">SST — F. Martin</div><div class="alert-sub">Formation à renouveler avant fin mai 2026</div></div>
+            </div>
+            <div class="section-title" style="margin-top:8px">Informations</div>
+            <div class="alert-card info">
+              <div class="alert-ico-wrap"><svg class="alert-ico" viewBox="0 0 16 16" fill="#93C5FD"><circle cx="8" cy="8" r="6" stroke="#93C5FD" stroke-width="1.5" fill="none"/><path d="M8 7v5M8 5v1" stroke="#93C5FD" stroke-width="1.5"/></svg></div>
+              <div><div class="alert-title">Planning semaine 18 manquant</div><div class="alert-sub">Import requis avant le 28 avril</div></div>
+            </div>
+          </div>
+          <div class="bottom-nav"><div class="nav-item" onclick="switchScreen('s-home')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#6B7FA3"><path d="M10 2L2 9h2v9h4v-5h4v5h4V9h2L10 2z"/></svg><span class="nav-lbl">Accueil</span></div><div class="nav-item" onclick="switchScreen('s-agents')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#6B7FA3"><circle cx="10" cy="6" r="3.5"/><path d="M3 17c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg><span class="nav-lbl">Agents</span></div><div class="nav-item" onclick="switchScreen('s-planning')"><svg class="nav-ico" viewBox="0 0 20 20" fill="none" stroke="#6B7FA3" stroke-width="1.5"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 8h14M7 3v4M13 3v4"/></svg><span class="nav-lbl">Planning</span></div><div class="nav-item on" onclick="switchScreen('s-alerts')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#60A5FA"><path d="M10 2a6 6 0 0 0-6 6v2L2 13v1h16v-1l-2-3V8a6 6 0 0 0-6-6zm0 16a2.5 2.5 0 0 0 2.5-2.5h-5A2.5 2.5 0 0 0 10 18z"/></svg><span class="nav-lbl" style="color:#60A5FA">Alertes</span></div><div class="nav-item" onclick="switchScreen('s-perf')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#6B7FA3"><rect x="3" y="12" width="3.5" height="5"/><rect x="8.25" y="8" width="3.5" height="9"/><rect x="13.5" y="4" width="3.5" height="13"/></svg><span class="nav-lbl">Stats</span></div></div>
+        </div>
+
+        <!-- PERF -->
+        <div class="screen" id="s-perf">
+          <div class="status-bar"><span class="status-time">09:41</span><div class="status-icons"><div class="signal"><span style="height:4px"></span><span style="height:7px"></span><span style="height:10px"></span><span style="height:13px"></span></div><div class="bat"><div class="bat-fill"></div></div></div></div>
+          <div class="app-header"><div class="app-header-row"><div style="font-size:13px;font-weight:700;color:#F1F5FF">Performance</div><div style="font-size:9px;color:#6B7FA3;background:rgba(59,130,246,.1);padding:3px 8px;border-radius:100px;border:0.5px solid rgba(59,130,246,.2);color:#93C5FD">Avril 2026</div></div></div>
+          <div class="scroll-area">
+            <div class="kpi-row">
+              <div class="kpi-card"><div class="kpi-val bl">94%</div><div class="kpi-lbl">Présence</div><div class="kpi-delta">+2% vs mars</div></div>
+              <div class="kpi-card"><div class="kpi-val gr">487h</div><div class="kpi-lbl">Effectuées</div><div class="kpi-delta">/ 520h plan</div></div>
+              <div class="kpi-card"><div class="kpi-val or">12h</div><div class="kpi-lbl">Heures supp.</div></div>
+              <div class="kpi-card"><div class="kpi-val bl">0</div><div class="kpi-lbl">Incidents</div><div class="kpi-delta">Excellent</div></div>
+            </div>
+            <div class="section-title">Présence par site</div>
+            <div class="perf-bar-row"><div class="perf-site">Musée Conf.</div><div class="perf-track"><div class="perf-fill" style="width:91%;background:#60A5FA"></div></div><div class="perf-pct" style="color:#60A5FA">91%</div></div>
+            <div class="perf-bar-row"><div class="perf-site">CIRC Lyon</div><div class="perf-track"><div class="perf-fill" style="width:97%;background:#10B981"></div></div><div class="perf-pct" style="color:#10B981">97%</div></div>
+            <div class="perf-bar-row"><div class="perf-site">P. Martinet</div><div class="perf-track"><div class="perf-fill" style="width:88%;background:#F97316"></div></div><div class="perf-pct" style="color:#F97316">88%</div></div>
+            <div class="perf-bar-row"><div class="perf-site">Gare Part-Dieu</div><div class="perf-track"><div class="perf-fill" style="width:96%;background:#10B981"></div></div><div class="perf-pct" style="color:#10B981">96%</div></div>
+            <div class="perf-bar-row"><div class="perf-site">Carré de Soie</div><div class="perf-track"><div class="perf-fill" style="width:93%;background:#60A5FA"></div></div><div class="perf-pct" style="color:#60A5FA">93%</div></div>
+          </div>
+          <div class="bottom-nav"><div class="nav-item" onclick="switchScreen('s-home')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#6B7FA3"><path d="M10 2L2 9h2v9h4v-5h4v5h4V9h2L10 2z"/></svg><span class="nav-lbl">Accueil</span></div><div class="nav-item" onclick="switchScreen('s-agents')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#6B7FA3"><circle cx="10" cy="6" r="3.5"/><path d="M3 17c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg><span class="nav-lbl">Agents</span></div><div class="nav-item" onclick="switchScreen('s-planning')"><svg class="nav-ico" viewBox="0 0 20 20" fill="none" stroke="#6B7FA3" stroke-width="1.5"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 8h14M7 3v4M13 3v4"/></svg><span class="nav-lbl">Planning</span></div><div class="nav-item" onclick="switchScreen('s-alerts')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#6B7FA3"><path d="M10 2a6 6 0 0 0-6 6v2L2 13v1h16v-1l-2-3V8a6 6 0 0 0-6-6zm0 16a2.5 2.5 0 0 0 2.5-2.5h-5A2.5 2.5 0 0 0 10 18z"/></svg><span class="nav-lbl">Alertes</span></div><div class="nav-item on" onclick="switchScreen('s-perf')"><svg class="nav-ico" viewBox="0 0 20 20" fill="#60A5FA"><rect x="3" y="12" width="3.5" height="5"/><rect x="8.25" y="8" width="3.5" height="9"/><rect x="13.5" y="4" width="3.5" height="13"/></svg><span class="nav-lbl" style="color:#60A5FA">Stats</span></div></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const t=document.getElementById(id);
+  if(t){t.classList.add('active')}
+}
+</script>

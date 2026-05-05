@@ -1,267 +1,77 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  ArrowLeft, ExternalLink, RefreshCw,
-  BadgeCheck, Newspaper, Scale, Wrench, Zap,
-} from 'lucide-react';
-import type { ChannelPayload, ArticlePayload } from '@/app/api/actualites/feeds/route';
+import { ArrowLeft, ExternalLink, RefreshCw, BadgeCheck, Newspaper, Scale, Briefcase, CalendarDays, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
-// ─── Couleurs SecuPRO ─────────────────────────────────────────────────────────
-const CYAN  = '#22d3ee';   // titres des blocs
-const GOLD  = '#fbbf24';   // badges NOUVEAU
-
-// ─── Config des canaux (icône, accent, badge officiel) ────────────────────────
-const CHANNEL_META: Record<string, {
-  label: string;
-  subtitle: string;
-  Icon: React.ElementType;
-  accentHex: string;
-  official?: boolean;
-}> = {
-  cnaps:  { label: 'Alertes CNAPS & Carte Pro',      subtitle: 'Source officielle CNAPS',    Icon: BadgeCheck, accentHex: '#FFD700', official: true },
-  legal:  { label: 'Convention Collective & Décrets', subtitle: 'IDCC 1351 — Sécurité Privée', Icon: Scale,      accentHex: '#60a5fa' },
-  metier: { label: 'Équipements & Innovations',       subtitle: 'Veille technologique secteur', Icon: Wrench,     accentHex: '#34d399' },
-  flash:  { label: 'Flash Info Secteur',              subtitle: 'Actualités rapides & alertes', Icon: Zap,        accentHex: '#f87171' },
+type Actu = {
+  id: string;
+  categorie: 'cnaps' | 'conv' | 'emploi';
+  titre: string;
+  resume: string;
+  contenu: string;
+  source: string;
+  url?: string;
+  created_at: string;
+  date_publication?: string;
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+const CATEGORIES = [
+  { id: 'all', label: 'Toutes les actualités', Icon: Newspaper },
+  { id: 'cnaps', label: 'CNAPS', Icon: BadgeCheck },
+  { id: 'conv', label: 'Convention collective', Icon: Scale },
+  { id: 'emploi', label: 'Emploi', Icon: Briefcase },
+];
+
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
-// ─── Skeleton Card ────────────────────────────────────────────────────────────
-function SkeletonCard() {
-  return (
-    <div
-      className="flex flex-col rounded-2xl overflow-hidden"
-      style={{ background: 'rgba(15,23,42,0.55)', border: '1px solid rgba(255,255,255,0.05)' }}
-    >
-      {/* Header skeleton */}
-      <div className="px-4 pt-5 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-white/[0.06] animate-pulse shrink-0" />
-          <div className="flex-1 space-y-2 pt-1">
-            <div className="h-2.5 bg-white/[0.08] rounded-full animate-pulse w-3/4" />
-            <div className="h-2 bg-white/[0.05] rounded-full animate-pulse w-1/2" />
-          </div>
-        </div>
-      </div>
-      {/* Articles skeleton × 3 */}
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="px-4 py-3.5 space-y-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-          <div className="h-2 bg-white/[0.06] rounded-full animate-pulse w-1/3" />
-          <div className="h-3 bg-white/[0.09] rounded-full animate-pulse w-full" style={{ animationDelay: `${i * 80}ms` }} />
-          <div className="h-2 bg-white/[0.05] rounded-full animate-pulse w-5/6" style={{ animationDelay: `${i * 80 + 40}ms` }} />
-          <div className="h-2 bg-white/[0.05] rounded-full animate-pulse w-4/6" style={{ animationDelay: `${i * 80 + 80}ms` }} />
-        </div>
-      ))}
-      {/* Footer skeleton */}
-      <div className="px-4 py-3">
-        <div className="h-7 bg-white/[0.05] rounded-xl animate-pulse" />
-      </div>
-    </div>
-  );
+function isNew(iso: string): boolean {
+  const diff = Date.now() - new Date(iso).getTime();
+  return diff < 24 * 3600 * 1000; // 24 hours
 }
 
-// ─── Article row ─────────────────────────────────────────────────────────────
-function ArticleRow({ art, accentHex }: { art: ArticlePayload; accentHex: string }) {
-  const [hovered, setHovered] = useState(false);
-  const isDead = !art.url || art.url === '#';
-
-  return (
-    <div className="px-4 py-3.5">
-      {/* Date + badge NOUVEAU */}
-      <div className="flex items-center gap-2 mb-1.5">
-        <span className="text-[9px] font-bold text-slate-600 uppercase tracking-wider">
-          {formatDate(art.date)}
-        </span>
-        {art.isNew && (
-          <span
-            className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full"
-            style={{
-              background: `${GOLD}22`,
-              color: GOLD,
-              boxShadow: `0 0 8px ${GOLD}44`,
-            }}
-          >
-            NOUVEAU
-          </span>
-        )}
-      </div>
-
-      {/* Titre */}
-      <p className="text-white text-xs font-black leading-snug mb-1">{art.title}</p>
-
-      {/* Résumé */}
-      <p className="text-slate-500 text-[10px] leading-relaxed line-clamp-3">{art.summary}</p>
-
-      {/* CTA LIRE LA SUITE */}
-      {isDead ? (
-        <span
-          className="mt-2.5 inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest cursor-default opacity-30"
-          style={{ color: accentHex }}
-        >
-          LIRE LA SUITE <ExternalLink size={9} />
-        </span>
-      ) : (
-        <a
-          href={art.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
-          className="mt-2.5 inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest transition-all duration-200"
-          style={{
-            color:      hovered ? CYAN : accentHex,
-            textShadow: hovered ? `0 0 10px ${CYAN}99` : 'none',
-          }}
-        >
-          LIRE LA SUITE <ExternalLink size={9} />
-        </a>
-      )}
-    </div>
-  );
-}
-
-// ─── News Card ────────────────────────────────────────────────────────────────
-function NewsCard({ payload }: { payload: ChannelPayload }) {
-  const meta = CHANNEL_META[payload.key];
-  if (!meta) return null;
-  const { label, subtitle, Icon, accentHex, official } = meta;
-  const [hover, setHover] = useState(false);
-
-  return (
-    <div
-      className="flex flex-col rounded-2xl overflow-hidden transition-all duration-300"
-      style={{
-        background: 'rgba(15,23,42,0.55)',
-        border: `1px solid ${hover ? accentHex + '55' : accentHex + '28'}`,
-        boxShadow: hover ? `0 0 32px ${accentHex}22, 0 0 0 1px ${accentHex}35` : 'none',
-        transition: 'border-color 0.25s, box-shadow 0.25s',
-      }}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-    >
-      {/* ── En-tête canal ── */}
-      <div className="px-4 pt-5 pb-4" style={{ borderBottom: `1px solid ${accentHex}18` }}>
-        <div className="flex items-start justify-between gap-2">
-          <div
-            className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0"
-            style={{ background: `${accentHex}18`, border: `1px solid ${accentHex}35` }}
-          >
-            <Icon size={17} style={{ color: accentHex }} />
-          </div>
-          <div className="flex items-center gap-1.5">
-            {payload.source === 'rss' && (
-              <span className="text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full border border-emerald-400/30 text-emerald-400 bg-emerald-400/10">
-                LIVE
-              </span>
-            )}
-            {official && (
-              <span
-                className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border"
-                style={{ color: accentHex, borderColor: `${accentHex}50`, background: `${accentHex}15` }}
-              >
-                OFFICIEL
-              </span>
-            )}
-          </div>
-        </div>
-        {/* Titre du bloc en CYAN unifié */}
-        <p
-          className="mt-3 text-[11px] font-black uppercase tracking-widest leading-tight"
-          style={{ color: CYAN, textShadow: `0 0 12px ${CYAN}55` }}
-        >
-          {label}
-        </p>
-        <p className="mt-0.5 text-[9px] text-slate-500 uppercase tracking-widest font-semibold">
-          {subtitle}
-        </p>
-      </div>
-
-      {/* ── Articles ── */}
-      <div className="flex-1 divide-y" style={{ borderColor: `${accentHex}10` }}>
-        {payload.articles.map((art) => (
-          <ArticleRow key={art.id} art={art} accentHex={accentHex} />
-        ))}
-      </div>
-
-      {/* ── Footer ── */}
-      <div className="px-4 py-3" style={{ borderTop: `1px solid ${accentHex}15` }}>
-        <button
-          className="w-full py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95"
-          style={{ color: accentHex, border: `1px solid ${accentHex}35`, background: `${accentHex}08` }}
-        >
-          Voir toutes les actualités →
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function ActualitesPage() {
   const router = useRouter();
-  const [channels, setChannels]       = useState<ChannelPayload[] | null>(null);
-  const [loading, setLoading]         = useState(true);
-  const [refreshing, setRefreshing]   = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [error, setError]             = useState(false);
+  const [actus, setActus] = useState<Actu[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedCat, setSelectedCat] = useState<string>('all');
+  const [error, setError] = useState<string | null>(null);
 
-  // Cache client-side : ne pas refetcher si déjà chargé dans la session
-  const sessionCache = useRef<{ data: ChannelPayload[]; at: number } | null>(null);
-
-  useEffect(() => {
-    const id = localStorage.getItem('entreprise_id');
-    if (!id) { router.push('/agent'); return; }
-    void loadFeeds(false);
-  }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const loadFeeds = async (forceRefresh = false) => {
-    // Cache client : 5 min
-    if (!forceRefresh && sessionCache.current && Date.now() - sessionCache.current.at < 5 * 60 * 1000) {
-      setChannels(sessionCache.current.data);
-      setLastUpdated(new Date(sessionCache.current.at));
-      setLoading(false);
-      return;
-    }
-
-    forceRefresh ? setRefreshing(true) : setLoading(true);
-    setError(false);
-
+  const loadActus = async (isRefresh = false) => {
+    isRefresh ? setRefreshing(true) : setLoading(true);
+    setError(null);
     try {
-      const res  = await fetch('/api/actualites/feeds', { next: { revalidate: 3600 } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json() as { channels: ChannelPayload[]; cachedAt: string };
-      sessionCache.current = { data: json.channels, at: Date.now() };
-      setChannels(json.channels);
-      setLastUpdated(new Date());
-    } catch {
-      setError(true);
-      // Fallback : données déjà chargées ou null → les skeleton restent
+      const { data, error } = await supabase
+        .from('actualites')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      setActus((data as Actu[]) || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur de chargement des actualités");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  const CHANNEL_KEYS = ['cnaps', 'legal', 'metier', 'flash'];
+  useEffect(() => {
+    loadActus();
+  }, []);
+
+  const filteredActus = selectedCat === 'all' 
+    ? actus 
+    : actus.filter(a => a.categorie === selectedCat);
 
   return (
     <div className="min-h-screen bg-[#060D18] text-white flex flex-col pb-12">
-
-      {/* Fond ambiance */}
-      <div className="pointer-events-none fixed inset-0 -z-10" aria-hidden>
-        <div
-          className="absolute -top-40 left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full opacity-25"
-          style={{ background: 'radial-gradient(circle, rgba(255,215,0,0.12) 0%, transparent 70%)' }}
-        />
-      </div>
-
       {/* ── Header ── */}
-      <div className="px-5 pt-10 pb-6">
+      <div className="px-5 pt-10 pb-6 border-b border-white/5 bg-gradient-to-b from-[#0a1426] to-transparent">
         <button
           onClick={() => router.push('/agent/hub')}
           className="inline-flex items-center gap-1.5 text-slate-500 text-[10px] uppercase tracking-widest mb-5 hover:text-white transition-colors"
@@ -269,65 +79,135 @@ export default function ActualitesPage() {
           <ArrowLeft size={12} /> Hub
         </button>
 
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <div>
-            <p className="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-bold mb-1">
-              SecuPRO — Veille réglementaire
+            <p className="text-[10px] text-[#3B82F6] uppercase tracking-[0.3em] font-bold mb-1">
+              Veille réglementaire
             </p>
-            <h1
-              className="text-3xl sm:text-4xl font-black tracking-tighter"
-              style={{
-                color: '#FFD700',
-                textShadow: '0 0 24px rgba(255,215,0,0.55), 0 0 48px rgba(255,215,0,0.25)',
-              }}
-            >
-              ACTUALITÉS <span className="text-white">SecuPRO</span>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tighter text-white">
+              ACTU <span className="text-[#3B82F6]">SÉCU</span>
             </h1>
-            <p className="mt-1.5 text-sm text-emerald-400 font-semibold">
-              Veille réglementaire et informations officielles du secteur
+            <p className="mt-1.5 text-sm text-slate-400 font-semibold">
+              Les dernières informations officielles et nouveautés du secteur
             </p>
           </div>
 
           <button
-            onClick={() => void loadFeeds(true)}
+            onClick={() => loadActus(true)}
             disabled={refreshing || loading}
-            className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 text-slate-400 text-[9px] font-black uppercase tracking-widest hover:border-white/20 hover:text-white transition-all disabled:opacity-40 mt-1"
+            className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-[10px] font-black uppercase tracking-widest hover:border-[#3B82F6]/50 hover:text-white hover:bg-[#3B82F6]/10 transition-all disabled:opacity-40"
           >
-            <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
+            <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
             <span className="hidden sm:inline">Actualiser</span>
           </button>
         </div>
+        
+        {/* Category Filters */}
+        <div className="flex overflow-x-auto hide-scrollbar gap-2 mt-6 pb-2">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCat(cat.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all ${
+                selectedCat === cat.id
+                  ? 'bg-[#3B82F6] text-white shadow-[0_0_20px_rgba(59,130,246,0.3)]'
+                  : 'bg-white/5 text-slate-400 border border-white/5 hover:border-[#3B82F6]/30 hover:text-white'
+              }`}
+            >
+              <cat.Icon size={14} />
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-        {lastUpdated && (
-          <p className="mt-3 text-[9px] text-slate-700 uppercase tracking-widest font-bold">
-            Mis à jour le {lastUpdated.toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-          </p>
+      {/* ── Content ── */}
+      <div className="px-4 mt-6">
+        {error && (
+          <div className="mb-6 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-xs text-red-300 font-semibold">
+            ⚠️ {error}
+          </div>
         )}
-      </div>
 
-      {/* ── Erreur réseau ── */}
-      {error && !loading && (
-        <div className="mx-4 mb-4 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-xs text-amber-300 font-semibold">
-          ⚠️ Impossible de joindre le serveur — contenu de secours affiché.
-        </div>
-      )}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <Loader2 className="text-[#3B82F6] animate-spin" size={32} />
+            <p className="text-[#3B82F6] text-sm font-bold uppercase tracking-widest">Chargement des actualités...</p>
+          </div>
+        ) : filteredActus.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <Newspaper className="text-slate-700" size={48} />
+            <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">Aucune actualité trouvée</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filteredActus.map((actu) => {
+              const dateRef = actu.date_publication || actu.created_at;
+              const isRecent = isNew(dateRef);
+              const catObj = CATEGORIES.find(c => c.id === actu.categorie) || CATEGORIES[0];
+              const targetUrl = actu.url || '#';
 
-      {/* ── Grille ── */}
-      <div className="px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {loading
-          ? CHANNEL_KEYS.map((k) => <SkeletonCard key={k} />)
-          : (channels ?? []).map((ch) => <NewsCard key={ch.key} payload={ch} />)
-        }
-      </div>
+              return (
+                <div 
+                  key={actu.id}
+                  className="flex flex-col rounded-2xl bg-[#0b1426] border border-white/5 hover:border-[#3B82F6]/30 transition-colors overflow-hidden group"
+                  style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02)' }}
+                >
+                  <div className="p-5 flex-1 flex flex-col">
+                    {/* Header: Date + Badges */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                      <div className="flex items-center gap-2 text-slate-400 text-xs font-bold">
+                        <CalendarDays size={12} />
+                        <span>{formatDate(dateRef)}</span>
+                      </div>
+                      
+                      <div className="flex gap-1.5">
+                        {/* Category Badge */}
+                        <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest text-slate-300">
+                          {catObj.label}
+                        </span>
+                        
+                        {/* 24h Badge */}
+                        {isRecent && (
+                          <span className="px-2 py-0.5 rounded-md bg-[#3B82F6]/20 border border-[#3B82F6]/40 text-[9px] font-black uppercase tracking-widest text-[#3B82F6] animate-pulse">
+                            Nouveau
+                          </span>
+                        )}
+                      </div>
+                    </div>
 
-      {/* ── Footer ── */}
-      <div className="flex justify-center pt-10 pb-2 px-4">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/[0.06] bg-white/[0.02]">
-          <Newspaper size={11} className="text-slate-600" />
-          <span className="text-[9px] text-slate-600 uppercase tracking-widest font-bold">
-            Sources : CNAPS · Légifrance · InfoProtection · SecuPRO — à titre informatif
-          </span>
-        </div>
+                    {/* Title */}
+                    <h3 className="text-white font-black text-lg leading-tight mb-2 group-hover:text-[#3B82F6] transition-colors">
+                      {actu.titre}
+                    </h3>
+                    
+                    {/* Source */}
+                    {actu.source && (
+                      <p className="text-[#3B82F6] text-xs font-bold mb-3 uppercase tracking-wider">
+                        Source : {actu.source}
+                      </p>
+                    )}
+
+                    {/* Summary */}
+                    <p className="text-slate-400 text-sm leading-relaxed line-clamp-3 mb-4 flex-1">
+                      {actu.resume || actu.contenu}
+                    </p>
+
+                    {/* Read More Button */}
+                    <a 
+                      href={targetUrl}
+                      target={actu.url ? "_blank" : "_self"}
+                      rel="noopener noreferrer"
+                      className="mt-auto w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-xs font-black uppercase tracking-widest group-hover:bg-[#3B82F6] group-hover:border-[#3B82F6] group-hover:text-white transition-all active:scale-95"
+                    >
+                      Lire l'article <ExternalLink size={14} />
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
