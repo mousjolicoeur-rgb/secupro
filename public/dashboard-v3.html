@@ -1955,7 +1955,7 @@ function openInviteMember() {
     <div style="margin-bottom:20px;">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px;">Rôle</div>
       <select id="inv-role" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--white);font-size:13px;outline:none;cursor:pointer;">
-        <option>Chef d'exploitation</option><option>Superviseur</option><option>RH / Administratif</option><option>Lecteur</option>
+        <option>Chef d'exploitation</option><option>Chef de site</option><option>Superviseur</option><option>RH / Administratif</option><option>Lecteur</option>
       </select>
     </div>
     <div id="inv-msg" style="display:none;padding:10px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;font-weight:600;"></div>
@@ -1983,9 +1983,37 @@ function sendInvite() {
   },1200);
 }
 
+function roleBadge(role) {
+  const s = {
+    'Administrateur':      'rgba(26,111,212,0.15)|var(--blueL)',
+    "Chef d'exploitation": 'rgba(0,209,255,0.12)|var(--cyan)',
+    'Chef de site':        'rgba(16,185,129,0.15)|var(--green)',
+    'Superviseur':         'rgba(249,115,22,0.12)|var(--orange)',
+  };
+  const [bg, col] = (s[role] || 'rgba(90,122,159,0.12)|var(--muted)').split('|');
+  return `padding:4px 12px;border-radius:100px;font-size:11px;font-weight:700;background:${bg};color:${col};`;
+}
+
+function saveMemberRole(name) {
+  const sel = document.getElementById('modal-role-select');
+  if (!sel) return;
+  const m = teamMembers.find(x => x.name === name);
+  if (m) m.role = sel.value;
+  document.querySelector('[data-member-modal]').remove();
+  renderSettings();
+}
+
+function cycleRight(ri, ci) {
+  const vals = ['✅', '👁️', '❌'];
+  const cur = accessRights[ri][ci];
+  accessRights[ri][ci] = vals[(vals.indexOf(cur) + 1) % vals.length];
+  renderSettingsContent('equipe');
+}
+
 function openMemberSettings(name, role) {
   const ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;';
+  ov.dataset.memberModal = '1';
   const ini = name.split(' ').map(n=>n[0]).join('').slice(0,2);
   ov.innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;width:420px;">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
@@ -1995,9 +2023,10 @@ function openMemberSettings(name, role) {
     </div>
     <div style="margin-bottom:16px;">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px;">Modifier le rôle</div>
-      <select style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--white);font-size:13px;outline:none;cursor:pointer;">
+      <select id="modal-role-select" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--white);font-size:13px;outline:none;cursor:pointer;">
         <option ${role==='Administrateur'?'selected':''}>Administrateur</option>
         <option ${role==="Chef d'exploitation"?'selected':''}>Chef d'exploitation</option>
+        <option ${role==='Chef de site'?'selected':''}>Chef de site</option>
         <option ${role==='Superviseur'?'selected':''}>Superviseur</option>
         <option>RH / Administratif</option><option>Lecteur</option>
       </select>
@@ -2009,7 +2038,7 @@ function openMemberSettings(name, role) {
     </div>
     <div style="display:flex;gap:10px;">
       <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">Annuler</button>
-      <button onclick="this.closest('[style*=fixed]').remove();alert('✅ Modifications enregistrées')" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--blue);color:#fff;font-size:13px;font-weight:900;cursor:pointer;">💾 Enregistrer</button>
+      <button onclick="saveMemberRole('${name}')" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--blue);color:#fff;font-size:13px;font-weight:900;cursor:pointer;">💾 Enregistrer</button>
     </div>
   </div>`;
   document.body.appendChild(ov);
@@ -2075,6 +2104,23 @@ const SETTINGS_SECTIONS = [
   { id:'notifications',icon:'📱',label:'Notifications Push' },
 ];
 let currentSettingsTab = 'entreprise';
+
+let teamMembers = [
+  {name:'Mustapha',        email:'contact@secupro.app',             role:'Administrateur',     last:'Aujourd\'hui'},
+  {name:'Jean-Pierre R.',  email:'jp.richard@securite-pro.fr',      role:"Chef d'exploitation", last:'Hier'},
+  {name:'Karim B.',        email:'k.benali@securite-pro.fr',         role:'Chef de site',        last:'Il y a 2j'},
+  {name:'Fatima Z.',       email:'f.zairi@securite-pro.fr',          role:'Superviseur',         last:'Il y a 3j'},
+];
+
+let accessRights = [
+  ['Agents & Import CSV', '✅','✅','👁️','👁️'],
+  ['Compliance CNAPS',    '✅','✅','👁️','👁️'],
+  ['Performance & KPIs',  '✅','✅','✅', '✅'],
+  ['Bulletins de paie',   '✅','✅','❌', '❌'],
+  ['SecuIA',              '✅','✅','✅', '✅'],
+  ['Facturation',         '✅','❌','❌', '❌'],
+  ['Paramètres équipe',   '✅','❌','❌', '❌'],
+];
 
 function renderSettings() {
   // Nav
@@ -2276,25 +2322,20 @@ function renderSettingsContent(tab) {
   }
 
   else if (tab === 'equipe') {
-    const members = [
-      {name:'Mustapha',email:'contact@secupro.app',role:'Administrateur',last:'Aujourd\'hui'},
-      {name:'Jean-Pierre R.',email:'jp.richard@securite-pro.fr',role:'Chef d\'exploitation',last:'Hier'},
-      {name:'Fatima Z.',email:'f.zairi@securite-pro.fr',role:'Superviseur',last:'Il y a 3j'},
-    ];
     html = `
       <div class="card" style="margin-bottom:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-          <div class="card-title" style="margin:0;">Membres de l'équipe (${members.length})</div>
+          <div class="card-title" style="margin:0;">Membres de l'équipe (${teamMembers.length})</div>
           <button class="btn-sm primary" onclick="openInviteMember()">+ Inviter un membre</button>
         </div>
-        ${members.map(m => `
+        ${teamMembers.map(m => `
           <div style="display:flex;align-items:center;gap:14px;padding:12px;border-radius:12px;background:var(--card2);margin-bottom:8px;">
             <div class="agent-avatar" style="width:40px;height:40px;font-size:13px;">${m.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
             <div style="flex:1;">
               <div style="font-weight:700;font-size:13px;">${m.name}</div>
               <div style="font-size:11px;color:var(--muted);">${m.email} · Dernière connexion : ${m.last}</div>
             </div>
-            <span style="padding:4px 12px;border-radius:100px;font-size:11px;font-weight:700;background:${m.role==='Administrateur'?'rgba(26,111,212,0.15)':'rgba(90,122,159,0.12)'};color:${m.role==='Administrateur'?'var(--blueL)':'var(--muted)'};">${m.role}</span>
+            <span style="${roleBadge(m.role)}">${m.role}</span>
             <button onclick="openMemberSettings('${m.name}','${m.role}')" style="background:transparent;border:1px solid var(--border);border-radius:8px;padding:5px 12px;color:var(--muted);font-size:11px;cursor:pointer;">⚙️</button>
           </div>`).join('')}
       </div>
@@ -2307,25 +2348,18 @@ function renderSettingsContent(tab) {
                 <th style="text-align:left;padding:8px 0;border-bottom:1px solid var(--border);">Module</th>
                 <th style="padding:8px 12px;border-bottom:1px solid var(--border);">Admin</th>
                 <th style="padding:8px 12px;border-bottom:1px solid var(--border);">Chef exploit.</th>
+                <th style="padding:8px 12px;border-bottom:1px solid var(--border);">Chef de site</th>
                 <th style="padding:8px 12px;border-bottom:1px solid var(--border);">Superviseur</th>
               </tr>
             </thead>
             <tbody>
-              ${[
-                ['Agents & Import CSV','✅','✅','👁️'],
-                ['Compliance CNAPS','✅','✅','👁️'],
-                ['Performance & KPIs','✅','✅','✅'],
-                ['Bulletins de paie','✅','✅','❌'],
-                ['SecuIA','✅','✅','✅'],
-                ['Facturation','✅','❌','❌'],
-                ['Paramètres équipe','✅','❌','❌'],
-              ].map(r=>`<tr style="border-bottom:1px solid var(--border2);">
+              ${accessRights.map((r, ri) => `<tr style="border-bottom:1px solid var(--border2);">
                 <td style="padding:10px 0;color:var(--white);font-weight:600;">${r[0]}</td>
-                ${r.slice(1).map(v=>`<td style="text-align:center;padding:10px 12px;">${v}</td>`).join('')}
+                ${r.slice(1).map((v, ci) => `<td onclick="cycleRight(${ri},${ci+1})" title="Cliquer pour modifier" style="text-align:center;padding:10px 12px;cursor:pointer;border-radius:6px;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">${v}</td>`).join('')}
               </tr>`).join('')}
             </tbody>
           </table>
-          <div style="font-size:11px;color:var(--muted);margin-top:10px;">✅ Lecture + écriture &nbsp;·&nbsp; 👁️ Lecture seule &nbsp;·&nbsp; ❌ Aucun accès</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:10px;">✅ Lecture + écriture &nbsp;·&nbsp; 👁️ Lecture seule &nbsp;·&nbsp; ❌ Aucun accès &nbsp;·&nbsp; <span style="opacity:.6;">Cliquer une cellule pour modifier</span></div>
         </div>
       </div>`;
   }

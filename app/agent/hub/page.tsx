@@ -1,7 +1,5 @@
 "use client";
 
-console.log("HUB CHARGÉ - FORCE LOCK");
-
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,118 +10,289 @@ import {
   CalendarDays,
   FileText,
   LifeBuoy,
-  Lock,
   Newspaper,
   ShieldCheck,
   User,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import TrialBanner from "@/components/TrialBanner";
 
-// ── CONTRÔLE ACCÈS — false = verrou FORCÉ, aucune condition ───────────────
+// ── CONFIG ACCÈS ───────────────────────────────────────────────────────────
+// true  → abonné confirmé, boutons verts + aucune bannière trial
+// false → période d'essai, boutons verts + TrialBanner actif
 const isPremium = false;
 
-// ── BOUTON VERROU — affiché en bas de la carte, titre toujours visible ────
-function VerrouBas() {
-  return (
-    <div
-      style={{
-        marginTop: "auto",
-        paddingTop: "16px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        gap: "10px",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-        <Lock size={13} style={{ color: "#f59e0b" }} />
-        <span
-          style={{
-            color: "#f59e0b",
-            fontSize: "9px",
-            fontWeight: 900,
-            textTransform: "uppercase",
-            letterSpacing: "0.2em",
-          }}
-        >
-          Accès Premium
-        </span>
-      </div>
-      <a
-        href="https://buy.stripe.com/28E6oAbTU3ZwaO92FI5gc01"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          display: "inline-block",
-          background: "#f59e0b",
-          color: "#000",
-          padding: "8px 20px",
-          borderRadius: "999px",
-          fontWeight: 900,
-          fontSize: "10px",
-          textTransform: "uppercase",
-          letterSpacing: "0.12em",
-          textDecoration: "none",
-          boxShadow: "0 0 16px rgba(245,158,11,0.45)",
-        }}
-      >
-        S&apos;abonner — 9.99€/mois
-      </a>
-    </div>
-  );
-}
-
+// ── DÉFINITION DES TUILES ──────────────────────────────────────────────────
 type Tile = {
   href: string;
   label: string;
   sub: string;
-  teaser?: string;
   Icon: LucideIcon;
-  accent: "cyan" | "emerald" | "violet" | "sky" | "amber" | "red" | "slate" | "indigo";
-  secuAiGlow?: boolean;
-  espaceProTitle?: boolean;
-  premium?: boolean;
+  color: string;        // couleur accent de l'icône
+  glow: string;         // couleur rgba pour box-shadow hover
+  borderIdle: string;   // border au repos
+  borderHover: string;  // border au hover (injecté via onMouse*)
+  featured?: boolean;   // tuile mise en avant (SecuAI)
 };
 
 const TILES: Tile[] = [
-  { href: "/agent/profil",     label: "Profil",         sub: "Identité tactique",       Icon: User,        accent: "cyan" },
-  { href: "/agent/planning",   label: "Planning",       sub: "Vacations & créneaux",    Icon: Calendar,    accent: "cyan",    premium: true,
-    teaser: "Accédez à vos vacations en temps réel" },
-  { href: "/agent/paie",       label: "Paie",           sub: "Salaires & acomptes",     Icon: Banknote,    accent: "emerald", premium: true,
-    teaser: "Consultez vos bulletins et acomptes instantanément" },
-  { href: "/agent/docs",       label: "Documents",      sub: "Carte CNAPS & diplômes",  Icon: FileText,    accent: "violet" },
-  { href: "/agent/secu-ai",    label: "Secu AI",        sub: "Assistant sécurité IA",   Icon: Bot,         accent: "sky",     secuAiGlow: true, premium: true,
-    teaser: "Votre assistant IA dédié à la sécurité privée" },
-  { href: "/agent/actualites", label: "Actualités",     sub: "Infos & alertes secteur", Icon: Newspaper,   accent: "amber",   premium: true,
-    teaser: "Infos et alertes du secteur en direct" },
-  { href: "/agent/calendrier", label: "RDV-Calendrier", sub: "Calendrier et RDV pro",   Icon: CalendarDays, accent: "indigo" },
-  { href: "/agent/espace-pro", label: "Espace PRO",     sub: "Connexion",               Icon: ShieldCheck, accent: "violet",  espaceProTitle: true },
-  { href: "/agent/support",    label: "Support",        sub: "Aide & assistance",       Icon: LifeBuoy,    accent: "slate" },
+  {
+    href: "/agent/profil",
+    label: "PROFIL",
+    sub: "Identité tactique",
+    Icon: User,
+    color: "#00d1ff",
+    glow: "rgba(0,209,255,0.22)",
+    borderIdle: "rgba(0,209,255,0.15)",
+    borderHover: "rgba(0,209,255,0.5)",
+  },
+  {
+    href: "/agent/planning",
+    label: "PLANNING",
+    sub: "Vacations & créneaux",
+    Icon: Calendar,
+    color: "#00d1ff",
+    glow: "rgba(0,209,255,0.22)",
+    borderIdle: "rgba(0,209,255,0.15)",
+    borderHover: "rgba(0,209,255,0.5)",
+  },
+  {
+    href: "/agent/paie",
+    label: "PAIE",
+    sub: "Salaires & acomptes",
+    Icon: Banknote,
+    color: "#34d399",
+    glow: "rgba(52,211,153,0.22)",
+    borderIdle: "rgba(52,211,153,0.15)",
+    borderHover: "rgba(52,211,153,0.5)",
+  },
+  {
+    href: "/agent/docs",
+    label: "DOCUMENTS",
+    sub: "Carte CNAPS & diplômes",
+    Icon: FileText,
+    color: "#a78bfa",
+    glow: "rgba(167,139,250,0.22)",
+    borderIdle: "rgba(167,139,250,0.15)",
+    borderHover: "rgba(167,139,250,0.5)",
+  },
+  {
+    href: "/agent/secu-ai",
+    label: "SECU AI",
+    sub: "Assistant sécurité IA",
+    Icon: Bot,
+    color: "#38bdf8",
+    glow: "rgba(56,189,248,0.3)",
+    borderIdle: "rgba(56,189,248,0.3)",
+    borderHover: "rgba(56,189,248,0.7)",
+    featured: true,
+  },
+  {
+    href: "/agent/actualites",
+    label: "ACTUALITÉS",
+    sub: "Infos & alertes secteur",
+    Icon: Newspaper,
+    color: "#fbbf24",
+    glow: "rgba(251,191,36,0.22)",
+    borderIdle: "rgba(251,191,36,0.15)",
+    borderHover: "rgba(251,191,36,0.5)",
+  },
+  {
+    href: "/agent/calendrier",
+    label: "CALENDRIER",
+    sub: "RDV & planification",
+    Icon: CalendarDays,
+    color: "#818cf8",
+    glow: "rgba(129,140,248,0.22)",
+    borderIdle: "rgba(129,140,248,0.15)",
+    borderHover: "rgba(129,140,248,0.5)",
+  },
+  {
+    href: "/agent/espace-pro",
+    label: "ESPACE PRO",
+    sub: "Connexion entreprise",
+    Icon: ShieldCheck,
+    color: "#a78bfa",
+    glow: "rgba(167,139,250,0.22)",
+    borderIdle: "rgba(167,139,250,0.15)",
+    borderHover: "rgba(167,139,250,0.5)",
+  },
+  {
+    href: "/agent/support",
+    label: "SUPPORT",
+    sub: "Aide & assistance",
+    Icon: LifeBuoy,
+    color: "#94a3b8",
+    glow: "rgba(0,209,255,0.15)",
+    borderIdle: "rgba(255,255,255,0.08)",
+    borderHover: "rgba(0,209,255,0.35)",
+  },
 ];
 
-const ACCENT_ICON: Record<string, string> = {
-  cyan:    "text-[#00d1ff] group-hover:drop-shadow-[0_0_12px_rgba(0,209,255,0.9)]",
-  emerald: "text-emerald-400 group-hover:drop-shadow-[0_0_10px_rgba(52,211,153,0.9)]",
-  violet:  "text-violet-400 group-hover:drop-shadow-[0_0_10px_rgba(167,139,250,0.9)]",
-  sky:     "text-sky-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.75)] group-hover:drop-shadow-[0_0_18px_rgba(56,189,248,1)]",
-  amber:   "text-amber-400 group-hover:drop-shadow-[0_0_10px_rgba(251,191,36,0.9)]",
-  red:     "text-red-400 group-hover:drop-shadow-[0_0_10px_rgba(248,113,113,0.9)]",
-  indigo:  "text-indigo-400 group-hover:drop-shadow-[0_0_12px_rgba(129,140,248,1)]",
-  slate:   "text-slate-400 group-hover:text-[#00d1ff] group-hover:drop-shadow-[0_0_8px_rgba(0,209,255,0.6)]",
-};
+// ── COMPOSANT TUILE ────────────────────────────────────────────────────────
+function HubTile({ tile }: { tile: Tile }) {
+  const { href, label, sub, Icon, color, glow, borderIdle, borderHover, featured } = tile;
 
-const ACCENT_BORDER: Record<string, string> = {
-  cyan:    "border-[#00d1ff]/25 hover:border-[#00d1ff]/55 hover:shadow-[0_0_32px_rgba(0,209,255,0.18)]",
-  emerald: "border-emerald-500/25 hover:border-emerald-400/55 hover:shadow-[0_0_28px_rgba(52,211,153,0.18)]",
-  violet:  "border-violet-500/25 hover:border-violet-400/55 hover:shadow-[0_0_28px_rgba(167,139,250,0.18)]",
-  sky:     "border-sky-500/40 shadow-[0_0_28px_rgba(56,189,248,0.25)] hover:shadow-[0_0_38px_rgba(56,189,248,0.4)]",
-  amber:   "border-amber-500/25 hover:border-amber-400/55 hover:shadow-[0_0_28px_rgba(251,191,36,0.18)]",
-  red:     "border-red-500/25 hover:border-red-400/55 hover:shadow-[0_0_28px_rgba(248,113,113,0.18)]",
-  indigo:  "border-indigo-500/30 hover:border-indigo-400/60 hover:shadow-[0_0_32px_rgba(129,140,248,0.25)]",
-  slate:   "border-white/10 hover:border-[#00d1ff]/35 hover:shadow-[0_0_24px_rgba(0,209,255,0.12)]",
-};
+  return (
+    <div
+      style={{
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0",
+        background: featured
+          ? "linear-gradient(135deg, rgba(56,189,248,0.06) 0%, rgba(13,17,23,0.98) 60%)"
+          : "rgba(22,27,34,0.95)",
+        border: `1px solid ${borderIdle}`,
+        borderRadius: "18px",
+        padding: "24px",
+        minHeight: "190px",
+        overflow: "hidden",
+        transition: "border-color 0.25s, box-shadow 0.25s, transform 0.2s",
+        cursor: "pointer",
+        boxShadow: featured
+          ? `0 0 30px rgba(56,189,248,0.12)`
+          : "none",
+      }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget as HTMLDivElement;
+        el.style.borderColor = borderHover;
+        el.style.boxShadow = `0 0 36px ${glow}`;
+        el.style.transform = "translateY(-2px)";
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget as HTMLDivElement;
+        el.style.borderColor = borderIdle;
+        el.style.boxShadow = featured ? `0 0 30px rgba(56,189,248,0.12)` : "none";
+        el.style.transform = "translateY(0)";
+      }}
+    >
+      {/* Liseré lumineux en haut */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "1px",
+          background: `linear-gradient(90deg, transparent, ${color}55, transparent)`,
+        }}
+      />
 
+      {/* Badge FEATURED */}
+      {featured && (
+        <div
+          style={{
+            position: "absolute",
+            top: "16px",
+            right: "16px",
+            background: "rgba(56,189,248,0.12)",
+            border: "1px solid rgba(56,189,248,0.35)",
+            borderRadius: "999px",
+            padding: "3px 10px",
+            fontSize: "8px",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: "0.2em",
+            color: "#38bdf8",
+          }}
+        >
+          IA
+        </div>
+      )}
+
+      {/* Icône */}
+      <div
+        style={{
+          width: "44px",
+          height: "44px",
+          borderRadius: "12px",
+          background: `${color}12`,
+          border: `1px solid ${color}30`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: "16px",
+          boxShadow: featured ? `0 0 16px ${color}40` : "none",
+        }}
+      >
+        <Icon
+          size={20}
+          style={{
+            color,
+            filter: featured ? `drop-shadow(0 0 6px ${color})` : "none",
+          }}
+        />
+      </div>
+
+      {/* Titre */}
+      <span
+        style={{
+          fontSize: "13px",
+          fontWeight: 900,
+          color: "#f1f5f9",
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+        }}
+      >
+        {label}
+      </span>
+
+      {/* Sous-titre */}
+      <span
+        style={{
+          marginTop: "4px",
+          fontSize: "10px",
+          fontWeight: 600,
+          color: "rgba(148,163,184,0.6)",
+          textTransform: "uppercase",
+          letterSpacing: "0.15em",
+        }}
+      >
+        {sub}
+      </span>
+
+      {/* Spacer */}
+      <div style={{ flex: 1, minHeight: "16px" }} />
+
+      {/* Bouton ACCÉDER */}
+      <Link
+        href={href}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
+          alignSelf: "flex-start",
+          padding: "8px 18px",
+          borderRadius: "10px",
+          background: "linear-gradient(135deg, #16a34a, #22c55e)",
+          color: "#fff",
+          fontSize: "10px",
+          fontWeight: 900,
+          textTransform: "uppercase",
+          letterSpacing: "0.18em",
+          textDecoration: "none",
+          boxShadow: "0 0 16px rgba(34,197,94,0.35)",
+          transition: "box-shadow 0.2s",
+          zIndex: 1,
+          position: "relative",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        ACCÉDER
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
+          <path d="M2 5h6M5 2l3 3-3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </Link>
+
+      {/* Overlay de clic sur toute la carte (sous le bouton) */}
+      <Link href={href} className="absolute inset-0" aria-label={label} style={{ zIndex: 0 }} />
+    </div>
+  );
+}
+
+// ── PAGE PRINCIPALE ────────────────────────────────────────────────────────
 export default function AgentHubPage() {
   const router = useRouter();
 
@@ -133,184 +302,268 @@ export default function AgentHubPage() {
   };
 
   return (
-    <div className="ow-layout-root min-h-screen font-sans">
-      <div className="ow-shell min-h-screen">
-        {/* Décor cockpit */}
-        <div className="ow-radar-rings">
-          <span />
-          <span />
-          <span />
-        </div>
-        <div className="ow-radar-sweep" />
-        <div className="ow-scanlines" />
-        <div className="ow-vignette" />
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#0d1117",
+        color: "#f1f5f9",
+        fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+        position: "relative",
+        overflowX: "hidden",
+      }}
+    >
+      {/* ── Grille de fond décorative ── */}
+      <div
+        aria-hidden
+        style={{
+          position: "fixed",
+          inset: 0,
+          pointerEvents: "none",
+          zIndex: 0,
+          backgroundImage:
+            "linear-gradient(rgba(0,209,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,209,255,0.025) 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
+          maskImage:
+            "radial-gradient(ellipse 85% 75% at 50% 20%, black 0%, transparent 70%)",
+        }}
+      />
+      {/* Halo central */}
+      <div
+        aria-hidden
+        style={{
+          position: "fixed",
+          top: 0,
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "800px",
+          height: "400px",
+          borderRadius: "50%",
+          background:
+            "radial-gradient(ellipse, rgba(0,209,255,0.07) 0%, transparent 70%)",
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
 
-        {/* ── EXIT fixe haut-droite ── */}
-        <button
-          type="button"
-          onClick={handleSignOut}
-          aria-label="Quitter le système"
-          className="fixed top-4 right-5 z-50 font-black uppercase tracking-widest transition-all duration-150 active:scale-95"
+      {/* ── EXIT fixe haut-droite ── */}
+      <button
+        type="button"
+        onClick={handleSignOut}
+        aria-label="Se déconnecter"
+        style={{
+          position: "fixed",
+          top: "18px",
+          right: "20px",
+          zIndex: 50,
+          background: "rgba(13,17,23,0.85)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: "8px",
+          padding: "7px 14px",
+          color: "rgba(148,163,184,0.7)",
+          fontSize: "10px",
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: "0.2em",
+          cursor: "pointer",
+          backdropFilter: "blur(8px)",
+          transition: "color 0.2s, border-color 0.2s",
+        }}
+        onMouseEnter={(e) => {
+          const el = e.currentTarget as HTMLButtonElement;
+          el.style.color = "#f87171";
+          el.style.borderColor = "rgba(248,113,113,0.4)";
+        }}
+        onMouseLeave={(e) => {
+          const el = e.currentTarget as HTMLButtonElement;
+          el.style.color = "rgba(148,163,184,0.7)";
+          el.style.borderColor = "rgba(255,255,255,0.08)";
+        }}
+      >
+        ← Quitter
+      </button>
+
+      {/* ── CONTENU ── */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          maxWidth: "1080px",
+          margin: "0 auto",
+          padding: "40px 24px 64px",
+        }}
+      >
+        {/* ── HEADER ── */}
+        <header
           style={{
-            fontSize: "13px",
-            color: "#00ff00",
-            textShadow: "0 0 8px rgba(0,255,0,0.9), 0 0 18px rgba(0,255,0,0.5)",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            letterSpacing: "0.3em",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.textShadow =
-              "0 0 12px rgba(0,255,0,1), 0 0 28px rgba(0,255,0,0.7), 0 0 50px rgba(0,255,0,0.35)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.textShadow =
-              "0 0 8px rgba(0,255,0,0.9), 0 0 18px rgba(0,255,0,0.5)";
+            display: "flex",
+            alignItems: "center",
+            gap: "20px",
+            marginBottom: "32px",
+            paddingBottom: "28px",
+            borderBottom: "1px solid rgba(0,209,255,0.08)",
           }}
         >
-          EXIT
-        </button>
-
-        <div className="ow-content mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-          {/* Header cockpit */}
-          <header className="mb-10 ow-header-panel">
-            <div className="flex items-center gap-4 mb-3">
-              <Image
-                src="/secupro-logo-official.png"
-                alt="SecuPRO"
-                width={56}
-                height={56}
-                priority
-                style={{
-                  filter: "drop-shadow(0 0 12px rgba(41,212,245,0.3))",
-                }}
-              />
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-500">
-                  Interface Agent
-                </p>
-                <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl ow-title-accent">
-                  HUB <span className="text-[#00d1ff]">AGENT</span>
-                </h1>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center gap-2">
-              <span
-                className="inline-block h-2 w-2 rounded-full bg-[#39ff14] animate-pulse"
-                style={{ boxShadow: "0 0 8px rgba(57,255,20,0.85), 0 0 16px rgba(57,255,20,0.45)" }}
-              />
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-                Système opérationnel
-              </span>
-            </div>
-          </header>
-
-          {/* Grille des modules */}
-          <nav
-            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
-            aria-label="Navigation modules agent"
-          >
-            {TILES.map(({ href, label, sub, teaser, Icon, accent, secuAiGlow, espaceProTitle, premium }) => {
-              const locked = premium && !isPremium;
-
-              return (
-                <div
-                  key={href}
-                  className={[
-                    "group relative flex flex-col overflow-hidden rounded-2xl border",
-                    "bg-gradient-to-br from-[rgba(28,42,58,0.95)] to-[rgba(12,22,34,0.92)]",
-                    "backdrop-blur-xl p-6 transition-all duration-300 min-h-[160px]",
-                    locked
-                      ? "border-amber-500/30 hover:border-amber-500/60 hover:shadow-[0_0_28px_rgba(245,158,11,0.15)]"
-                      : ACCENT_BORDER[accent],
-                  ].join(" ")}
-                >
-                  {/* Liseré haut — amber si verrouillé */}
-                  <div
-                    className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent to-transparent"
-                    style={{
-                      background: locked
-                        ? "linear-gradient(to right, transparent, rgba(245,158,11,0.4), transparent)"
-                        : "linear-gradient(to right, transparent, rgba(0,209,255,0.25), transparent)",
-                    }}
-                  />
-
-                  {/* Icône + badge cadenas */}
-                  <div className="mb-3 flex items-center gap-3">
-                    <div
-                      className={[
-                        "flex h-11 w-11 items-center justify-center rounded-xl border bg-black/30",
-                        locked
-                          ? "border-amber-500/30"
-                          : `border-white/10 ${secuAiGlow ? "border-sky-500/40 shadow-[0_0_16px_rgba(56,189,248,0.3)]" : ""}`,
-                      ].join(" ")}
-                    >
-                      <Icon
-                        className={[
-                          "h-5 w-5",
-                          locked ? "text-amber-500/50" : ACCENT_ICON[accent],
-                        ].join(" ")}
-                      />
-                    </div>
-                    {locked && (
-                      <Lock size={14} style={{ color: "#f59e0b", opacity: 0.8 }} />
-                    )}
-                  </div>
-
-                  {/* Titre — toujours visible */}
-                  <span
-                    className="text-base font-black uppercase tracking-wide"
-                    style={{ color: locked ? "#f59e0b" : "#fff" }}
-                  >
-                    {espaceProTitle ? "ESPACE PRO" : label}
-                  </span>
-
-                  {/* Sous-titre */}
-                  <span className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
-                    {sub}
-                  </span>
-
-                  {/* Teaser — phrase d'accroche visible même verrouillé */}
-                  {locked && teaser && (
-                    <p
-                      style={{
-                        marginTop: "10px",
-                        fontSize: "11px",
-                        color: "#94a3b8",
-                        lineHeight: 1.5,
-                        fontStyle: "italic",
-                      }}
-                    >
-                      {teaser}
-                    </p>
-                  )}
-
-                  {/* Bas de carte : bouton abonnement OU flèche navigation */}
-                  {locked ? (
-                    <VerrouBas />
-                  ) : (
-                    <>
-                      <Link href={href} className="absolute inset-0" aria-label={label} />
-                      <div className="absolute bottom-4 right-4 text-slate-700 transition-all duration-200 group-hover:text-[#00d1ff] group-hover:translate-x-0.5">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                          <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </div>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </nav>
-
-          <footer className="mt-12 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-700">
-              © 2026 SECUPRO COMMAND SYSTEM
+          <Image
+            src="/secupro-logo-official.png"
+            alt="SecuPRO"
+            width={52}
+            height={52}
+            priority
+            style={{
+              filter:
+                "drop-shadow(0 0 14px rgba(41,212,245,0.35))",
+            }}
+          />
+          <div style={{ flex: 1 }}>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "9px",
+                fontWeight: 900,
+                textTransform: "uppercase",
+                letterSpacing: "0.4em",
+                color: "rgba(0,209,255,0.45)",
+              }}
+            >
+              Interface Agent · SecuPRO
             </p>
-          </footer>
-        </div>
+            <h1
+              style={{
+                margin: "4px 0 0",
+                fontSize: "clamp(1.6rem, 4vw, 2.4rem)",
+                fontWeight: 900,
+                letterSpacing: "-0.02em",
+                color: "#ffffff",
+                lineHeight: 1,
+              }}
+            >
+              HUB{" "}
+              <span
+                style={{
+                  color: "#00d1ff",
+                  textShadow:
+                    "0 0 20px rgba(0,209,255,0.6), 0 0 50px rgba(0,209,255,0.25)",
+                }}
+              >
+                AGENT
+              </span>
+            </h1>
+          </div>
+
+          {/* Statut système */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "8px 16px",
+              background: "rgba(34,197,94,0.05)",
+              border: "1px solid rgba(34,197,94,0.18)",
+              borderRadius: "10px",
+            }}
+          >
+            <span
+              style={{
+                width: "7px",
+                height: "7px",
+                borderRadius: "50%",
+                background: "#22c55e",
+                boxShadow: "0 0 8px rgba(34,197,94,0.9)",
+                display: "inline-block",
+                animation: "sysPulse 2s ease-in-out infinite",
+              }}
+            />
+            <span
+              style={{
+                fontSize: "9px",
+                fontWeight: 900,
+                textTransform: "uppercase",
+                letterSpacing: "0.2em",
+                color: "rgba(34,197,94,0.8)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Système actif
+            </span>
+          </div>
+        </header>
+
+        {/* ── TRIAL BANNER ── */}
+        {!isPremium && <TrialBanner />}
+
+        {/* ── GRILLE DES MODULES ── */}
+        <nav
+          aria-label="Modules agent"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: "16px",
+          }}
+          className="hub-grid"
+        >
+          {TILES.map((tile) => (
+            <HubTile key={tile.href} tile={tile} />
+          ))}
+        </nav>
+
+        {/* ── FOOTER ── */}
+        <footer
+          style={{
+            marginTop: "48px",
+            paddingTop: "20px",
+            borderTop: "1px solid rgba(0,209,255,0.06)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "8px",
+          }}
+        >
+          <p
+            style={{
+              fontSize: "9px",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.35em",
+              color: "rgba(0,209,255,0.18)",
+              margin: 0,
+            }}
+          >
+            © 2026 SecuPRO — SIRET 10335392600019
+          </p>
+          <a
+            href="mailto:support@secupro.app"
+            style={{
+              fontSize: "9px",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.2em",
+              color: "rgba(0,209,255,0.25)",
+              textDecoration: "none",
+            }}
+          >
+            support@secupro.app
+          </a>
+        </footer>
       </div>
+
+      {/* ── KEYFRAMES ── */}
+      <style>{`
+        @keyframes sysPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+        @media (max-width: 900px) {
+          .hub-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+        @media (max-width: 540px) {
+          .hub-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

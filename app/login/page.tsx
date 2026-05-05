@@ -16,6 +16,8 @@ function LoginContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const errorParam   = searchParams.get('error');
+  // URL de destination post-login (injectée par le middleware via ?next=)
+  const nextPath     = searchParams.get('next') ?? '/dashboard';
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +25,11 @@ function LoginContent() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) { setError(error.message); }
-      else { router.replace('/dashboard'); }
+      else {
+        // Redirige vers la page demandée avant l'interception du middleware,
+        // ou vers /dashboard par défaut. On s'assure que c'est un chemin local.
+        router.replace(nextPath.startsWith('/') ? nextPath : '/dashboard');
+      }
     } catch { setError('Une erreur est survenue. Réessayez.'); }
     finally { setLoading(false); }
   };

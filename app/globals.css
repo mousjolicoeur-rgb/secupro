@@ -1,4 +1,12 @@
 @import "tailwindcss";
+@plugin "tailwind-scrollbar";
+
+@theme {
+  --color-background: #0B1426;
+  --color-card:       #0A1428;
+  --color-cyan:       #00FFCC;
+  --color-neon:       #39ff14;
+}
 
 /* -------------------------------------------------------------------------- */
 /* SECUPRO OVERWATCH — Cockpit high-tech (importé par layout.tsx)              */

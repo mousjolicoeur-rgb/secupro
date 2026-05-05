@@ -33,12 +33,13 @@ export async function POST(req: Request) {
       customer_email: user.email,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: 'subscription',
+      subscription_data: { trial_period_days: 7 },
       success_url: `${req.headers.get('origin')}/agent?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('origin')}/abonnement`,
       metadata: { userId: user.id },
     })
 
-    return NextResponse.json({ sessionId: session.id })
+    return NextResponse.json({ sessionId: session.id, url: session.url })
   } catch (err: any) {
     console.error(err)
     return NextResponse.json({ error: err.message }, { status: 500 })

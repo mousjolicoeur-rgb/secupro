@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecuPRO — Dashboard Exploitation</title>
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="grid-bg" aria-hidden="true"></div>
+
+<div class="dash-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo">
+        <div class="logo-mark">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L3 6V12C3 16.97 6.84 21.61 12 23C17.16 21.61 21 16.97 21 12V6L12 2Z" fill="rgba(0,209,255,0.15)" stroke="#00d1ff" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M9 12L11 14L15 10" stroke="#00d1ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="logo-name">Secu<span>PRO</span></span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <p class="nav-section-label">Principal</p>
+      <button class="nav-item active">
+        <span class="n-icon">📊</span> Dashboard
+      </button>
+      <button class="nav-item">
+        <span class="n-icon">🗺️</span> Sites
+      </button>
+      <button class="nav-item">
+        <span class="n-icon">👮</span> Agents
+      </button>
+      <button class="nav-item">
+        <span class="n-icon">📅</span> Planning
+      </button>
+      <p class="nav-section-label">Opérationnel</p>
+      <button class="nav-item">
+        <span class="n-icon">⚡</span> Alertes Missions
+      </button>
+      <button class="nav-item">
+        <span class="n-icon">📄</span> Rapports
+      </button>
+      <button class="nav-item">
+        <span class="n-icon">🤖</span> Radar IA
+      </button>
+      <p class="nav-section-label">Gestion</p>
+      <button class="nav-item">
+        <span class="n-icon">💰</span> Masse Salariale
+      </button>
+      <button class="nav-item">
+        <span class="n-icon">⚙️</span> Paramètres
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar">A</div>
+        <div>
+          <p class="user-name">Admin</p>
+          <p class="user-role">Directeur Exploitation</p>
+        </div>
+      </div>
+      <button onclick="window.location.href='login.html'" style="width:100%;margin-top:10px;padding:8px;border-radius:8px;background:rgba(255,68,85,0.06);border:1px solid rgba(255,68,85,0.15);color:rgba(255,68,85,0.5);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.18em;transition:all 0.15s;"
+        onmouseover="this.style.color='#ff4455';this.style.borderColor='rgba(255,68,85,0.4)'"
+        onmouseout="this.style.color='rgba(255,68,85,0.5)';this.style.borderColor='rgba(255,68,85,0.15)'">
+        🚪 Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <div class="dash-main">
+
+    <!-- HEADER -->
+    <header class="dash-header">
+      <div class="dash-breadcrumb">
+        <span class="dash-page-label">Command Center · Vue globale</span>
+        <span class="dash-page-title">Dashboard Exploitation</span>
+      </div>
+      <div class="dash-header-right">
+        <div class="clock" id="clock">--:--:--</div>
+        <div class="status-dot">
+          <span class="dot"></span>
+          <span class="status-text">Système actif</span>
+        </div>
+        <button class="btn btn-orange" style="padding:8px 14px;font-size:10px;">
+          ⚡ Envoyer alerte
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="dash-content">
+
+      <!-- KPI GRID -->
+      <div class="kpi-grid">
+
+        <!-- SITES ACTIFS -->
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon-cyan">🗺️</div>
+          <div>
+            <p class="kpi-label">Sites Actifs</p>
+            <p class="kpi-value" id="kpi-sites">12</p>
+            <p class="kpi-sub">sur 14 sites total</p>
+          </div>
+          <div class="kpi-trend trend-up">↑ 2 sites ce mois</div>
+        </div>
+
+        <!-- AGENTS EN POSTE -->
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon-green">👮</div>
+          <div>
+            <p class="kpi-label">Agents en Poste</p>
+            <p class="kpi-value kpi-value-green" id="kpi-agents">47</p>
+            <p class="kpi-sub">vacations en cours</p>
+          </div>
+          <div class="kpi-trend trend-up">↑ +3 vs hier</div>
+        </div>
+
+        <!-- ALERTES CRITIQUES -->
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon-orange">🚨</div>
+          <div>
+            <p class="kpi-label">Alertes Critiques</p>
+            <p class="kpi-value kpi-value-orange" id="kpi-alerts">2</p>
+            <p class="kpi-sub">nécessitent intervention</p>
+          </div>
+          <div class="kpi-trend trend-alert">⚠ 1 non résolue &gt; 2h</div>
+        </div>
+
+        <!-- MASSES HORAIRES -->
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon-violet">⏱️</div>
+          <div>
+            <p class="kpi-label">Masses Horaires</p>
+            <p class="kpi-value kpi-value-violet" id="kpi-hours">1 842</p>
+            <p class="kpi-sub">heures ce mois</p>
+          </div>
+          <div class="kpi-trend trend-neutral">≈ Conforme budget</div>
+        </div>
+
+      </div>
+
+      <!-- BOTTOM GRID -->
+      <div class="bottom-grid">
+
+        <!-- TABLE AGENTS -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Agents · Vacations en cours</span>
+            <span class="pill pill-green">
+              <span class="dot" style="width:5px;height:5px;animation:blink 2s infinite;background:#39ff14;box-shadow:none;"></span>
+              Live
+            </span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Agent</th>
+                  <th>Site</th>
+                  <th>Créneau</th>
+                  <th>Statut</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Martin D.</strong></td>
+                  <td>Site Auchan Lyon</td>
+                  <td style="font-family:var(--mono);font-size:11px;">06:00 – 14:00</td>
+                  <td><span class="pill pill-green">En poste</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Karim V.</strong></td>
+                  <td>Site Orange Villeurbanne</td>
+                  <td style="font-family:var(--mono);font-size:11px;">08:00 – 16:00</td>
+                  <td><span class="pill pill-green">En poste</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Sophie B.</strong></td>
+                  <td>Site Carrefour Part-Dieu</td>
+                  <td style="font-family:var(--mono);font-size:11px;">14:00 – 22:00</td>
+                  <td><span class="pill pill-orange">En déplacement</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Youssef A.</strong></td>
+                  <td>Site Hôpital Édouard Herriot</td>
+                  <td style="font-family:var(--mono);font-size:11px;">22:00 – 06:00</td>
+                  <td><span class="pill pill-cyan">Nuit</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Clara M.</strong></td>
+                  <td>Site Tour Incity</td>
+                  <td style="font-family:var(--mono);font-size:11px;">09:00 – 17:00</td>
+                  <td><span class="pill pill-red">Alerte active</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Thomas R.</strong></td>
+                  <td>Site Gare Part-Dieu</td>
+                  <td style="font-family:var(--mono);font-size:11px;">06:00 – 14:00</td>
+                  <td><span class="pill pill-green">En poste</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- RADAR PANEL -->
+        <div class="panel radar-panel">
+          <div class="panel-header">
+            <span class="panel-title">Radar IA · Surveillance</span>
+            <span class="pill pill-cyan">Actif</span>
+          </div>
+          <div class="radar-body">
+            <div>
+              <div class="radar-outer">
+                <div class="radar-ring ring1"></div>
+                <div class="radar-ring ring2"></div>
+                <div class="radar-ring ring3"></div>
+                <div class="radar-ring ring4"></div>
+                <div class="radar-cross"></div>
+                <div class="radar-sweep"></div>
+                <div class="radar-blip blip1"></div>
+                <div class="radar-blip blip2"></div>
+                <div class="radar-blip blip3"></div>
+                <div class="radar-blip blip4"></div>
+              </div>
+              <p class="radar-label">· SCAN EN COURS ·</p>
+            </div>
+          </div>
+          <!-- Alertes -->
+          <div style="border-top:1px solid rgba(0,209,255,0.08);">
+            <div class="alert-list">
+              <div class="alert-row">
+                <div class="alert-dot-wrap"><span class="alert-icon">🔴</span></div>
+                <div>
+                  <p class="alert-title">Anomalie détectée — Site Tour Incity</p>
+                  <p class="alert-meta">Il y a 12 min · Agent sur place</p>
+                </div>
+              </div>
+              <div class="alert-row">
+                <div class="alert-dot-wrap"><span class="alert-icon">🟡</span></div>
+                <div>
+                  <p class="alert-title">Retard pointage — Site Auchan</p>
+                  <p class="alert-meta">Il y a 34 min · En attente confirmation</p>
+                </div>
+              </div>
+              <div class="alert-row">
+                <div class="alert-dot-wrap"><span class="alert-icon">🟢</span></div>
+                <div>
+                  <p class="alert-title">Rapport mission validé — Karim V.</p>
+                  <p class="alert-meta">Il y a 1h · Transmis automatiquement</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clock').textContent = h + ':' + m + ':' + s;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// Animation KPI (compteur au chargement)
+function animateCount(id, target, duration, suffix) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const start = 0;
+  const step = target / (duration / 16);
+  let current = start;
+  const timer = setInterval(() => {
+    current = Math.min(current + step, target);
+    el.textContent = Math.floor(current).toLocaleString('fr-FR') + (suffix || '');
+    if (current >= target) clearInterval(timer);
+  }, 16);
+}
+window.addEventListener('load', () => {
+  animateCount('kpi-sites', 12, 800);
+  animateCount('kpi-agents', 47, 1000);
+  animateCount('kpi-alerts', 2, 500);
+  animateCount('kpi-hours', 1842, 1200);
+});
+
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+
+</body>
+</html>

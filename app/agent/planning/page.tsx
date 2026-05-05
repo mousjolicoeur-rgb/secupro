@@ -5,10 +5,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, CalendarDays, ChevronLeft, ChevronRight,
-  Download, Loader2, Save, Trash2,
+  Download, Loader2, Save, Trash2, Upload,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { isAuthenticatedClient } from "@/lib/authClient";
+import type { PlanningImportResult } from "@/app/api/planning/import/route";
 
 type PlanningRow = Record<string, unknown> & { id?: string };
 
@@ -69,12 +70,20 @@ export default function AgentPlanningPage() {
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [uploadUrl, setUploadUrl] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [weekStart, setWeekStart] = useState<Date>(() => getWeekMonday(new Date()));
   const [note, setNote] = useState("");
   const [noteSaved, setNoteSaved] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
+
+  // ── Import planning ─────────────────────────────────────────────────────
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  type ImportStatus = "idle" | "uploading" | "analyzing" | "success" | "warning" | "error";
+  const [importStatus, setImportStatus] = useState<ImportStatus>("idle");
+  const [importMsg, setImportMsg] = useState<string | null>(null);
+  const [importCount, setImportCount] = useState<number>(0);
 
   const noteKey = agentId ? `secupro_note_${agentId}_${toISO(weekStart)}` : null;
 
@@ -127,18 +136,136 @@ export default function AgentPlanningPage() {
     return () => { if (channel) supabase.removeChannel(channel); };
   }, [router, loadPlanning]);
 
-  async function handleDownload() {
-    if (!exportRef.current || downloading) return;
-    setDownloading(true);
+  // ── Déclenche le sélecteur de fichier ─────────────────────────────────
+  function triggerFileInput() {
+    fileInputRef.current?.click();
+  }
+
+  // ── Traite le fichier dès qu'il est sélectionné ────────────────────────
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    // Reset l'input pour permettre de re-sélectionner le même fichier
+    e.target.value = "";
+
+    if (!file || !agentId) return;
+
+    // ── Vérification format côté client ──────────────────────────────────
+    const allowed = [".pdf", ".jpg", ".jpeg", ".png", ".xlsx"];
+    const ext = "." + file.name.split(".").pop()?.toLowerCase();
+    if (!allowed.includes(ext)) {
+      setImportStatus("error");
+      setImportMsg(`Format non accepté : ${ext}. Utilisez PDF, JPG, PNG ou XLSX.`);
+      return;
+    }
+
+    // ── Phase 1 : upload en cours ─────────────────────────────────────────
+    setImportStatus("uploading");
+    setImportMsg("Envoi du fichier en cours…");
+    setImportCount(0);
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("userId", agentId);
+
     try {
+      // ── Phase 2 : analyse SecuAI ────────────────────────────────────────
+      setImportStatus("analyzing");
+      setImportMsg("Traitement du planning par SecuAI en cours…");
+
+      const res = await fetch("/api/planning/import", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result: PlanningImportResult = await res.json();
+
+      if (!res.ok || result.error) {
+        setImportStatus("error");
+        setImportMsg(result.error ?? "Une erreur s'est produite. Réessayez.");
+        return;
+      }
+
+      if (result.warning) {
+        setImportStatus("warning");
+        setImportMsg(result.warning);
+        if (result.rows.length > 0) {
+          setImportCount(result.rows.length);
+          await loadPlanning(agentId);
+        }
+        return;
+      }
+
+      // ── Succès ──────────────────────────────────────────────────────────
+      setImportCount(result.rows.length);
+      setImportStatus("success");
+      setImportMsg(
+        `${result.rows.length} vacation${result.rows.length > 1 ? "s" : ""} importée${result.rows.length > 1 ? "s" : ""} avec succès.`
+      );
+      await loadPlanning(agentId);
+
+      // Auto-reset du feedback après 6 secondes
+      setTimeout(() => {
+        setImportStatus("idle");
+        setImportMsg(null);
+      }, 6000);
+
+    } catch (err) {
+      setImportStatus("error");
+      setImportMsg(
+        err instanceof Error ? err.message : "Erreur réseau. Vérifiez votre connexion."
+      );
+    }
+  }
+
+  async function handleDownload() {
+    if (!exportRef.current || downloading || !agentId) return;
+    setDownloading(true);
+    setUploadUrl(null);
+    try {
+      // 1. Génère le PNG côté client avec html-to-image
       const { toPng } = await import("html-to-image");
-      const dataUrl = await toPng(exportRef.current, { backgroundColor: "#050A12", pixelRatio: 2 });
+      const dataUrl = await toPng(exportRef.current, {
+        backgroundColor: "#050A12",
+        pixelRatio: 2,
+      });
+
+      // 2. Convertit le dataUrl en Blob binaire
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const arrayBuffer = await blob.arrayBuffer();
+      const uint8 = new Uint8Array(arrayBuffer);
+
+      // 3. Upload vers Supabase Storage (bucket "plannings")
+      const fileName = `planning_${agentId}_S${getISOWeek(weekStart)}_${weekStart.getFullYear()}.png`;
+      const storagePath = `${agentId}/${fileName}`;
+
+      const { error: upErr } = await supabase.storage
+        .from("plannings")
+        .upload(storagePath, uint8, {
+          contentType: "image/png",
+          upsert: true,
+        });
+
+      if (upErr) throw new Error(upErr.message);
+
+      // 4. Récupère l'URL publique
+      const { data: urlData } = supabase.storage
+        .from("plannings")
+        .getPublicUrl(storagePath);
+
+      setUploadUrl(urlData.publicUrl);
+
+      // 5. Propose aussi le téléchargement local
       const a = document.createElement("a");
-      a.download = "MON_PLANNING_SECU.png";
+      a.download = fileName;
       a.href = dataUrl;
       a.click();
-    } catch (e) { console.error(e); }
-    finally { setDownloading(false); }
+
+    } catch (e) {
+      console.error("[planning/upload]", e);
+    } finally {
+      setDownloading(false);
+    }
   }
 
   async function handleDelete() {
@@ -212,6 +339,89 @@ export default function AgentPlanningPage() {
           </div>
         </div>
 
+        {/* ── Input fichier caché — déclenché par le bouton IMPORTER ── */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png,.xlsx"
+          style={{ display: "none" }}
+          aria-hidden="true"
+          onChange={(e) => void handleImport(e)}
+        />
+
+        {/* ── Bannière de feedback import ── */}
+        {importStatus !== "idle" && (
+          <div
+            className="mb-4 flex items-center gap-3 rounded-xl border px-4 py-3"
+            style={{
+              borderColor:
+                importStatus === "success" ? "rgba(34,197,94,0.4)" :
+                importStatus === "warning" ? "rgba(251,191,36,0.4)" :
+                importStatus === "error"   ? "rgba(248,113,113,0.4)" :
+                                             "rgba(0,209,255,0.35)",
+              background:
+                importStatus === "success" ? "rgba(34,197,94,0.06)" :
+                importStatus === "warning" ? "rgba(251,191,36,0.06)" :
+                importStatus === "error"   ? "rgba(248,113,113,0.06)" :
+                                             "rgba(0,209,255,0.06)",
+              boxShadow:
+                importStatus === "analyzing"
+                  ? "0 0 20px rgba(0,209,255,0.12)"
+                  : "none",
+            }}
+          >
+            {/* Icône / spinner */}
+            {(importStatus === "uploading" || importStatus === "analyzing") ? (
+              <Loader2
+                className="h-4 w-4 shrink-0 animate-spin"
+                style={{ color: "#00d1ff" }}
+              />
+            ) : importStatus === "success" ? (
+              <span style={{ fontSize: "16px" }}>✅</span>
+            ) : importStatus === "warning" ? (
+              <span style={{ fontSize: "16px" }}>⚠️</span>
+            ) : (
+              <span style={{ fontSize: "16px" }}>❌</span>
+            )}
+
+            <div className="flex flex-col gap-0.5 flex-1">
+              {/* Label d'état */}
+              <span
+                className="text-[9px] font-black uppercase tracking-[0.3em]"
+                style={{
+                  color:
+                    importStatus === "success" ? "rgba(34,197,94,0.8)" :
+                    importStatus === "warning" ? "rgba(251,191,36,0.8)" :
+                    importStatus === "error"   ? "rgba(248,113,113,0.8)" :
+                                                 "rgba(0,209,255,0.7)",
+                }}
+              >
+                {importStatus === "uploading" ? "Envoi en cours" :
+                 importStatus === "analyzing" ? "SecuAI analyse votre planning" :
+                 importStatus === "success"   ? `✓ ${importCount} vacation${importCount > 1 ? "s" : ""} importée${importCount > 1 ? "s" : ""}` :
+                 importStatus === "warning"   ? "Attention" :
+                                                "Échec de l'import"}
+              </span>
+              {/* Message détaillé */}
+              <span className="text-xs" style={{ color: "rgba(148,163,184,0.85)" }}>
+                {importMsg}
+              </span>
+            </div>
+
+            {/* Bouton fermer si état terminal */}
+            {(importStatus === "success" || importStatus === "warning" || importStatus === "error") && (
+              <button
+                type="button"
+                onClick={() => { setImportStatus("idle"); setImportMsg(null); }}
+                className="ml-auto shrink-0 text-slate-500 hover:text-slate-300 text-lg leading-none"
+                aria-label="Fermer"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Erreur */}
         {loadErr && (
           <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-950/30 px-4 py-3 text-sm text-amber-200">
@@ -230,6 +440,25 @@ export default function AgentPlanningPage() {
               Calendrier des vacations
             </span>
             <div className="flex items-center gap-2">
+              {/* Importer un planning */}
+              <button
+                type="button"
+                disabled={importStatus === "uploading" || importStatus === "analyzing"}
+                onClick={triggerFileInput}
+                className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl border border-[#22c55e]/50 bg-[#22c55e]/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-[#22c55e] transition-all duration-200 hover:scale-105 hover:bg-[#22c55e]/20 disabled:opacity-60 disabled:cursor-wait"
+                style={{ boxShadow: "0 0 10px rgba(34,197,94,0.2)" }}
+                title="Importer un planning (PDF, JPG, PNG, XLSX)"
+              >
+                <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-[#22c55e]/10 to-transparent transition-transform duration-500 group-hover:translate-x-full" />
+                {importStatus === "uploading" || importStatus === "analyzing"
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  : <Upload className="h-3.5 w-3.5" />
+                }
+                <span className="hidden sm:inline">
+                  {importStatus === "analyzing" ? "Analyse…" : "Importer"}
+                </span>
+              </button>
+
               {/* Télécharger */}
               <button type="button" disabled={downloading} onClick={() => void handleDownload()}
                 className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl border border-[#00d1ff]/50 bg-[#00d1ff]/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-[#00d1ff] transition-all duration-200 hover:scale-105 hover:bg-[#00d1ff]/20 disabled:opacity-60"
@@ -247,6 +476,45 @@ export default function AgentPlanningPage() {
               </button>
             </div>
           </div>
+
+          {/* Bannière confirmation upload */}
+          {uploadUrl && (
+            <div className="flex items-center justify-between gap-3 border-b border-emerald-500/20 bg-emerald-950/30 px-5 py-2.5 sm:px-7">
+              <div className="flex items-center gap-2">
+                <span className="text-base">✅</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                  Planning sauvegardé dans Supabase
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <a
+                  href={uploadUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] font-bold text-emerald-400 underline underline-offset-2 hover:text-emerald-300"
+                >
+                  Voir le fichier →
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(uploadUrl);
+                  }}
+                  className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:bg-emerald-500/20"
+                >
+                  Copier le lien
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUploadUrl(null)}
+                  className="text-slate-500 hover:text-slate-300 text-lg leading-none"
+                  aria-label="Fermer"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Colonnes headers */}
           <div className="grid grid-cols-[2fr_2fr_1.4fr] border-b border-white/[0.07] bg-black/20 px-5 py-2.5 sm:px-7">

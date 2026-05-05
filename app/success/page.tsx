@@ -185,7 +185,7 @@ export default function SuccessPage() {
 
           {/* Donner son avis */}
           <a
-            href="mailto:mustaphajelikhi@outlook.fr?subject=Mon%20avis%20sur%20SecuPRO&body=Bonjour%20Mustapha%2C%0A%0AVoici%20mon%20avis%20sur%20SecuPRO%20:%0A%0A"
+            href="mailto:contact@secupro.app?subject=Mon%20avis%20sur%20SecuPRO&body=Bonjour%2C%0A%0AVoici%20mon%20avis%20sur%20SecuPRO%20:%0A%0A"
             style={{
               display: "block",
               width: "100%",
