@@ -101,8 +101,10 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
-      { source: "/app.html", destination: "/", permanent: true },
-      { source: "/index.html", destination: "/", permanent: true },
+      { source: "/app.html",   destination: "/",                          permanent: true },
+      { source: "/index.html", destination: "/",                          permanent: true },
+      // L'ancien /dashboard est remplacé par le cockpit B2B
+      { source: "/dashboard",  destination: "/espace-societe/dashboard",  permanent: true },
     ];
   },
 };

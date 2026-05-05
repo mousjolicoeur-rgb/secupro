@@ -20,7 +20,7 @@ function LoginContent() {
   // pour éviter une faille open-redirect vers un domaine externe.
   const nextPath     = (() => {
     const raw = searchParams.get('next') ?? '';
-    return raw.startsWith('/') ? raw : '/dashboard';
+    return raw.startsWith('/') ? raw : '/espace-societe/dashboard';
   })();
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -54,14 +54,14 @@ function LoginContent() {
           .single();
         const role = profile?.role as string | undefined;
         if (role === 'admin' || profile?.is_approved) {
-          router.replace('/dashboard');
+          router.replace('/espace-societe/dashboard');
         } else if (['societe', 'manager'].includes(role ?? '')) {
           router.replace('/espace-societe/dashboard');
         } else {
-          router.replace(nextPath !== '/dashboard' ? nextPath : '/agent/hub');
+          router.replace(nextPath !== '/espace-societe/dashboard' ? nextPath : '/agent/hub');
         }
       } else {
-        router.replace('/dashboard');
+        router.replace('/espace-societe/dashboard');
       }
     } catch (err) {
       console.error('[SecuPRO] handleSignIn exception:', err);

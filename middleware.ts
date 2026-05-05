@@ -64,9 +64,9 @@ export async function middleware(request: NextRequest) {
   }
 
   // Si l'utilisateur est déjà connecté et accède à /login,
-  // on le renvoie directement vers /dashboard (évite le double-login).
+  // on le renvoie directement vers le cockpit B2B (évite le double-login).
   if (user && pathname === "/login") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/espace-societe/dashboard", request.url));
   }
 
   return response;

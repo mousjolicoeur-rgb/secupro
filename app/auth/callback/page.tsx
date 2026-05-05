@@ -20,7 +20,7 @@ function CallbackInner() {
     // /dashboard, quel que soit le contenu éventuel de la colonne role.
     const role = profile?.role as string | undefined;
     if (profile?.is_approved || role === 'admin') {
-      router.replace('/dashboard');
+      router.replace('/espace-societe/dashboard');
     } else if (['societe', 'manager'].includes(role ?? '')) {
       router.replace('/espace-societe/dashboard');
     } else {
