@@ -36,6 +36,7 @@ export default function HomePage() {
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           plugins: {
             legend: { display: false },
             tooltip: {
@@ -64,6 +65,7 @@ export default function HomePage() {
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           plugins: {
             legend: { display: false },
             tooltip: {
@@ -101,7 +103,7 @@ export default function HomePage() {
         .sp-stat-card.orange::before { background: linear-gradient(to right, transparent, #ffab40, transparent); }
         .sp-stat-card.red::before { background: linear-gradient(to right, transparent, #ff6b6b, transparent); }
         .sp-stat-card.purple::before { background: linear-gradient(to right, transparent, #b98aff, transparent); }
-        .sp-chart-wrap { background: rgba(255,255,255,0.02); border: 1px solid rgba(0,170,255,0.1); border-radius: 14px; padding: 1.5rem; margin-bottom: 1rem; }
+        .sp-chart-wrap { background: rgba(255,255,255,0.02); border: 1px solid rgba(0,170,255,0.1); border-radius: 14px; padding: 1.5rem; margin-bottom: 1rem; height: 220px; position: relative; }
         .sp-feat-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 1.2rem; }
         .sp-comp-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden; }
         .sp-access-card { border-radius: 18px; padding: 2rem 1.5rem; text-align: center; transition: transform 0.2s, border-color 0.2s, background 0.2s; position: relative; overflow: hidden; }
@@ -170,7 +172,7 @@ export default function HomePage() {
           <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.35)', marginBottom: '1.5rem' }}>Cartes professionnelles délivrées par le CNAPS (milliers) — Source CNAPS</div>
           <div className="sp-chart-wrap">
             <div style={{ fontSize: '0.78rem', letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: '1rem' }}>Délivrance de cartes pro 2019 – 2025</div>
-            <canvas ref={chartGrowthRef} height={160} />
+            <canvas ref={chartGrowthRef} height={220} style={{ maxHeight: '220px' }} />
           </div>
         </div>
 
@@ -179,7 +181,7 @@ export default function HomePage() {
           <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.35)', marginBottom: '1.5rem' }}>Répartition des décisions prononcées — Source CNAPS Rapport Annuel 2025</div>
           <div className="sp-chart-wrap">
             <div style={{ fontSize: '0.78rem', letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: '1rem' }}>Décisions & sanctions 2025</div>
-            <canvas ref={chartInfraRef} height={160} />
+            <canvas ref={chartInfraRef} height={220} style={{ maxHeight: '220px' }} />
           </div>
         </div>
 
