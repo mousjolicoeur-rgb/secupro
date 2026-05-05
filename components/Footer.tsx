@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import Link from "next/link";
-import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -25,13 +24,13 @@ export default function Footer() {
         }}
       >
         {/* Logo */}
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src="/secupro-logo.svg"
           alt="SecuPRO"
           width={180}
           height={48}
           style={{ opacity: 0.85 }}
-          unoptimized
         />
 
         {/* Liens légaux */}

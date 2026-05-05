@@ -1,6 +1,5 @@
 ﻿"use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle, Settings, CreditCard,
@@ -229,12 +228,11 @@ export default function EspaceSocieteSupport() {
               background: "radial-gradient(circle, rgba(0,209,255,0.16) 0%, transparent 68%)",
             }}
           />
-          <Image
+          <img
             src="/secupro-logo.svg"
             alt="SecuPRO"
             width={54}
             height={54}
-            priority
             style={{ filter: "drop-shadow(0 0 16px rgba(0,209,255,0.5))", position: "relative" }}
           />
         </div>

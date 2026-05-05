@@ -3,7 +3,6 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import Image from 'next/image';
 import Link from 'next/link';
 
 function LoginContent() {
@@ -29,11 +28,23 @@ function LoginContent() {
     setError(''); setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) { setError(error.message); return; }
+
+      if (error) {
+        console.error('[SecuPRO] signInWithPassword error:', error);
+        // Traduction des messages Supabase les plus fréquents
+        const msg =
+          error.message === 'Invalid login credentials'
+            ? 'Email ou mot de passe incorrect.'
+            : error.message === 'Email not confirmed'
+            ? 'Confirmez votre email avant de vous connecter.'
+            : error.message === 'Too many requests'
+            ? 'Trop de tentatives. Réessayez dans quelques minutes.'
+            : error.message;
+        setError(msg);
+        return;
+      }
 
       // Routing basé sur le profil — priorité absolue sur ?next=
-      // pour éviter qu'un ?next= capturé antérieurement envoie un admin
-      // vers le mauvais espace.
       const userId = data.session?.user?.id;
       if (userId) {
         const { data: profile } = await supabase
@@ -47,14 +58,17 @@ function LoginContent() {
         } else if (['societe', 'manager'].includes(role ?? '')) {
           router.replace('/espace-societe/dashboard');
         } else {
-          // Agent sans approbation : honorer ?next= si présent, sinon hub
           router.replace(nextPath !== '/dashboard' ? nextPath : '/agent/hub');
         }
       } else {
         router.replace('/dashboard');
       }
-    } catch { setError('Une erreur est survenue. Réessayez.'); }
-    finally { setLoading(false); }
+    } catch (err) {
+      console.error('[SecuPRO] handleSignIn exception:', err);
+      setError('Connexion impossible. Vérifiez votre réseau et réessayez.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = async (e: React.FormEvent) => {
@@ -92,7 +106,8 @@ function LoginContent() {
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <Image src="/secupro-logo.svg" alt="SecuPRO" width={56} height={56} style={{ margin: '0 auto 8px', filter: 'drop-shadow(0 0 16px rgba(0,209,255,0.3))' }} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/secupro-logo.svg" alt="SecuPRO" width={210} height={56} style={{ margin: '0 auto 8px', filter: 'drop-shadow(0 0 16px rgba(0,209,255,0.3))' }} />
           <p style={{ color: 'rgba(0,209,255,0.5)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.3em' }}>
             Gestion opérationnelle · Sécurité privée
           </p>

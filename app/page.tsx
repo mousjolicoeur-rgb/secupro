@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Script from "next/script";
 
 function BenefitCard({ icon, title, desc }: { icon: string; title: string; desc: string }) {
@@ -136,12 +135,11 @@ export default function LandingPage() {
         >
           {/* Logo */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <Image
+            <img
               src="/secupro-logo.svg"
               alt="SecuPRO"
               width={36}
               height={36}
-              priority
               style={{
                 filter:
                   "drop-shadow(0 0 10px rgba(41,212,245,0.4))",

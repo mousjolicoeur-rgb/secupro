@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   AtSign, Lock, Eye, EyeOff, LogIn,
@@ -106,12 +105,11 @@ export default function EspaceSocietePage() {
                 background: "radial-gradient(circle, rgba(0,209,255,0.18) 0%, transparent 68%)",
               }}
             />
-            <Image
+            <img
               src="/secupro-logo.svg"
               alt="SecuPRO"
               width={62}
               height={62}
-              priority
               style={{ filter: "drop-shadow(0 0 16px rgba(0,209,255,0.5))", position: "relative" }}
             />
           </div>

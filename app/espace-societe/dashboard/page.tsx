@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Users, AlertTriangle, Building2, Bell, Bot,
@@ -591,7 +590,7 @@ export default function ChefExploitationDashboard() {
         </button>
 
         <div className="flex items-center gap-2.5">
-          <Image src="/secupro-logo.svg" alt="SecuPRO" width={26} height={26}
+          <img src="/secupro-logo.svg" alt="SecuPRO" width={26} height={26}
             style={{ filter: "drop-shadow(0 0 7px rgba(0,209,255,0.4))" }} />
           <div>
             <p className="text-[8px] font-black uppercase tracking-[0.48em]"
