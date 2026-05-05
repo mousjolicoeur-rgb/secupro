@@ -36,9 +36,12 @@ export async function POST(req: Request) {
       const buffer = await file.arrayBuffer();
       const base64 = Buffer.from(buffer).toString("base64");
 
+      // Le SDK @anthropic-ai/sdk ne type pas encore "document" dans ContentBlockParam
+      // → on passe le content en `any` pour contourner le type check
       const response = await anthropic.messages.create({
         model: "claude-opus-4-5",
         max_tokens: 4096,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         messages: [
           {
             role: "user",
@@ -46,9 +49,9 @@ export async function POST(req: Request) {
               {
                 type: "document",
                 source: { type: "base64", media_type: "application/pdf", data: base64 },
-              } as Parameters<typeof anthropic.messages.create>[0]["messages"][0]["content"][0],
+              },
               { type: "text", text: EXTRACTION_PROMPT },
-            ],
+            ] as any,
           },
         ],
       });
