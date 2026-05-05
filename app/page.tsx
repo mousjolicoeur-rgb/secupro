@@ -103,9 +103,10 @@ export default function HomePage() {
         .sp-stat-card.orange::before { background: linear-gradient(to right, transparent, #ffab40, transparent); }
         .sp-stat-card.red::before { background: linear-gradient(to right, transparent, #ff6b6b, transparent); }
         .sp-stat-card.purple::before { background: linear-gradient(to right, transparent, #b98aff, transparent); }
-        .sp-chart-wrap { background: rgba(255,255,255,0.02); border: 1px solid rgba(0,170,255,0.1); border-radius: 14px; padding: 1.5rem; margin-bottom: 1rem; height: 220px; position: relative; }
+        .sp-chart-wrap { background: rgba(255,255,255,0.02); border: 1px solid rgba(0,170,255,0.1); border-radius: 14px; padding: 1.5rem; margin-bottom: 1rem; height: 200px; position: relative; }
         .sp-feat-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 1.2rem; }
         .sp-comp-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden; }
+        .sp-comp-label { font-size: 0.78rem; color: rgba(255,255,255,0.55); width: 200px; flex-shrink: 0; }
         .sp-access-card { border-radius: 18px; padding: 2rem 1.5rem; text-align: center; transition: transform 0.2s, border-color 0.2s, background 0.2s; position: relative; overflow: hidden; }
         .sp-access-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
         .sp-access-card.agent { background: rgba(0,232,160,0.04); border: 1px solid rgba(0,232,160,0.2); }
@@ -115,6 +116,13 @@ export default function HomePage() {
         .sp-access-card:hover { transform: translateY(-6px); }
         .sp-access-card.agent:hover { border-color: rgba(0,232,160,0.5); background: rgba(0,232,160,0.08); }
         .sp-access-card.societe:hover { border-color: rgba(0,170,255,0.5); background: rgba(0,170,255,0.08); }
+        @media (min-width: 768px) { .sp-chart-wrap { height: 260px; } }
+        @media (max-width: 480px) {
+          .sp-hero { padding: 1rem !important; }
+          .sp-comp-label { width: 120px; }
+          .sp-trial { flex-direction: column !important; align-items: flex-start !important; }
+          .sp-access-card { min-width: 100% !important; max-width: 100% !important; flex: unset !important; width: 100%; }
+        }
       `}</style>
 
       <div className="sp-root">
@@ -124,7 +132,7 @@ export default function HomePage() {
         </div>
 
         {/* HERO */}
-        <div style={{ textAlign: 'center', padding: '2rem 2rem 1rem' }}>
+        <div className="sp-hero" style={{ textAlign: 'center', padding: '2rem 2rem 1rem' }}>
           <div style={{ fontSize: '0.75rem', letterSpacing: '4px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: '1rem' }}>
             Plateforme SaaS · Sécurité Privée Française
           </div>
@@ -147,7 +155,7 @@ export default function HomePage() {
         <div style={{ textAlign: 'center', fontSize: '0.68rem', letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', padding: '1.5rem 2rem 0.3rem' }}>
           Le secteur en chiffres — Rapport officiel CNAPS 2025
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem', padding: '0.5rem 2rem 2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem', padding: '0.5rem 2rem 2rem' }}>
           {[
             { num: '300 000+', label: 'Personnes habilitées en France', source: 'CNAPS — Rapport annuel 2025', color: 'blue' },
             { num: '12 000+', label: 'Entreprises de sécurité privée', source: 'CNAPS — Rapport annuel 2025', color: 'green' },
@@ -199,7 +207,7 @@ export default function HomePage() {
             { label: 'Défaut de formation obligatoire', pct: 28, color: '#0af' },
           ].map((r, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-              <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.55)', width: '200px', flexShrink: 0 }}>{r.label}</span>
+              <span className="sp-comp-label">{r.label}</span>
               <div className="sp-comp-bar-bg"><div style={{ height: '100%', width: `${r.pct}%`, background: r.color, borderRadius: '3px' }} /></div>
               <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', width: '32px', textAlign: 'right' }}>{r.pct}%</span>
             </div>
@@ -214,7 +222,7 @@ export default function HomePage() {
           <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.3rem', fontWeight: 600, letterSpacing: '1px', marginBottom: '0.3rem' }}>Ce que SecuPRO résout</div>
           <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.35)', marginBottom: '1.5rem' }}>Conçu par un ex-agent. Pensé pour les exploitants.</div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '1rem', padding: '0 2rem 2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: '1rem', padding: '0 2rem 2rem' }}>
           {[
             { icon: '📋', title: 'Planning IA', desc: 'Détection automatique des conflits, repos non respectés et dépassements IDCC 1351.' },
             { icon: '🛡️', title: 'Conformité CNAPS', desc: 'Alertes cartes pro, SSIAP, SST — avant l\'expiration, pas après le contrôle.' },
@@ -236,7 +244,7 @@ export default function HomePage() {
           <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.3rem', fontWeight: 600, letterSpacing: '1px', marginBottom: '0.3rem' }}>Comment ça fonctionne</div>
           <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.35)', marginBottom: '1.5rem' }}>Démarrage sans risque, abonnement automatique après l'essai</div>
         </div>
-        <div style={{ background: 'linear-gradient(135deg,rgba(0,170,255,0.12),rgba(0,232,160,0.08))', border: '1px solid rgba(0,170,255,0.25)', borderRadius: '14px', padding: '1.5rem 2rem', margin: '0 2rem 2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+        <div className="sp-trial" style={{ background: 'linear-gradient(135deg,rgba(0,170,255,0.12),rgba(0,232,160,0.08))', border: '1px solid rgba(0,170,255,0.25)', borderRadius: '14px', padding: '1.5rem 2rem', margin: '0 2rem 2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
           <div style={{ fontSize: '2rem', flexShrink: 0 }}>🗓️</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.3rem', fontWeight: 700 }}>30 jours d'essai gratuit — puis abonnement automatique</div>

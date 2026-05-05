@@ -40,6 +40,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Script id="linkedin-insight-init" strategy="beforeInteractive">{`
           _linkedin_partner_id = "535460075";
           window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
