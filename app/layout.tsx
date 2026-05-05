@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ThemeClient from "@/components/ThemeClient";
@@ -21,12 +21,10 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   icons: {
     icon: [
-      { url: "/secupro-logo-official.png", type: "image/png", sizes: "512x512" },
+      { url: "/secupro-logo.svg", type: "image/svg+xml" },
     ],
-    shortcut: "/secupro-logo-official.png",
-    apple: [
-      { url: "/secupro-logo-official.png", sizes: "512x512" },
-    ],
+    shortcut: "/secupro-logo.svg",
+    apple: "/secupro-logo.svg",
   },
 };
 

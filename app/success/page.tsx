@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 
@@ -52,7 +52,7 @@ export default function SuccessPage() {
       >
         {/* Logo */}
         <Image
-          src="/secupro-logo-official.png"
+          src="/secupro-logo.svg"
           alt="SecuPRO"
           width={80}
           height={80}

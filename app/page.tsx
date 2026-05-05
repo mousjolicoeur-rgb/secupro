@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -137,7 +137,7 @@ export default function LandingPage() {
           {/* Logo */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <Image
-              src="/secupro-logo-official.png"
+              src="/secupro-logo.svg"
               alt="SecuPRO"
               width={36}
               height={36}

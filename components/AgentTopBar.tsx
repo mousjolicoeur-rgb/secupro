@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import AgentAvatar from "@/components/AgentAvatar";
 import { Moon, Sun, Crown } from "lucide-react";
@@ -28,12 +28,13 @@ export default function AgentTopBar(props: {
       {/* SECTION GAUCHE : Logo + Titres */}
       <div className="flex items-center gap-3 min-w-0">
         <Image
-          src="/secupro-logo-official.png"
+          src="/secupro-logo.svg"
           alt="SecuPRO"
-          width={36}
+          width={135}
           height={36}
           className="shrink-0"
           priority
+          unoptimized
         />
         <div className="w-px h-8 shrink-0 opacity-20" style={{ background: "currentColor" }} />
         <div className="min-w-0">

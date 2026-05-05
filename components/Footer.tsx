@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -26,11 +26,12 @@ export default function Footer() {
       >
         {/* Logo */}
         <Image
-          src="/secupro-logo-official.png"
+          src="/secupro-logo.svg"
           alt="SecuPRO"
-          width={48}
+          width={180}
           height={48}
           style={{ opacity: 0.85 }}
+          unoptimized
         />
 
         {/* Liens légaux */}

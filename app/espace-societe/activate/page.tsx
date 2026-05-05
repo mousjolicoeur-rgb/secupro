@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -275,7 +275,7 @@ export default function ActivateEnterprisePage() {
                 }}
               />
               <Image
-                src="/secupro-logo-official.png"
+                src="/secupro-logo.svg"
                 alt="SecuPRO"
                 width={58}
                 height={58}

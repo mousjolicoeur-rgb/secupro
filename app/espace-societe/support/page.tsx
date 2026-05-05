@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -230,7 +230,7 @@ export default function EspaceSocieteSupport() {
             }}
           />
           <Image
-            src="/secupro-logo-official.png"
+            src="/secupro-logo.svg"
             alt="SecuPRO"
             width={54}
             height={54}

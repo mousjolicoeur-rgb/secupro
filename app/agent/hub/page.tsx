@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -404,7 +404,7 @@ export default function AgentHubPage() {
           }}
         >
           <Image
-            src="/secupro-logo-official.png"
+            src="/secupro-logo.svg"
             alt="SecuPRO"
             width={52}
             height={52}

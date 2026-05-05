@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, RefreshCw } from "lucide-react";
@@ -32,7 +32,7 @@ export function Header({ onReset }: HeaderProps) {
 
       {/* Centre — branding */}
       <div className="flex items-center gap-3">
-        <Image src="/secupro-logo-official.png" alt="SecuPRO" width={28} height={28}
+        <Image src="/secupro-logo.svg" alt="SecuPRO" width={28} height={28}
           style={{ filter:"drop-shadow(0 0 8px rgba(0,255,204,0.5))" }} />
         <div>
           <p className="text-[7px] font-black uppercase tracking-[0.55em]"
