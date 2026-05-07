@@ -11,6 +11,20 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+/** Détails PostgREST / Supabase pour debug client + logs. */
+function formatSupabaseError(err: {
+  message: string;
+  code?: string;
+  details?: string | null;
+  hint?: string | null;
+}): string {
+  const bits: string[] = [err.message];
+  if (err.code) bits.push(`code=${err.code}`);
+  if (err.details) bits.push(`details=${err.details}`);
+  if (err.hint) bits.push(`hint=${err.hint}`);
+  return bits.join(" · ");
+}
+
 export async function POST(req: Request): Promise<NextResponse> {
   try {
     const { user_id, nom_societe, email } = (await req.json()) as {
@@ -27,17 +41,30 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
 
     // Vérifie si une société existe déjà pour cet utilisateur
-    const { data: existing } = await supabaseAdmin
+    const { data: existing, error: existingErr } = await supabaseAdmin
       .from("societes")
       .select("id")
       .eq("user_id", user_id)
       .maybeSingle();
 
+    if (existingErr) {
+      console.error("[Register] Erreur Supabase (lecture société):", {
+        message: existingErr.message,
+        code: existingErr.code,
+        details: existingErr.details,
+        hint: existingErr.hint,
+      });
+      return NextResponse.json(
+        { error: formatSupabaseError(existingErr) },
+        { status: 500 }
+      );
+    }
+
     if (existing) {
       return NextResponse.json({ societe_id: existing.id });
     }
 
-    // Crée la société avec subscription_status='trial'
+    // Crée la société avec subscription_status='trial' (colonnes DB : nom, email_contact, …)
     const { data: societe, error } = await supabaseAdmin
       .from("societes")
       .insert({
@@ -49,17 +76,28 @@ export async function POST(req: Request): Promise<NextResponse> {
       .select("id")
       .single();
 
-    if (error || !societe) {
-      console.error("[Register] Erreur création société:", error);
+    if (error) {
+      console.error("[Register] Erreur Supabase (insert societes):", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
       return NextResponse.json(
-        { error: "Impossible de créer la société." },
+        { error: formatSupabaseError(error) },
         { status: 500 }
       );
     }
 
+    if (!societe) {
+      const msg = "Aucune ligne société retournée après insertion (réponse vide).";
+      console.error("[Register]", msg);
+      return NextResponse.json({ error: msg }, { status: 500 });
+    }
+
     return NextResponse.json({ societe_id: societe.id });
   } catch (err: unknown) {
-    console.error("[Register]", err);
+    console.error("[Register] Exception:", err);
     const msg = err instanceof Error ? err.message : "Erreur inconnue";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
