@@ -878,10 +878,6 @@ export default function EntreprisesPage() {
             }}
             onClick={() => router.push("/")}
           >
-            <span style={{fontFamily:"'Rajdhani', sans-serif", fontWeight:700, fontSize:'1.5rem', letterSpacing:'2px'}}>
-              <span style={{color:'#fff'}}>Secu</span>
-              <span style={{color:'#00aaff'}}>PRO</span>
-            </span>
             <div>
               <div
                 style={{
@@ -1570,10 +1566,6 @@ export default function EntreprisesPage() {
                   marginBottom: "18px",
                 }}
               >
-                <span style={{fontFamily:"'Rajdhani', sans-serif", fontWeight:700, fontSize:'1.5rem', letterSpacing:'2px'}}>
-                  <span style={{color:'#fff'}}>Secu</span>
-                  <span style={{color:'#00aaff'}}>PRO</span>
-                </span>
                 <span
                   style={{
                     fontFamily: "'Rajdhani', sans-serif",

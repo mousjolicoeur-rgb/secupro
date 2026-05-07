@@ -1,8 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+  // Pages with their own full footer — skip global footer
+  if (pathname === "/entreprises") return null;
+
   return (
     <footer
       style={{
