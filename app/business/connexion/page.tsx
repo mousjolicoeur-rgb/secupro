@@ -32,7 +32,7 @@ export default function BusinessConnexionPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/dashboard-exploitation");
+    router.push("/espace-societe/dashboard");
   };
 
   return (

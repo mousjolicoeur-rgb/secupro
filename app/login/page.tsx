@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -27,7 +27,7 @@ function LoginContent() {
       else {
         // Redirige vers la page demandée avant l'interception du middleware,
         // ou vers /dashboard par défaut. On s'assure que c'est un chemin local.
-        router.replace(nextPath.startsWith('/') ? nextPath : '/dashboard');
+        router.replace(nextPath.startsWith('/') ? nextPath : '/espace-societe/dashboard');
       }
     } catch { setError('Une erreur est survenue. Réessayez.'); }
     finally { setLoading(false); }
