@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -262,6 +263,7 @@ function ModuleCard({ mod }: { mod: ModuleItem }) {
           transform: "translate(40px, -40px)",
           transition: "opacity 0.3s",
           opacity: hovered ? 1 : 0,
+          pointerEvents: "none",
         }}
       />
 
@@ -313,23 +315,29 @@ function ModuleCard({ mod }: { mod: ModuleItem }) {
       </div>
 
       {/* Link */}
-      <div
+      <Link
+        href={`/entreprises/${mod.id}`}
         style={{
+          position: "relative",
+          zIndex: 50,
+          cursor: "pointer",
           display: "inline-flex",
           alignItems: "center",
           gap: "6px",
+          fontFamily: "'Rajdhani', sans-serif",
           fontSize: "11px",
           fontWeight: 700,
-          fontFamily: "'Rajdhani', sans-serif",
           textTransform: "uppercase",
           letterSpacing: "0.12em",
           color: isCyan ? CYAN : ORANGE,
           opacity: hovered ? 1 : 0.5,
           transition: "opacity 0.2s",
+          textDecoration: "none",
+          pointerEvents: "auto",
         }}
       >
-        En savoir plus →
-      </div>
+        EN SAVOIR PLUS →
+      </Link>
     </div>
   );
 }
@@ -694,7 +702,7 @@ function PricingCard({ plan }: { plan: PlanItem }) {
           lineHeight: 1.5,
         }}
       >
-        14 jours gratuits · Sans engagement · Résiliation en 1 clic
+        1 mois gratuit · Sans engagement · Résiliation en 1 clic
       </p>
     </div>
   );
@@ -1155,7 +1163,7 @@ export default function EntreprisesPage() {
               (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 0 44px rgba(0,200,240,0.38)`;
             }}
           >
-            Essai gratuit 14 jours →
+            Essai gratuit 1 mois →
           </button>
           <a
             href="#modules"
@@ -1513,7 +1521,7 @@ export default function EntreprisesPage() {
               lineHeight: 1.65,
             }}
           >
-            14 jours d&apos;essai gratuit. Sans engagement. Résiliation en 1 clic.
+            1 mois d&apos;essai gratuit. Sans engagement. Résiliation en 1 clic.
           </p>
         </div>
 
