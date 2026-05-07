@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   Users, AlertTriangle, Building2, Bell, Bot,
   FileText, Table2, Phone, CheckCircle2, XCircle,
-  Activity, MapPin, Zap, ArrowLeft,
+  Activity, MapPin, Zap, ArrowLeft, Shield, Eye,
 } from "lucide-react";
 
 const BoutonRapportMensuel = dynamic(
@@ -178,6 +178,30 @@ const STATUS_DOT: Record<string, string> = {
   nominal:"#34d399",  alerte:"#fbbf24",     critique:"#f87171",
 };
 
+// ── Données conformité CNAPS ─────────────────────────────────────────────────
+type CnapsStatut = "conforme" | "a_verifier" | "critique";
+interface CnapsModule {
+  num: string; titre: string; statut: CnapsStatut;
+  solution: string; lien: string;
+}
+const CNAPS_MODULES: CnapsModule[] = [
+  { num:"01", titre:"Exercice sans carte professionnelle valide",     statut:"critique",   solution:"Alertes expiration carte pro automatiques (CNAPS)",        lien:"#agents" },
+  { num:"02", titre:"Défaut d'habilitation préalable du dirigeant",   statut:"a_verifier", solution:"Suivi habilitation dirigeant avec rappels",                lien:"#conformite" },
+  { num:"03", titre:"Emploi d'agents non titulaires du TFP APS",      statut:"critique",   solution:"Vérification TFP APS à l'import CSV agents",              lien:"#agents" },
+  { num:"04", titre:"Absence du livre de police (registre d'activité)",statut:"a_verifier", solution:"Registre d'activité généré automatiquement",              lien:"#rapports" },
+  { num:"05", titre:"Défaut d'assurance RCP",                          statut:"a_verifier", solution:"Document RCP centralisé avec alerte échéance",            lien:"#documents" },
+  { num:"06", titre:"Non-respect de la tenue réglementaire",           statut:"conforme",   solution:"Checklist tenue par agent au pointage",                   lien:"#plannings" },
+  { num:"07", titre:"Sous-traitance à une entreprise non autorisée",   statut:"a_verifier", solution:"Vérification autorisation CNAPS sous-traitants",          lien:"#conformite" },
+  { num:"08", titre:"Dépassement des plafonds horaires légaux",        statut:"conforme",   solution:"Détection automatique dépassement 48h/semaine",           lien:"#plannings" },
+  { num:"09", titre:"Absence du DUERP",                                statut:"a_verifier", solution:"Modèle DUERP générable depuis la plateforme",             lien:"#documents" },
+  { num:"10", titre:"Défaut de formation continue obligatoire",        statut:"conforme",   solution:"Suivi formations SST/SSIAP/recyclage par agent",          lien:"#agents" },
+];
+const CNAPS_STATUT_CFG: Record<CnapsStatut, { label: string; color: string }> = {
+  conforme:   { label: "Conforme",   color: "#34d399" },
+  a_verifier: { label: "À vérifier", color: "#fbbf24" },
+  critique:   { label: "Critique",   color: "#f87171" },
+};
+
 // ══════════════════════════════════════════════════════════════════════════════
 // COMPOSANTS PARTAGÉS
 // ══════════════════════════════════════════════════════════════════════════════
@@ -204,6 +228,82 @@ function BlockWrap({ children, className = "" }: { children: React.ReactNode; cl
     <div className={`flex flex-col gap-0 rounded-xl ${className}`}
       style={{ background: C.blockBg, backdropFilter: "blur(14px)", border: `1px solid ${C.blockBdr}` }}>
       {children}
+    </div>
+  );
+}
+
+function CnapsCard({ num, titre, statut, solution, lien }: CnapsModule) {
+  const cfg = CNAPS_STATUT_CFG[statut];
+  return (
+    <div
+      style={{
+        background: "rgba(8,16,34,0.85)",
+        border: `1px solid ${cfg.color}22`,
+        borderLeft: `3px solid ${cfg.color}`,
+        borderRadius: "10px",
+        padding: "14px 16px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "10px",
+        transition: "border-color 0.2s",
+      }}
+    >
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{
+            fontFamily: "'Rajdhani', monospace",
+            fontSize: "11px",
+            fontWeight: 900,
+            color: cfg.color,
+            opacity: 0.7,
+            letterSpacing: "0.08em",
+            flexShrink: 0,
+          }}>
+            {num}
+          </span>
+          <span style={{ fontSize: "12px", fontWeight: 600, color: "#e2e8f0", lineHeight: 1.35 }}>
+            {titre}
+          </span>
+        </div>
+        <span style={{
+          fontSize: "7px", fontWeight: 900, textTransform: "uppercase",
+          letterSpacing: "0.2em", padding: "3px 8px", borderRadius: "99px", flexShrink: 0,
+          background: `${cfg.color}14`, border: `1px solid ${cfg.color}30`, color: cfg.color,
+        }}>
+          {cfg.label}
+        </span>
+      </div>
+
+      {/* Solution */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: "7px" }}>
+        <span style={{ fontSize: "9px", color: C.cyan, flexShrink: 0, marginTop: "1px" }}>✓</span>
+        <p style={{ fontSize: "11px", color: C.muted, lineHeight: 1.5 }}>
+          <span style={{ color: "rgba(0,209,255,0.45)", fontSize: "9px", fontWeight: 700,
+            textTransform: "uppercase", letterSpacing: "0.12em", marginRight: "5px" }}>
+            Solution :
+          </span>
+          {solution}
+        </p>
+      </div>
+
+      {/* Bouton */}
+      <div>
+        <a
+          href={lien}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: "4px",
+            fontSize: "9px", fontWeight: 700, textTransform: "uppercase",
+            letterSpacing: "0.15em", color: cfg.color, textDecoration: "none",
+            padding: "4px 10px", borderRadius: "6px",
+            background: `${cfg.color}0d`, border: `1px solid ${cfg.color}22`,
+            transition: "all 0.18s",
+          }}
+        >
+          <Eye style={{ width: "9px", height: "9px" }} />
+          Voir
+        </a>
+      </div>
     </div>
   );
 }
@@ -624,6 +724,43 @@ export default function ChefExploitationDashboard() {
           societeId={MOCK_SOCIETE.id}
           societeName={MOCK_SOCIETE.nom}
         />
+
+        {/* ── CONFORMITÉ CNAPS — MODULES DE PRÉVENTION ── */}
+        <div style={{ gridColumn: "1 / -1", marginTop: "4px" }}>
+          <BlockWrap>
+            {/* En-tête */}
+            <div className="px-4 py-3 flex items-center justify-between flex-wrap gap-2"
+              style={{ borderBottom: `1px solid ${C.blockBdr}` }}>
+              <div className="flex items-center gap-2">
+                <Shield className="shrink-0" style={{ width: "13px", height: "13px", color: C.cyan }} />
+                <span className="text-[9px] font-black uppercase tracking-[0.22em]"
+                  style={{ color: C.muted }}>Conformité CNAPS</span>
+                <span className="text-[9px] font-black uppercase tracking-[0.22em]"
+                  style={{ color: C.cyan }}>— Modules de prévention</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge label={`${CNAPS_MODULES.filter(m => m.statut === "critique").length} critique${CNAPS_MODULES.filter(m => m.statut === "critique").length > 1 ? "s" : ""}`}   color={C.red} />
+                <Badge label={`${CNAPS_MODULES.filter(m => m.statut === "a_verifier").length} à vérifier`} color={C.amber} />
+                <Badge label={`${CNAPS_MODULES.filter(m => m.statut === "conforme").length} conformes`}    color={C.green} />
+              </div>
+            </div>
+
+            {/* Grille cartes */}
+            <div style={{ padding: "16px" }}>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, 1fr)",
+                gap: "10px",
+              }}
+                className="cnaps-grid"
+              >
+                {CNAPS_MODULES.map((m) => (
+                  <CnapsCard key={m.num} {...m} />
+                ))}
+              </div>
+            </div>
+          </BlockWrap>
+        </div>
       </main>
 
       <footer className="px-5 py-4 text-center">
@@ -643,6 +780,7 @@ export default function ChefExploitationDashboard() {
         }
         @media (max-width: 1024px) { .dash-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px)  { .dash-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 640px)  { .cnaps-grid { grid-template-columns: 1fr !important; } }
       `}</style>
     </div>
   );
