@@ -185,16 +185,16 @@ interface CnapsModule {
   solution: string; lien: string;
 }
 const CNAPS_MODULES: CnapsModule[] = [
-  { num:"01", titre:"Exercice sans carte professionnelle valide",     statut:"critique",   solution:"Alertes expiration carte pro automatiques (CNAPS)",        lien:"#agents" },
-  { num:"02", titre:"Défaut d'habilitation préalable du dirigeant",   statut:"a_verifier", solution:"Suivi habilitation dirigeant avec rappels",                lien:"#conformite" },
-  { num:"03", titre:"Emploi d'agents non titulaires du TFP APS",      statut:"critique",   solution:"Vérification TFP APS à l'import CSV agents",              lien:"#agents" },
-  { num:"04", titre:"Absence du livre de police (registre d'activité)",statut:"a_verifier", solution:"Registre d'activité généré automatiquement",              lien:"#rapports" },
-  { num:"05", titre:"Défaut d'assurance RCP",                          statut:"a_verifier", solution:"Document RCP centralisé avec alerte échéance",            lien:"#documents" },
-  { num:"06", titre:"Non-respect de la tenue réglementaire",           statut:"conforme",   solution:"Checklist tenue par agent au pointage",                   lien:"#plannings" },
-  { num:"07", titre:"Sous-traitance à une entreprise non autorisée",   statut:"a_verifier", solution:"Vérification autorisation CNAPS sous-traitants",          lien:"#conformite" },
-  { num:"08", titre:"Dépassement des plafonds horaires légaux",        statut:"conforme",   solution:"Détection automatique dépassement 48h/semaine",           lien:"#plannings" },
-  { num:"09", titre:"Absence du DUERP",                                statut:"a_verifier", solution:"Modèle DUERP générable depuis la plateforme",             lien:"#documents" },
-  { num:"10", titre:"Défaut de formation continue obligatoire",        statut:"conforme",   solution:"Suivi formations SST/SSIAP/recyclage par agent",          lien:"#agents" },
+  { num:"01", titre:"Exercice sans carte professionnelle valide",      statut:"critique",   solution:"Alertes expiration carte pro automatiques (CNAPS)",        lien:"/espace-societe/dashboard#agents" },
+  { num:"02", titre:"Défaut d'habilitation préalable du dirigeant",    statut:"a_verifier", solution:"Suivi habilitation dirigeant avec rappels",                lien:"/espace-societe/support" },
+  { num:"03", titre:"Emploi d'agents non titulaires du TFP APS",       statut:"critique",   solution:"Vérification TFP APS à l'import CSV agents",              lien:"/espace-societe/dashboard#agents" },
+  { num:"04", titre:"Absence du livre de police (registre d'activité)",statut:"a_verifier", solution:"Registre d'activité généré automatiquement",              lien:"/espace-societe/dashboard#planning" },
+  { num:"05", titre:"Défaut d'assurance RCP",                           statut:"a_verifier", solution:"Document RCP centralisé avec alerte échéance",            lien:"/espace-societe/support" },
+  { num:"06", titre:"Non-respect de la tenue réglementaire",            statut:"conforme",   solution:"Checklist tenue par agent au pointage",                   lien:"/espace-societe/dashboard#planning" },
+  { num:"07", titre:"Sous-traitance à une entreprise non autorisée",    statut:"a_verifier", solution:"Vérification autorisation CNAPS sous-traitants",          lien:"/espace-societe/support" },
+  { num:"08", titre:"Dépassement des plafonds horaires légaux",         statut:"conforme",   solution:"Détection automatique dépassement 48h/semaine",           lien:"/espace-societe/dashboard#alertes" },
+  { num:"09", titre:"Absence du DUERP",                                 statut:"a_verifier", solution:"Modèle DUERP générable depuis la plateforme",             lien:"/espace-societe/support" },
+  { num:"10", titre:"Défaut de formation continue obligatoire",         statut:"conforme",   solution:"Suivi formations SST/SSIAP/recyclage par agent",          lien:"/espace-societe/dashboard#agents" },
 ];
 const CNAPS_STATUT_CFG: Record<CnapsStatut, { label: string; color: string }> = {
   conforme:   { label: "Conforme",   color: "#34d399" },
@@ -289,7 +289,7 @@ function CnapsCard({ num, titre, statut, solution, lien }: CnapsModule) {
 
       {/* Bouton */}
       <div>
-        <a
+        <Link
           href={lien}
           style={{
             display: "inline-flex", alignItems: "center", gap: "4px",
@@ -302,7 +302,7 @@ function CnapsCard({ num, titre, statut, solution, lien }: CnapsModule) {
         >
           <Eye style={{ width: "9px", height: "9px" }} />
           Voir
-        </a>
+        </Link>
       </div>
     </div>
   );
