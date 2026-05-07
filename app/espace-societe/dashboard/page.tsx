@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
@@ -222,6 +222,92 @@ async function exportXLSX(agents: Agent[]) {
   }
 }
 
+function normCell(v: unknown): string {
+  return String(v ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "");
+}
+
+function parseStatutPlanning(raw: string): AgentStatus {
+  const t = raw.trim().toLowerCase();
+  if (t.includes("repos")) return "repos";
+  if (t.includes("dispo")) return "disponible";
+  if (t.includes("anomal")) return "anomalie";
+  if (t.includes("poste") || t === "actif" || t === "en poste" || t === "en_poste") return "en_poste";
+  return "en_poste";
+}
+
+/** Importe planning depuis .xlsx / .xls / .csv — colonnes Agent, Site, Horaires, Statut */
+async function parsePlanningFromFile(file: File): Promise<Agent[]> {
+  const XLSX = await import("xlsx");
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: "array" });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  if (!ws) throw new Error("empty");
+  const rows = XLSX.utils.sheet_to_json<(string | number | undefined)[]>(ws, {
+    header: 1,
+    raw: false,
+    defval: "",
+  }) as (string | number | undefined)[][];
+
+  let headerRow = -1;
+  let colAgent = -1;
+  let colSite = -1;
+  let colHoraires = -1;
+  let colStatut = -1;
+
+  for (let r = 0; r < Math.min(rows.length, 40); r++) {
+    const row = rows[r] ?? [];
+    const cells = row.map(normCell);
+    const ia = cells.findIndex(c => c === "agent");
+    const is = cells.findIndex(c => c === "site");
+    const ih = cells.findIndex(c => c === "horaires" || c === "horaire");
+    const ist = cells.findIndex(c => c === "statut" || c === "status" || c === "st");
+    if (ia >= 0 && is >= 0 && ih >= 0 && ist >= 0) {
+      headerRow = r;
+      colAgent = ia;
+      colSite = is;
+      colHoraires = ih;
+      colStatut = ist;
+      break;
+    }
+  }
+
+  if (headerRow < 0) throw new Error("format");
+
+  const out: Agent[] = [];
+  let idx = 0;
+  for (let r = headerRow + 1; r < rows.length; r++) {
+    const row = rows[r] ?? [];
+    const agentStr = String(row[colAgent] ?? "").trim();
+    const site = String(row[colSite] ?? "").trim();
+    const horaires = String(row[colHoraires] ?? "").trim();
+    const statutRaw = String(row[colStatut] ?? "").trim();
+    if (!agentStr && !site && !horaires && !statutRaw) continue;
+    if (!agentStr) continue;
+
+    const parts = agentStr.split(/\s+/).filter(Boolean);
+    const prenom = parts[0] ?? "—";
+    const nom = parts.slice(1).join(" ").trim() || "—";
+
+    out.push({
+      id: `imp-${idx++}`,
+      nom,
+      prenom,
+      site,
+      horaires: horaires || "—",
+      tel: "—",
+      status: parseStatutPlanning(statutRaw),
+      habilitation: "TFP APS",
+    });
+  }
+
+  if (out.length === 0) throw new Error("format");
+  return out;
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // TOKENS DE DESIGN
 // ══════════════════════════════════════════════════════════════════════════════
@@ -388,11 +474,12 @@ function CnapsCard({ num, titre, statut, solution, lien }: CnapsModule) {
 
 function BlockHead({
   title, Icon, accent = C.cyan, badge,
-  onPDF, onXLSX,
+  onPDF, onXLSX, onImportExcel,
 }: {
   title: string; Icon: React.ElementType; accent?: string;
   badge?: { label: string; color: string };
   onPDF?: () => void; onXLSX?: () => void;
+  onImportExcel?: () => void;
 }) {
   return (
     <div className="flex items-center justify-between px-4 pt-3.5 pb-3"
@@ -404,10 +491,10 @@ function BlockHead({
         </span>
         {badge && <Badge label={badge.label} color={badge.color} />}
       </div>
-      {(onPDF || onXLSX) && (
+      {(onPDF || onXLSX || onImportExcel) && (
         <div className="flex items-center gap-0.5">
           {onPDF && (
-            <button onClick={onPDF} title="Export PDF"
+            <button onClick={onPDF} title="Export PDF" type="button"
               className="flex items-center gap-1 px-2 py-1 rounded transition-colors duration-150"
               style={{ color: "rgba(148,163,184,0.4)" }}
               onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.color = C.red)}
@@ -417,13 +504,23 @@ function BlockHead({
             </button>
           )}
           {onXLSX && (
-            <button onClick={onXLSX} title="Export Excel"
+            <button onClick={onXLSX} title="Export Excel" type="button"
               className="flex items-center gap-1 px-2 py-1 rounded transition-colors duration-150"
               style={{ color: "rgba(148,163,184,0.4)" }}
               onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.color = C.green)}
               onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.color = "rgba(148,163,184,0.4)")}>
               <Table2 size={11} />
               <span className="text-[8px] font-bold uppercase tracking-wider">XLSX</span>
+            </button>
+          )}
+          {onImportExcel && (
+            <button onClick={onImportExcel} title="Importer Excel / CSV" type="button"
+              className="flex items-center gap-1 px-2 py-1 rounded transition-colors duration-150"
+              style={{ color: "rgba(148,163,184,0.4)" }}
+              onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.color = C.cyan)}
+              onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.color = "rgba(148,163,184,0.4)")}>
+              <span className="text-[10px] leading-none" aria-hidden>📥</span>
+              <span className="text-[8px] font-bold uppercase tracking-wider">Importer Excel</span>
             </button>
           )}
         </div>
@@ -469,13 +566,57 @@ function BlocKPIs({ agents, anomalies }: { agents: Agent[]; anomalies: Anomalie[
 // BLOC 2 — PLANNINGS DU JOUR (export PDF + XLSX)
 // ══════════════════════════════════════════════════════════════════════════════
 
-function BlocPlannings({ agents }: { agents: Agent[] }) {
+type ToastState = { message: string; variant: "ok" | "err" } | null;
+
+function BlocPlannings({
+  agents,
+  onAgentsImported,
+}: {
+  agents: Agent[];
+  onAgentsImported: (next: Agent[]) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [toast, setToast] = useState<ToastState>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = window.setTimeout(() => setToast(null), 3200);
+    return () => window.clearTimeout(t);
+  }, [toast]);
+
   const actifs = agents.filter(a => a.status !== "repos");
+
+  const openFilePicker = () => fileRef.current?.click();
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    try {
+      const next = await parsePlanningFromFile(file);
+      onAgentsImported(next);
+      setToast({ message: `Planning importé — ${next.length} agent${next.length > 1 ? "s" : ""} chargé${next.length > 1 ? "s" : ""}`, variant: "ok" });
+    } catch {
+      setToast({ message: "Format invalide", variant: "err" });
+    }
+  };
+
   return (
     <BlockWrap>
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".xlsx,.xls,.csv"
+        className="hidden"
+        aria-hidden
+        onChange={onFileChange}
+      />
       <BlockHead title="Plannings du jour" Icon={Users}
         badge={{ label: `${actifs.length} agents`, color: C.cyan }}
-        onPDF={() => exportPDF(agents)} onXLSX={() => exportXLSX(agents)} />
+        onPDF={() => exportPDF(agents)}
+        onXLSX={() => exportXLSX(agents)}
+        onImportExcel={openFilePicker}
+      />
       <div className="px-4 pb-3 pt-1">
         {/* En-têtes */}
         <div className="grid text-[8px] font-black uppercase tracking-[0.3em] pb-1.5"
@@ -501,6 +642,20 @@ function BlocPlannings({ agents }: { agents: Agent[] }) {
           </div>
         ))}
       </div>
+      {toast && (
+        <div
+          className="fixed bottom-6 left-1/2 z-[100] -translate-x-1/2 px-4 py-3 rounded-xl text-[11px] font-semibold shadow-lg max-w-[90vw]"
+          style={{
+            background: toast.variant === "ok" ? "rgba(52,211,153,0.15)" : "rgba(248,113,113,0.15)",
+            border: `1px solid ${toast.variant === "ok" ? "rgba(52,211,153,0.35)" : "rgba(248,113,113,0.4)"}`,
+            color: toast.variant === "ok" ? "#34d399" : "#f87171",
+            backdropFilter: "blur(12px)",
+          }}
+          role="status"
+        >
+          {toast.message}
+        </div>
+      )}
     </BlockWrap>
   );
 }
@@ -1064,7 +1219,7 @@ export default function ChefExploitationDashboard() {
   }, [router]);
 
   // État global — source de vérité partagée entre tous les blocs
-  const [agents]   = useState<Agent[]>(AGENTS);
+  const [agents, setAgents] = useState<Agent[]>(AGENTS);
   const [anomalies] = useState<Anomalie[]>(ANOMALIES);
   const [sites]    = useState<Site[]>(SITES);
   const [alertes, setAlertes] = useState<Alerte[]>(ALERTES);
@@ -1172,7 +1327,7 @@ export default function ChefExploitationDashboard() {
       {/* ── GRILLE 7 BLOCS ── */}
       <main className="px-4 py-4 max-w-[1440px] mx-auto dash-grid">
         <div id="agents">  <BlocKPIs    agents={agents} anomalies={anomalies} /></div>
-        <div id="planning"><BlocPlannings agents={agents} /></div>
+        <div id="planning"><BlocPlannings agents={agents} onAgentsImported={setAgents} /></div>
         <BlocAnomalies anomalies={anomalies} />
         <BlocSites   sites={sites} />
         <div id="alertes"> <BlocAlertes alertes={alertes} /></div>
