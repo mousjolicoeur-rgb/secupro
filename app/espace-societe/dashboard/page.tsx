@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
   Users, AlertTriangle, Building2, Bell, Bot,
   FileText, Table2, Phone, CheckCircle2, XCircle,
-  Activity, MapPin, Zap, ArrowLeft, Shield, Eye,
+  Activity, MapPin, Zap, ArrowLeft, Shield, Eye, Clock,
 } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
 
 const BoutonRapportMensuel = dynamic(
   () => import("@/components/dashboard/BoutonRapportMensuel"),
@@ -654,8 +655,84 @@ function BlocIA({ suggestions, anomalies }: { suggestions: IASuggestion[]; anoma
 // PAGE PRINCIPALE
 // ══════════════════════════════════════════════════════════════════════════════
 
+// ── Bannière essai ────────────────────────────────────────────────────────
+function TrialBanner({ daysLeft, onUpgrade }: { daysLeft: number; onUpgrade: () => void }) {
+  const isUrgent = daysLeft <= 2;
+  const color    = isUrgent ? "#f87171" : "#fbbf24";
+  return (
+    <div className="flex items-center justify-between px-5 py-2 gap-3 flex-wrap"
+      style={{
+        background: isUrgent ? "rgba(248,113,113,0.08)" : "rgba(251,191,36,0.07)",
+        borderBottom: `1px solid ${color}22`,
+      }}>
+      <div className="flex items-center gap-2">
+        <Clock size={12} style={{ color, flexShrink: 0 }} />
+        <span className="text-[10px] font-black uppercase tracking-[0.18em]"
+          style={{ color }}>
+          Essai gratuit
+        </span>
+        <span className="text-[10px] font-semibold" style={{ color: "rgba(241,245,249,0.7)" }}>
+          —&nbsp;
+          {daysLeft > 0
+            ? `${daysLeft} jour${daysLeft > 1 ? "s" : ""} restant${daysLeft > 1 ? "s" : ""}`
+            : "Dernier jour"}
+        </span>
+      </div>
+      <button
+        onClick={onUpgrade}
+        className="text-[9px] font-black uppercase tracking-[0.22em] px-3 py-1 rounded-full transition-all"
+        style={{
+          background: `${color}15`, border: `1px solid ${color}40`, color,
+        }}>
+        Passer à l&apos;abonnement →
+      </button>
+    </div>
+  );
+}
+
 export default function ChefExploitationDashboard() {
   const router = useRouter();
+
+  // ── Essai gratuit : calcul jours restants depuis created_at ──────────────
+  const [trialDaysLeft, setTrialDaysLeft]     = useState<number | null>(null);
+  const [subscriptionActive, setSubscriptionActive] = useState(false);
+
+  useEffect(() => {
+    async function checkTrial() {
+      try {
+        const societeId =
+          typeof window !== "undefined" ? localStorage.getItem("societe_id") : null;
+        if (!societeId) return;
+
+        const { data } = await supabase
+          .from("societes")
+          .select("created_at, subscription_status")
+          .eq("id", societeId)
+          .single();
+
+        if (!data) return;
+
+        if (data.subscription_status === "active") {
+          setSubscriptionActive(true);
+          return;
+        }
+
+        const created  = new Date(data.created_at);
+        const now      = new Date();
+        const elapsed  = Math.floor((now.getTime() - created.getTime()) / 86_400_000);
+        const daysLeft = Math.max(0, 7 - elapsed);
+
+        setTrialDaysLeft(daysLeft);
+
+        if (daysLeft === 0) {
+          router.push("/espace-societe/activation");
+        }
+      } catch {
+        // Silencieux en dev — le mock continue
+      }
+    }
+    checkTrial();
+  }, [router]);
 
   // État global — source de vérité partagée entre tous les blocs
   const [agents]   = useState<Agent[]>(AGENTS);
@@ -722,6 +799,14 @@ export default function ChefExploitationDashboard() {
             style={{ color: "rgba(52,211,153,0.75)" }}>En direct</span>
         </div>
       </header>
+
+      {/* ── BANNIÈRE ESSAI GRATUIT ── */}
+      {!subscriptionActive && trialDaysLeft !== null && (
+        <TrialBanner
+          daysLeft={trialDaysLeft}
+          onUpgrade={() => router.push("/tarifs-entreprise")}
+        />
+      )}
 
       {/* ── GRILLE 7 BLOCS ── */}
       <main className="px-4 py-4 max-w-[1440px] mx-auto dash-grid">

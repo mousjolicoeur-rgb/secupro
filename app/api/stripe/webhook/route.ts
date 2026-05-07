@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { sendWelcomeB2BEmail } from '@/lib/emails';
+import { sendWelcomeB2BEmail, sendActivationCodeEmail } from '@/lib/emails';
 import { z } from 'zod';
 
 const stripeCheckoutSchema = z.object({
@@ -60,23 +60,29 @@ export async function POST(req: Request) {
         const subscriptionId = validated.data.subscription;
         const customerId = validated.data.customer;
 
-        // Récupérer le plan à partir du produit/prix souscrit
+        // Récupérer le plan à partir des vrais Price IDs Stripe
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         const priceId = subscription.items.data[0].price.id;
-        
-        // Déterminer le plan en fonction de l'ID (mocké ici, à adapter avec les vrais IDs)
+
         let plan = 'gratuit';
-        if (priceId.includes('essentiel')) plan = 'essentiel';
-        if (priceId.includes('pro')) plan = 'pro';
-        if (priceId.includes('premium')) plan = 'premium';
+        if (priceId === process.env.STRIPE_PRICE_ESSENTIEL) plan = 'essentiel';
+        else if (priceId === process.env.STRIPE_PRICE_PRO)      plan = 'pro';
+        else if (priceId === process.env.STRIPE_PRICE_PREMIUM)  plan = 'premium';
+
+        // Générer un code d'activation unique XXXX-XXXX-XXXX-XXXX
+        const seg = () => crypto.randomUUID().replace(/-/g, '').toUpperCase().slice(0, 4);
+        const activationCode = `${seg()}-${seg()}-${seg()}-${seg()}`;
 
         // Mettre à jour la base de données
         const { error } = await supabaseAdmin
           .from('societes')
           .update({
-            plan: plan,
-            stripe_customer_id: customerId,
+            plan:                  plan,
+            stripe_customer_id:    customerId,
             stripe_subscription_id: subscriptionId,
+            subscription_status:   'active',
+            subscription_plan:     plan,
+            activation_code:       activationCode,
           })
           .eq('id', societeId);
 
@@ -84,12 +90,11 @@ export async function POST(req: Request) {
           console.error('Error updating societe after checkout:', error);
           throw error;
         }
-        
-        console.log(`[Stripe] Societe ${societeId} updated to plan ${plan}`);
 
-        // ENVOI EMAIL DE BIENVENUE
+        console.log(`[Stripe] Societe ${societeId} → plan=${plan}, code=${activationCode}`);
+
+        // ENVOI EMAILS (bienvenue + code d'activation)
         try {
-          // On récupère le nom et l'email de la société pour l'email
           const { data: soc } = await supabaseAdmin
             .from('societes')
             .select('nom, email_contact')
@@ -97,11 +102,14 @@ export async function POST(req: Request) {
             .single();
 
           if (soc && soc.email_contact) {
-            await sendWelcomeB2BEmail(soc.email_contact, soc.nom, plan);
-            console.log(`[Email] Bienvenue envoyé à ${soc.email_contact}`);
+            await Promise.all([
+              sendWelcomeB2BEmail(soc.email_contact, soc.nom, plan),
+              sendActivationCodeEmail(soc.email_contact, soc.nom, plan, activationCode),
+            ]);
+            console.log(`[Email] Bienvenue + code activation envoyés à ${soc.email_contact}`);
           }
         } catch (emailErr) {
-          console.error('[Email] Erreur envoi bienvenue:', emailErr);
+          console.error('[Email] Erreur envoi emails post-checkout:', emailErr);
         }
 
         break;

@@ -84,6 +84,73 @@ export const sendAgentAccessEmail = async (email: string, prenom: string, societ
   });
 };
 
+export const sendActivationCodeEmail = async (
+  email: string,
+  societeNom: string,
+  plan: string,
+  activationCode: string,
+) => {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://secupro.app";
+  const activationUrl = `${appUrl}/espace-societe/activation`;
+  const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
+
+  return resend.emails.send({
+    from: "SecuPRO <noreply@secupro.app>",
+    to: email,
+    subject: `SecuPRO — Votre code d'activation ${planLabel}`,
+    html: `
+      <div style="${BASE_STYLES}">
+        <div style="${CONTAINER_STYLES}">
+          <div style="text-align:center; margin-bottom:28px;">
+            <span style="font-family:'Rajdhani',sans-serif; font-size:28px; font-weight:700; letter-spacing:3px;">
+              <span style="color:#fff;">Secu</span><span style="color:#00aaff;">PRO</span>
+            </span>
+          </div>
+
+          <h2 style="font-size:20px; color:#f1f5f9; margin-bottom:6px;">
+            Abonnement activé — Plan ${planLabel}
+          </h2>
+          <p style="color:#9ca3af; margin-bottom:28px;">
+            Bonjour ${societeNom},<br>
+            Votre paiement a bien été reçu. Utilisez le code ci-dessous pour débloquer
+            l'accès complet à votre espace SecuPRO Business.
+          </p>
+
+          <!-- Code d'activation -->
+          <div style="background:#0f172a; border:1px solid rgba(0,209,255,0.25);
+                      border-radius:12px; padding:24px; text-align:center; margin-bottom:28px;">
+            <p style="color:rgba(0,209,255,0.6); font-size:11px; font-weight:700;
+                      letter-spacing:0.4em; text-transform:uppercase; margin:0 0 12px;">
+              Votre code d'activation
+            </p>
+            <p style="color:#00d1ff; font-size:28px; font-weight:900;
+                      letter-spacing:6px; margin:0; font-family:monospace;">
+              ${activationCode}
+            </p>
+            <p style="color:#6b7280; font-size:11px; margin:10px 0 0;">
+              À usage unique · Valable indéfiniment
+            </p>
+          </div>
+
+          <a href="${activationUrl}" style="${BUTTON_STYLES}; background:#00d1ff; color:#0a0d12; border-radius:8px;">
+            Activer mon accès maintenant →
+          </a>
+
+          <div style="margin-top:32px; padding-top:24px; border-top:1px solid #1f2937;">
+            <p style="color:#6b7280; font-size:13px; margin:0 0 8px;">
+              <strong style="color:#9ca3af;">Plan souscrit :</strong> ${planLabel}
+            </p>
+            <p style="color:#6b7280; font-size:13px; margin:0;">
+              Conservez ce code précieusement. En cas de perte, contactez
+              <a href="mailto:support@secupro.app" style="color:#00d1ff;">support@secupro.app</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    `,
+  });
+};
+
 export const sendCarteProAlertEmail = async (email: string, agentNom: string, prenom: string, expireLe: string, urgency: 'informatif' | 'urgent' | 'critique', jRestant: number) => {
   const isCritique = urgency === 'critique';
   return resend.emails.send({
