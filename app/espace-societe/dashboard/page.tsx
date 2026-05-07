@@ -657,35 +657,47 @@ function BlocIA({ suggestions, anomalies }: { suggestions: IASuggestion[]; anoma
 
 // ── Bannière essai ────────────────────────────────────────────────────────
 function TrialBanner({ daysLeft, onUpgrade }: { daysLeft: number; onUpgrade: () => void }) {
-  const isUrgent = daysLeft <= 2;
-  const color    = isUrgent ? "#f87171" : "#fbbf24";
+  // Couleur dynamique : bleu >3j, orange 2-3j, rouge ≤1j
+  const color =
+    daysLeft > 3 ? "#60a5fa" :
+    daysLeft >= 2 ? "#fbbf24" :
+    "#f87171";
+  const bgAlpha =
+    daysLeft > 3 ? "rgba(96,165,250,0.07)" :
+    daysLeft >= 2 ? "rgba(251,191,36,0.07)" :
+    "rgba(248,113,113,0.08)";
+  const progressPct = Math.round(((7 - daysLeft) / 7) * 100);
+
   return (
-    <div className="flex items-center justify-between px-5 py-2 gap-3 flex-wrap"
-      style={{
-        background: isUrgent ? "rgba(248,113,113,0.08)" : "rgba(251,191,36,0.07)",
-        borderBottom: `1px solid ${color}22`,
-      }}>
-      <div className="flex items-center gap-2">
-        <Clock size={12} style={{ color, flexShrink: 0 }} />
-        <span className="text-[10px] font-black uppercase tracking-[0.18em]"
-          style={{ color }}>
-          Essai gratuit
-        </span>
-        <span className="text-[10px] font-semibold" style={{ color: "rgba(241,245,249,0.7)" }}>
-          —&nbsp;
-          {daysLeft > 0
-            ? `${daysLeft} jour${daysLeft > 1 ? "s" : ""} restant${daysLeft > 1 ? "s" : ""}`
-            : "Dernier jour"}
-        </span>
+    <div style={{ background: bgAlpha, borderBottom: `1px solid ${color}20` }}>
+      <div className="flex items-center justify-between px-5 py-2 gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Clock size={12} style={{ color, flexShrink: 0 }} />
+          <span className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color }}>
+            Essai gratuit
+          </span>
+          <span className="text-[10px] font-semibold" style={{ color: "rgba(241,245,249,0.7)" }}>
+            — {daysLeft > 0
+              ? `${daysLeft} jour${daysLeft > 1 ? "s" : ""} restant${daysLeft > 1 ? "s" : ""} sur 7`
+              : "Dernier jour"}
+          </span>
+        </div>
+        <button
+          onClick={onUpgrade}
+          className="text-[9px] font-black uppercase tracking-[0.22em] px-3 py-1 rounded-full"
+          style={{ background: `${color}15`, border: `1px solid ${color}40`, color, cursor: "pointer" }}>
+          Passer à l&apos;abonnement →
+        </button>
       </div>
-      <button
-        onClick={onUpgrade}
-        className="text-[9px] font-black uppercase tracking-[0.22em] px-3 py-1 rounded-full transition-all"
-        style={{
-          background: `${color}15`, border: `1px solid ${color}40`, color,
-        }}>
-        Passer à l&apos;abonnement →
-      </button>
+      {/* Barre de progression */}
+      <div className="h-0.5 w-full" style={{ background: "rgba(255,255,255,0.04)" }}>
+        <div className="h-full transition-all duration-700"
+          style={{
+            width: `${progressPct}%`,
+            background: `linear-gradient(90deg, ${color}55, ${color})`,
+            boxShadow: `0 0 6px ${color}66`,
+          }} />
+      </div>
     </div>
   );
 }

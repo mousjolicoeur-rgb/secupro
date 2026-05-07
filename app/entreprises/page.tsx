@@ -173,7 +173,7 @@ const PLANS: PlanItem[] = [
       "Support email",
     ],
     cta: "Commencer l'essai gratuit",
-    href: "/espace-societe/activate",
+    href: "/inscription",
   },
   {
     id: "pro",
@@ -190,7 +190,7 @@ const PLANS: PlanItem[] = [
       "Support prioritaire 7j/7",
     ],
     cta: "Commencer l'essai gratuit",
-    href: "/espace-societe/activate",
+    href: "/inscription",
   },
   {
     id: "premium",
@@ -207,7 +207,7 @@ const PLANS: PlanItem[] = [
       "Onboarding personnalisé",
     ],
     cta: "Demander une démo",
-    href: "/espace-societe/activate",
+    href: "/inscription",
   },
 ];
 
@@ -989,7 +989,7 @@ export default function EntreprisesPage() {
               Connexion
             </button>
             <button
-              onClick={() => router.push("/espace-societe/activate")}
+              onClick={() => router.push("/inscription")}
               style={{
                 background: `linear-gradient(135deg, #c45e00 0%, ${ORANGE} 100%)`,
                 border: "none",
@@ -1132,7 +1132,7 @@ export default function EntreprisesPage() {
           }}
         >
           <button
-            onClick={() => router.push("/espace-societe/activate")}
+            onClick={() => router.push("/inscription")}
             style={{
               background: `linear-gradient(135deg, #009BB8 0%, ${CYAN} 100%)`,
               border: "none",
