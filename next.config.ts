@@ -12,9 +12,9 @@ const securityHeaders = [
       // Fallback global
       "default-src 'self'",
 
-      // Scripts : self + inline (Next.js) + Stripe + LinkedIn badge + Sentry CDN
+      // Scripts : self + inline (Next.js) + Stripe (+ dahlia Elements) + LinkedIn + Sentry CDN
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'" +
-        " https://js.stripe.com" +
+        " https://js.stripe.com https://js.stripe.com/dahlia/" +
         " https://platform.linkedin.com" +
         " https://static.licdn.com" +
         " https://*.sentry.io",
@@ -32,18 +32,21 @@ const securityHeaders = [
       // Images : self + data URI + blob (html-to-image) + tout HTTPS
       "img-src 'self' data: blob: https:",
 
-      // Connexions réseau : Supabase REST + Supabase Realtime (WebSocket)
-      // + Sentry + LinkedIn API + OpenAI (SecuAI) + Anthropic
+      // Connexions réseau : Supabase REST + Realtime + Sentry + LinkedIn + APIs (+ Stripe)
       "connect-src 'self'" +
         " https://*.supabase.co" +
         " wss://*.supabase.co" +
         " https://sentry.io https://*.sentry.io" +
         " https://www.linkedin.com https://api.linkedin.com" +
         " https://api.anthropic.com" +
-        " https://api.stripe.com",
+        " https://api.stripe.com https://*.stripe.com",
 
-      // Frames : Stripe Elements + LinkedIn badge
-      "frame-src https://js.stripe.com https://hooks.stripe.com https://www.linkedin.com",
+      // Frames : Stripe Elements / Checkout (tous sous-domaines) + LinkedIn badge
+      "frame-src 'self'" +
+        " https://js.stripe.com" +
+        " https://hooks.stripe.com" +
+        " https://*.stripe.com" +
+        " https://www.linkedin.com",
 
       // Empêche l'embedding de SecuPRO dans des iframes tierces
       "frame-ancestors 'none'",
