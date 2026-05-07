@@ -42,6 +42,18 @@ interface IASuggestion {
   id: string; site: string; agentManquant: string;
   agentPropose: Agent; confidence: "haute" | "moyenne"; raison: string;
 }
+interface AgentDoc {
+  id: string; nom: string; prenom: string; tel: string;
+  carte_pro_num: string;  carte_pro_expiry: string;
+  sst_expiry: string | null;
+  cqp_expiry: string | null;
+  ssiap_level: string | null; ssiap_expiry: string | null;
+  online: boolean;
+}
+interface ContactMessage {
+  id: string; agentId: string; agentNom: string;
+  content: string; time: string;
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // DONNÉES MOCK — à remplacer par appels API
@@ -81,6 +93,26 @@ const ALERTES: Alerte[] = [
   { id:"al4", level:"info",     message:"Renouvellement CNAPS requis — MARTIN Luc · échéance dans 30 j",  time:"08:00" },
 ];
 
+// Dates calculées dynamiquement par rapport à today pour un rendu réaliste
+const T = (d: number) => new Date(Date.now() + d * 86_400_000).toISOString().slice(0, 10);
+
+const AGENTS_DOCS: AgentDoc[] = [
+  { id:"a1", nom:"MARTIN",   prenom:"Luc",      tel:"0612345678", carte_pro_num:"AUT-069-2024-01-A", carte_pro_expiry:T(45),  sst_expiry:T(120), cqp_expiry:T(200),  ssiap_level:"1", ssiap_expiry:T(90),  online:true  },
+  { id:"a2", nom:"DIALLO",   prenom:"Mamadou",  tel:"0623456789", carte_pro_num:"AUT-069-2023-02-B", carte_pro_expiry:T(8),   sst_expiry:T(-5),  cqp_expiry:null,    ssiap_level:null,ssiap_expiry:null,   online:true  },
+  { id:"a3", nom:"NGUYEN",   prenom:"Hoa",      tel:"0634567890", carte_pro_num:"AUT-069-2024-03-C", carte_pro_expiry:T(310), sst_expiry:T(200), cqp_expiry:T(420),  ssiap_level:"2", ssiap_expiry:T(400), online:false },
+  { id:"a4", nom:"LAMBERT",  prenom:"Sophie",   tel:"0645678901", carte_pro_num:"AUT-069-2024-04-D", carte_pro_expiry:T(22),  sst_expiry:T(18),  cqp_expiry:null,    ssiap_level:null,ssiap_expiry:null,   online:false },
+  { id:"a5", nom:"BENALI",   prenom:"Karim",    tel:"0656789012", carte_pro_num:"AUT-069-2023-05-E", carte_pro_expiry:T(180), sst_expiry:T(75),  cqp_expiry:T(180),  ssiap_level:null,ssiap_expiry:null,   online:true  },
+  { id:"a6", nom:"DUPONT",   prenom:"Jean",     tel:"0667890123", carte_pro_num:"AUT-069-2024-06-F", carte_pro_expiry:T(600), sst_expiry:T(380), cqp_expiry:T(500),  ssiap_level:"1", ssiap_expiry:T(210), online:true  },
+  { id:"a7", nom:"KONÉ",     prenom:"Aïssatou", tel:"0678901234", carte_pro_num:"AUT-069-2024-07-G", carte_pro_expiry:T(500), sst_expiry:T(25),  cqp_expiry:null,    ssiap_level:null,ssiap_expiry:null,   online:false },
+  { id:"a8", nom:"FERREIRA", prenom:"Pedro",    tel:"0689012345", carte_pro_num:"AUT-069-2023-08-H", carte_pro_expiry:T(-12), sst_expiry:T(-30), cqp_expiry:T(95),   ssiap_level:null,ssiap_expiry:null,   online:false },
+];
+
+const INIT_MESSAGES: ContactMessage[] = [
+  { id:"m1", agentId:"a1", agentNom:"MARTIN Luc",     content:"Planning validé pour demain 06h00",                      time:"13:45" },
+  { id:"m2", agentId:"a3", agentNom:"NGUYEN Hoa",     content:"Rappel : badge obligatoire à la prise de poste",        time:"12:30" },
+  { id:"m3", agentId:"a5", agentNom:"BENALI Karim",   content:"Modification de poste : Entrepôt → Gare Part-Dieu",     time:"10:15" },
+];
+
 // ══════════════════════════════════════════════════════════════════════════════
 // IA OBSERVATEUR — logique de suggestion de remplacement
 // ══════════════════════════════════════════════════════════════════════════════
@@ -101,6 +133,40 @@ function genererSuggestions(anomalies: Anomalie[], agents: Agent[]): IASuggestio
       };
     })
     .filter((s): s is IASuggestion => s !== null);
+}
+
+// ── Badging documents ──────────────────────────────────────────────────────
+function docBadge(expiry: string | null): { label: string; color: string; days: number | null } {
+  if (!expiry) return { label: "N/R", color: "rgba(148,163,184,0.35)", days: null };
+  const days = Math.floor((new Date(expiry).getTime() - Date.now()) / 86_400_000);
+  if (days < 0)   return { label: "EXPIRÉ",         color: "#f87171", days };
+  if (days <= 30) return { label: "EXPIRE BIENTÔT", color: "#fbbf24", days };
+  return                  { label: "VALIDE",          color: "#34d399", days };
+}
+
+// IA : génère des alertes à partir des docs agents
+function genDocAlerts(docs: AgentDoc[]): Alerte[] {
+  const out: Alerte[] = [];
+  docs.forEach(d => {
+    const checks = [
+      { label: "Carte pro",            expiry: d.carte_pro_expiry },
+      { label: "SST",                  expiry: d.sst_expiry },
+      { label: "CQP",                  expiry: d.cqp_expiry },
+      { label: `SSIAP ${d.ssiap_level ?? ""}`.trim(), expiry: d.ssiap_expiry },
+    ];
+    checks.forEach(({ label, expiry }) => {
+      if (!expiry) return;
+      const days = Math.floor((new Date(expiry).getTime() - Date.now()) / 86_400_000);
+      if (days < 0) {
+        out.push({ id: `doc-${d.id}-${label}`, level: "critical",
+          message: `SecuIA — ${label} EXPIRÉ · ${d.prenom} ${d.nom}`, time: "IA" });
+      } else if (days <= 30) {
+        out.push({ id: `doc-${d.id}-${label}`, level: "warning",
+          message: `SecuIA — ${label} expire J-${days} · ${d.prenom} ${d.nom}`, time: "IA" });
+      }
+    });
+  });
+  return out;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -655,6 +721,255 @@ function BlocIA({ suggestions, anomalies }: { suggestions: IASuggestion[]; anoma
 // PAGE PRINCIPALE
 // ══════════════════════════════════════════════════════════════════════════════
 
+// ══════════════════════════════════════════════════════════════════════════════
+// MODULE 1 — EFFECTIFS & CONFORMITÉ DOCUMENTS
+// ══════════════════════════════════════════════════════════════════════════════
+
+function DocBadge({ expiry }: { expiry: string | null }) {
+  const { label, color, days } = docBadge(expiry);
+  return (
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded"
+      style={{ background: `${color}12`, border: `1px solid ${color}30`, fontSize: "8px",
+        fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color }}>
+      {label}
+      {days !== null && days >= 0 && days <= 30 && (
+        <span style={{ opacity: 0.65 }}>J-{days}</span>
+      )}
+    </span>
+  );
+}
+
+function BlocAgentsDocuments({ docs }: { docs: AgentDoc[] }) {
+  return (
+    <BlockWrap>
+      <BlockHead title="Effectifs & Conformité Documents" Icon={FileText}
+        badge={{ label: `${docs.length} agents`, color: C.cyan }} />
+      <div style={{ overflowX: "auto", padding: "0 0 4px" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "10px" }}>
+          <thead>
+            <tr style={{ borderBottom: `1px solid ${C.blockBdr}` }}>
+              {["Agent", "Tél.", "Carte Pro", "SST", "CQP", "SSIAP"].map(h => (
+                <th key={h} style={{ padding: "6px 12px", textAlign: "left",
+                  color: "rgba(0,209,255,0.45)", fontWeight: 700,
+                  fontSize: "8px", textTransform: "uppercase", letterSpacing: "0.3em",
+                  whiteSpace: "nowrap" }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {docs.map((d, i) => (
+              <tr key={d.id}
+                style={{ borderBottom: i < docs.length - 1 ? `1px solid ${C.rowDivider}` : "none" }}>
+                <td style={{ padding: "8px 12px", whiteSpace: "nowrap" }}>
+                  <span style={{ fontWeight: 700, color: "#f1f5f9" }}>
+                    {d.prenom} {d.nom}
+                  </span>
+                </td>
+                <td style={{ padding: "8px 12px", color: C.muted, whiteSpace: "nowrap" }}>
+                  {d.tel}
+                </td>
+                <td style={{ padding: "8px 12px" }}>
+                  <div className="flex flex-col gap-0.5">
+                    <span style={{ fontSize: "8px", color: C.muted, fontFamily: "monospace" }}>
+                      {d.carte_pro_num}
+                    </span>
+                    <DocBadge expiry={d.carte_pro_expiry} />
+                  </div>
+                </td>
+                <td style={{ padding: "8px 12px" }}><DocBadge expiry={d.sst_expiry} /></td>
+                <td style={{ padding: "8px 12px" }}><DocBadge expiry={d.cqp_expiry} /></td>
+                <td style={{ padding: "8px 12px" }}>
+                  {d.ssiap_expiry ? (
+                    <div className="flex items-center gap-1.5">
+                      <span style={{ fontSize: "8px", color: C.violet, fontWeight: 700 }}>
+                        Niv.{d.ssiap_level}
+                      </span>
+                      <DocBadge expiry={d.ssiap_expiry} />
+                    </div>
+                  ) : (
+                    <span style={{ fontSize: "9px", color: "rgba(148,163,184,0.3)" }}>—</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </BlockWrap>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODULE 2 — PORTAIL CONTACT AGENTS LIVE
+// ══════════════════════════════════════════════════════════════════════════════
+
+function BlocPortailContact({
+  docs,
+  messages,
+  onSend,
+}: {
+  docs: AgentDoc[];
+  messages: ContactMessage[];
+  onSend: (agentId: string, agentNom: string, content: string) => void;
+}) {
+  const [selectedAgent, setSelectedAgent] = useState<AgentDoc | null>(null);
+  const [msgText, setMsgText]             = useState("");
+  const [sending, setSending]             = useState(false);
+
+  const handleSend = async () => {
+    if (!selectedAgent || !msgText.trim()) return;
+    setSending(true);
+    await new Promise(r => setTimeout(r, 280));
+    onSend(selectedAgent.id, `${selectedAgent.prenom} ${selectedAgent.nom}`, msgText.trim());
+    setMsgText("");
+    setSending(false);
+  };
+
+  const online  = docs.filter(d => d.online);
+  const offline = docs.filter(d => !d.online);
+
+  return (
+    <BlockWrap>
+      {/* En-tête */}
+      <div className="px-4 py-3 flex items-center justify-between"
+        style={{ borderBottom: `1px solid ${C.blockBdr}` }}>
+        <div className="flex items-center gap-2">
+          <Phone className="shrink-0" style={{ width: "13px", height: "13px", color: C.cyan }} />
+          <span className="text-[9px] font-black uppercase tracking-[0.22em]"
+            style={{ color: C.muted }}>Canal direct agents</span>
+          <span className="text-[9px] font-black uppercase tracking-[0.22em]"
+            style={{ color: C.cyan }}>— En direct</span>
+        </div>
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded-full"
+          style={{ background: "rgba(52,211,153,0.07)", border: "1px solid rgba(52,211,153,0.2)" }}>
+          <span className="w-1.5 h-1.5 rounded-full animate-pulse"
+            style={{ background: C.green, boxShadow: `0 0 5px ${C.green}` }} />
+          <span className="text-[8px] font-black uppercase tracking-[0.22em]"
+            style={{ color: "rgba(52,211,153,0.75)" }}>
+            {online.length} en ligne
+          </span>
+        </div>
+      </div>
+
+      <div className="grid gap-0" style={{ gridTemplateColumns: "1fr 1fr", minHeight: "0" }}
+        className="portail-grid">
+        {/* Colonne gauche : liste agents */}
+        <div style={{ borderRight: `1px solid ${C.blockBdr}`, padding: "12px 0" }}>
+          {[...online, ...offline].map(d => (
+            <button key={d.id} type="button"
+              onClick={() => setSelectedAgent(d)}
+              className="w-full flex items-center gap-2.5 px-4 py-2 transition-all"
+              style={{
+                background: selectedAgent?.id === d.id ? "rgba(0,209,255,0.06)" : "transparent",
+                borderLeft: selectedAgent?.id === d.id ? `2px solid ${C.cyan}` : "2px solid transparent",
+                cursor: "pointer", textAlign: "left",
+              }}>
+              {/* Statut online */}
+              <span className="shrink-0 w-2 h-2 rounded-full"
+                style={{
+                  background: d.online ? C.green : "rgba(148,163,184,0.2)",
+                  boxShadow: d.online ? `0 0 5px ${C.green}` : "none",
+                }} />
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-black truncate" style={{ color: "#f1f5f9" }}>
+                  {d.prenom} {d.nom}
+                </p>
+                <p className="text-[8px] font-medium" style={{ color: C.muted }}>
+                  {d.online ? "En ligne" : "Hors ligne"} · {d.tel}
+                </p>
+              </div>
+              {/* Bouton appel */}
+              <a href={`tel:${d.tel}`}
+                onClick={e => e.stopPropagation()}
+                className="shrink-0 flex items-center justify-center w-6 h-6 rounded-lg transition-all"
+                style={{ background: "rgba(52,211,153,0.08)", border: `1px solid ${C.green}22`,
+                  color: C.green, textDecoration: "none", fontSize: "9px" }}
+                title={`Appeler ${d.prenom}`}>
+                📞
+              </a>
+            </button>
+          ))}
+        </div>
+
+        {/* Colonne droite : messagerie */}
+        <div className="flex flex-col" style={{ padding: "12px" }}>
+          {/* Historique messages */}
+          <div className="flex-1 flex flex-col gap-2 mb-3"
+            style={{ maxHeight: "200px", overflowY: "auto" }}>
+            {messages.length === 0 ? (
+              <p className="text-[9px] text-center py-4" style={{ color: C.muted }}>
+                Aucun message envoyé
+              </p>
+            ) : (
+              messages.slice(-5).reverse().map(m => (
+                <div key={m.id} className="rounded-xl px-3 py-2"
+                  style={{ background: "rgba(0,209,255,0.04)", border: `1px solid ${C.blockBdr}` }}>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[9px] font-black uppercase tracking-[0.15em]"
+                      style={{ color: C.cyan }}>{m.agentNom}</span>
+                    <span className="text-[8px]" style={{ color: C.muted }}>{m.time}</span>
+                  </div>
+                  <p className="text-[10px] leading-snug" style={{ color: "rgba(241,245,249,0.7)" }}>
+                    {m.content}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Zone envoi */}
+          <div className="flex flex-col gap-2">
+            {selectedAgent ? (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg"
+                style={{ background: "rgba(0,209,255,0.06)", border: `1px solid ${C.cyan}22` }}>
+                <span className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{ background: selectedAgent.online ? C.green : "rgba(148,163,184,0.3)" }} />
+                <span className="text-[9px] font-black" style={{ color: C.cyan }}>
+                  → {selectedAgent.prenom} {selectedAgent.nom}
+                </span>
+              </div>
+            ) : (
+              <p className="text-[9px] text-center" style={{ color: C.muted }}>
+                Sélectionnez un agent à gauche
+              </p>
+            )}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={msgText}
+                onChange={e => setMsgText(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && !e.shiftKey && handleSend()}
+                disabled={!selectedAgent}
+                placeholder="Message rapide…"
+                className="flex-1 rounded-xl px-3 py-2 text-[11px] outline-none"
+                style={{
+                  background: "rgba(0,209,255,0.04)",
+                  border: `1px solid ${C.blockBdr}`,
+                  color: "#f1f5f9",
+                  opacity: selectedAgent ? 1 : 0.4,
+                }}
+              />
+              <button type="button" onClick={handleSend}
+                disabled={!selectedAgent || !msgText.trim() || sending}
+                className="rounded-xl px-3 py-2 text-[9px] font-black uppercase tracking-[0.15em] transition-all shrink-0"
+                style={{
+                  background: selectedAgent && msgText.trim() ? C.cyan : "rgba(0,209,255,0.08)",
+                  color: selectedAgent && msgText.trim() ? "#0B1426" : "rgba(0,209,255,0.3)",
+                  cursor: selectedAgent && msgText.trim() ? "pointer" : "not-allowed",
+                  border: "none",
+                }}>
+                {sending ? "…" : "Envoyer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </BlockWrap>
+  );
+}
+
 // ── Bannière essai ────────────────────────────────────────────────────────
 function TrialBanner({ daysLeft, onUpgrade }: { daysLeft: number; onUpgrade: () => void }) {
   // Couleur dynamique : bleu >3j, orange 2-3j, rouge ≤1j
@@ -750,7 +1065,39 @@ export default function ChefExploitationDashboard() {
   const [agents]   = useState<Agent[]>(AGENTS);
   const [anomalies] = useState<Anomalie[]>(ANOMALIES);
   const [sites]    = useState<Site[]>(SITES);
-  const [alertes]  = useState<Alerte[]>(ALERTES);
+  const [alertes, setAlertes] = useState<Alerte[]>(ALERTES);
+  const [agentsDocs]          = useState<AgentDoc[]>(AGENTS_DOCS);
+  const [messages, setMessages] = useState<ContactMessage[]>(INIT_MESSAGES);
+
+  // SecuIA : injecte les alertes documents au montage
+  useEffect(() => {
+    const docAlerts = genDocAlerts(AGENTS_DOCS);
+    if (docAlerts.length > 0) {
+      setAlertes(prev => {
+        const existingIds = new Set(prev.map(a => a.id));
+        return [...prev, ...docAlerts.filter(a => !existingIds.has(a.id))];
+      });
+    }
+  }, []);
+
+  // Envoi message agent (sauvegarde Supabase + état local)
+  const handleSendMessage = async (agentId: string, agentNom: string, content: string) => {
+    const now = new Date();
+    const time = now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    const newMsg: ContactMessage = {
+      id: `m-${Date.now()}`, agentId, agentNom, content, time,
+    };
+    setMessages(prev => [...prev.slice(-49), newMsg]);
+    // Sauvegarde Supabase (silencieuse si table absente)
+    try {
+      const societeId = typeof window !== "undefined" ? localStorage.getItem("societe_id") : null;
+      await supabase.from("messages_agents").insert({
+        societe_id: societeId ?? MOCK_SOCIETE.id,
+        agent_id: agentId, agent_nom: agentNom,
+        contenu: content, sent_at: now.toISOString(),
+      });
+    } catch { /* silencieux */ }
+  };
 
   // IA observe anomalies + agents disponibles → suggestions dérivées
   const suggestions = useMemo(
@@ -833,6 +1180,20 @@ export default function ChefExploitationDashboard() {
           societeName={MOCK_SOCIETE.nom}
         />
 
+        {/* ── EFFECTIFS & CONFORMITÉ DOCUMENTS ── */}
+        <div style={{ gridColumn: "1 / -1", marginTop: "4px" }}>
+          <BlocAgentsDocuments docs={agentsDocs} />
+        </div>
+
+        {/* ── PORTAIL CONTACT AGENTS LIVE ── */}
+        <div style={{ gridColumn: "1 / -1", marginTop: "4px" }}>
+          <BlocPortailContact
+            docs={agentsDocs}
+            messages={messages}
+            onSend={handleSendMessage}
+          />
+        </div>
+
         {/* ── CONFORMITÉ CNAPS — MODULES DE PRÉVENTION ── */}
         <div style={{ gridColumn: "1 / -1", marginTop: "4px" }}>
           <BlockWrap>
@@ -889,6 +1250,8 @@ export default function ChefExploitationDashboard() {
         @media (max-width: 1024px) { .dash-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px)  { .dash-grid { grid-template-columns: 1fr; } }
         @media (max-width: 640px)  { .cnaps-grid { grid-template-columns: 1fr !important; } }
+        .portail-grid { display: grid; grid-template-columns: 1fr 1fr; }
+        @media (max-width: 640px) { .portail-grid { grid-template-columns: 1fr !important; } }
       `}</style>
     </div>
   );
