@@ -11,16 +11,17 @@ export default function HomePage() {
   useEffect(() => {
     if (chartsInitialized.current) return;
 
-    import('chart.js/auto').then((ChartModule) => {
-      const Chart = ChartModule.default;
-      if (!chartGrowthRef.current || !chartInfraRef.current) return;
-      chartsInitialized.current = true;
+    import("chart.js")
+      .then(({ Chart, registerables }) => {
+        Chart.register(...registerables);
+        if (!chartGrowthRef.current || !chartInfraRef.current) return;
+        chartsInitialized.current = true;
 
-      Chart.defaults.color = 'rgba(255,255,255,0.4)';
-      Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
-      Chart.defaults.font = { family: "'DM Sans', sans-serif", size: 11 } as any;
+        Chart.defaults.color = "rgba(255,255,255,0.4)";
+        Chart.defaults.borderColor = "rgba(255,255,255,0.06)";
+        Chart.defaults.font = { family: "'DM Sans', sans-serif", size: 11 } as typeof Chart.defaults.font;
 
-      new Chart(chartGrowthRef.current, {
+        new Chart(chartGrowthRef.current, {
         type: 'line',
         data: {
           labels: ['2019', '2020', '2021', '2022', '2023', '2024', '2025'],
@@ -81,7 +82,8 @@ export default function HomePage() {
           },
         },
       });
-    });
+    })
+      .catch((err) => console.error("[Chart.js]", err));
   }, []);
 
   return (
