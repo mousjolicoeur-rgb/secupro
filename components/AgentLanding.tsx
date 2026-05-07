@@ -4,17 +4,12 @@ import { useState, useEffect } from "react";
 import {
   FileText,
   MessageSquare,
-  BadgeEuro,
   Calendar,
   User,
-  ShieldCheck,
   Lock,
-  Zap,
-  Download,
 } from "lucide-react";
-import Link from "next/link";
 
-// ─── VERROU PAYWALL (intégré ici, aucun import externe) ───────────────────────
+// ─── VERROU PAYWALL ───────────────────────────────────────────────────────────
 function Verrou({ children, bloque }: { children: React.ReactNode; bloque: boolean }) {
   if (!bloque) return <>{children}</>;
 
@@ -85,12 +80,23 @@ function Verrou({ children, bloque }: { children: React.ReactNode; bloque: boole
   );
 }
 
-// ─── DASHBOARD PRINCIPAL ──────────────────────────────────────────────────────
-export default function AgentLanding() {
-  const [mounted, setMounted] = useState(false);
+// ─── MODULES PREMIUM ─────────────────────────────────────────────────────────
+const premiumModules = [
+  { id: 'planning', label: 'PLANNING',       icon: '🗓️' },
+  { id: 'paie',     label: 'ANALYSE PAIE',   icon: '💶' },
+  { id: 'seculia',  label: 'SÉCULIA IA',     icon: '🤖' },
+  { id: 'secdroit', label: 'SECDROIT',        icon: '⚖️' },
+  { id: 'alertes',  label: 'ALERTES CNAPS',  icon: '🔔' },
+  { id: 'perf',     label: 'PERFORMANCES',   icon: '📊' },
+];
 
-  // ⚙️  CONTRÔLE ACCÈS — false = verrou actif / true = accès complet
-  const isPremium = false;
+// ─── DASHBOARD PRINCIPAL ──────────────────────────────────────────────────────
+interface AgentLandingProps {
+  hasAccess?: boolean;
+}
+
+export default function AgentLanding({ hasAccess = false }: AgentLandingProps) {
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -201,49 +207,34 @@ export default function AgentLanding() {
           Services Premium — 9.99€/mois
         </div>
 
-        <Verrou bloque={!isPremium}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "16px",
-            }}
-          >
-            {[
-              { icon: <Download size={22} />, label: "Planning de Mission", bg: "rgba(59,130,246,0.1)", border: "rgba(59,130,246,0.3)", color: "#60a5fa" },
-              { icon: <BadgeEuro size={22} />, label: "Bulletins de Paie", bg: "rgba(168,85,247,0.1)", border: "rgba(168,85,247,0.3)", color: "#c084fc" },
-              { icon: <Zap size={22} />, label: "Secu AI Intelligence", bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.3)", color: "#fbbf24" },
-              { icon: <ShieldCheck size={22} />, label: "Veille Tactique", bg: "rgba(239,68,68,0.1)", border: "rgba(239,68,68,0.3)", color: "#f87171" },
-            ].map(({ icon, label, bg, border, color }) => (
-              <div
-                key={label}
-                style={{
-                  padding: "24px",
-                  background: bg,
-                  border: `1px solid ${border}`,
-                  borderRadius: "16px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "14px",
-                  color,
-                }}
-              >
-                {icon}
-                <span
-                  style={{
-                    color: "#f1f5f9",
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  {label}
+        {hasAccess && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+            {premiumModules.map(mod => (
+              <div key={mod.id} style={{
+                background: '#0d1e30',
+                border: '1px solid #1e3a5f',
+                borderRadius: '10px',
+                padding: '28px 20px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '10px',
+                cursor: 'pointer',
+              }}>
+                <span style={{ fontSize: '28px' }}>{mod.icon}</span>
+                <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '2px', color: '#94a3b8' }}>
+                  {mod.label}
                 </span>
               </div>
             ))}
           </div>
-        </Verrou>
+        )}
+
+        {!hasAccess && (
+          <Verrou bloque={true}>
+            <></>
+          </Verrou>
+        )}
       </section>
     </div>
   );

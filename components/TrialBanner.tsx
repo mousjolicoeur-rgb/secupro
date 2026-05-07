@@ -1,213 +1,177 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { useState, useEffect } from 'react';
 
-const TRIAL_DAYS = 7;
-const STRIPE_URL = "https://buy.stripe.com/28E6oAbTU3ZwaO92FI5gc01";
+const STRIPE_URL = 'https://buy.stripe.com/28E6oAbTU3ZwaO92FI5gc01';
 
-type Remaining = {
-  days: number;
-  hours: number;
-  minutes: number;
-  totalMs: number;
-};
-
-function calcRemaining(createdAt: string): Remaining | null {
-  const trialEnd =
-    new Date(createdAt).getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000;
-  const diff = trialEnd - Date.now();
-  if (diff <= 0) return null;
-  return {
-    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-    hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-    minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-    totalMs: diff,
-  };
+interface TrialBannerProps {
+  daysRemaining?: number;
+  isExpired?: boolean;
+  agentId?: string | null;
 }
 
-export default function TrialBanner() {
-  const [createdAt, setCreatedAt] = useState<string | null>(null);
-  const [remaining, setRemaining] = useState<Remaining | null | "loading">(
-    "loading"
-  );
+export default function TrialBanner({ daysRemaining = 30, isExpired = false }: TrialBannerProps) {
+  const [redirecting, setRedirecting] = useState(false);
+  const [timeLeft, setTimeLeft] = useState('');
 
-  // Récupère la date d'inscription depuis Supabase
+  // Ticker HH:MM:SS pour le dernier jour
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setCreatedAt(data.user?.created_at ?? null);
-    });
-  }, []);
+    if (daysRemaining > 1 || isExpired) return;
+    const tick = () => {
+      const now = new Date();
+      const midnight = new Date(now);
+      midnight.setHours(24, 0, 0, 0);
+      const diff = midnight.getTime() - now.getTime();
+      const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+      const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+      const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+      setTimeLeft(`${h}:${m}:${s}`);
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [daysRemaining, isExpired]);
 
-  // Recalcule le temps restant chaque minute
+  // Auto-redirect Stripe si expiré
   useEffect(() => {
-    if (createdAt === null) {
-      setRemaining(null);
-      return;
-    }
-    const update = () => setRemaining(calcRemaining(createdAt));
-    update();
-    const id = setInterval(update, 60_000);
-    return () => clearInterval(id);
-  }, [createdAt]);
+    if (!isExpired) return;
+    const timeout = setTimeout(() => handleSubscribe(), 3000);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isExpired]);
 
-  // Pas encore chargé ou essai expiré
-  if (remaining === "loading" || remaining === null) return null;
+  const handleSubscribe = () => {
+    setRedirecting(true);
+    window.location.href = STRIPE_URL;
+  };
 
-  const isCritical = remaining.totalMs < 24 * 60 * 60 * 1000;
+  if (isExpired) {
+    return (
+      <div className="trial-banner trial-expired">
+        <div className="trial-inner">
+          <span style={{ fontSize: '22px' }}>🔒</span>
+          <div>
+            <p style={{ margin: 0, color: '#ef4444', fontWeight: 700, fontSize: '14px' }}>
+              Votre essai gratuit est terminé
+            </p>
+            <p style={{ margin: '2px 0 0', color: '#94a3b8', fontSize: '12px' }}>
+              Redirection vers l&apos;abonnement dans quelques secondes…
+            </p>
+          </div>
+          <button onClick={handleSubscribe} disabled={redirecting} className="trial-cta">
+            {redirecting ? 'Chargement…' : "S'abonner maintenant"}
+          </button>
+        </div>
+        <style>{bannerCSS}</style>
+      </div>
+    );
+  }
 
-  // Couleurs dynamiques selon l'urgence
-  const accentColor = isCritical ? "#f97316" : "#00d1ff";
-  const accentGlow = isCritical
-    ? "rgba(249,115,22,0.35)"
-    : "rgba(0,209,255,0.25)";
-  const borderColor = isCritical
-    ? "rgba(249,115,22,0.4)"
-    : "rgba(0,209,255,0.3)";
-  const bgColor = isCritical
-    ? "rgba(249,115,22,0.04)"
-    : "rgba(0,209,255,0.04)";
+  if (daysRemaining <= 1) {
+    return (
+      <div className="trial-banner trial-urgent">
+        <div className="trial-inner">
+          <span>🔥</span>
+          <span style={{ color: '#94a3b8', fontSize: '13px' }}>
+            Essai gratuit — Dernier jour !{' '}
+            <strong style={{ color: '#fb923c', fontFamily: 'monospace' }}>{timeLeft}</strong> restant
+          </span>
+          <button onClick={handleSubscribe} className="trial-cta" style={{ marginLeft: 'auto' }}>
+            Continuer →
+          </button>
+        </div>
+        <style>{bannerCSS}</style>
+      </div>
+    );
+  }
 
-  // Formatage du message
-  const parts: string[] = [];
-  if (remaining.days > 0)
-    parts.push(`${remaining.days} jour${remaining.days > 1 ? "s" : ""}`);
-  if (remaining.hours > 0 || remaining.days > 0)
-    parts.push(`${remaining.hours} heure${remaining.hours > 1 ? "s" : ""}`);
-  parts.push(`${remaining.minutes} minute${remaining.minutes > 1 ? "s" : ""}`);
-
-  const timeString = parts.join(", ");
+  const progressPercent = Math.round(((7 - daysRemaining) / 7) * 100);
 
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      style={{
-        marginBottom: "24px",
-        padding: "16px 20px",
-        borderRadius: "16px",
-        border: `1px solid ${borderColor}`,
-        background: bgColor,
-        boxShadow: `0 0 28px ${accentGlow}, inset 0 1px 0 rgba(255,255,255,0.03)`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: "16px",
-        flexWrap: "wrap",
-      }}
-    >
-      {/* Indicateur + texte */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          flex: 1,
-          minWidth: "0",
-        }}
-      >
-        {/* Dot pulsant */}
-        <span
-          style={{
-            flexShrink: 0,
-            width: "8px",
-            height: "8px",
-            borderRadius: "50%",
-            background: accentColor,
-            boxShadow: `0 0 8px ${accentColor}`,
-            display: "inline-block",
-            animation: "trialPulse 1.8s ease-in-out infinite",
-          }}
-        />
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-          {/* Label eyebrow */}
-          <p
-            style={{
-              margin: 0,
-              fontSize: "9px",
-              fontWeight: 900,
-              textTransform: "uppercase",
-              letterSpacing: "0.35em",
-              color: isCritical
-                ? "rgba(249,115,22,0.65)"
-                : "rgba(0,209,255,0.55)",
-            }}
-          >
-            {isCritical ? "⚠ Accès limité — Urgence" : "Accès gratuit en cours"}
-          </p>
-
-          {/* Compte à rebours */}
-          <p
-            style={{
-              margin: 0,
-              fontSize: "13px",
-              fontWeight: 700,
-              color: "#f1f5f9",
-              lineHeight: 1.4,
-            }}
-          >
-            Il vous reste{" "}
-            <span
-              style={{
-                color: accentColor,
-                fontWeight: 900,
-                textShadow: `0 0 12px ${accentGlow}`,
-              }}
-            >
-              {timeString}
-            </span>{" "}
-            d&apos;essai gratuit.
-          </p>
+    <div className="trial-banner">
+      <div className="trial-inner">
+        <span className="trial-badge">ESSAI GRATUIT — 7 JOURS</span>
+        <span style={{ color: '#94a3b8', fontSize: '13px' }}>
+          <strong style={{ color: '#38bdf8', fontSize: '15px' }}>{daysRemaining}j</strong> restants
+        </span>
+        <div style={{ width: '120px', height: '4px', background: '#1e3a5f', borderRadius: '2px', overflow: 'hidden' }}>
+          <div style={{
+            height: '100%',
+            width: `${progressPercent}%`,
+            background: daysRemaining <= 7 ? '#f59e0b' : '#3b82f6',
+            borderRadius: '2px',
+            transition: 'width 0.5s ease',
+          }} />
         </div>
+        <button onClick={handleSubscribe} className="trial-cta-secondary" style={{ marginLeft: 'auto' }}>
+          Passer à l&apos;abonnement
+        </button>
       </div>
-
-      {/* CTA Passer en PRO */}
-      <a
-        href={STRIPE_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          flexShrink: 0,
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "6px",
-          padding: "9px 18px",
-          borderRadius: "10px",
-          background: isCritical
-            ? "linear-gradient(135deg, #ea580c, #f97316)"
-            : "linear-gradient(135deg, #0095c8, #00d1ff)",
-          color: "#fff",
-          fontSize: "11px",
-          fontWeight: 900,
-          textTransform: "uppercase",
-          letterSpacing: "0.12em",
-          textDecoration: "none",
-          boxShadow: `0 0 20px ${accentGlow}`,
-          transition: "transform 0.15s, box-shadow 0.15s",
-          whiteSpace: "nowrap",
-        }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLAnchorElement).style.transform =
-            "translateY(-1px)";
-          (e.currentTarget as HTMLAnchorElement).style.boxShadow = `0 0 30px ${accentGlow}`;
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLAnchorElement).style.transform =
-            "translateY(0)";
-          (e.currentTarget as HTMLAnchorElement).style.boxShadow = `0 0 20px ${accentGlow}`;
-        }}
-      >
-        ⚡ Passer en PRO
-      </a>
-
-      {/* Keyframe injecté via style tag */}
-      <style>{`
-        @keyframes trialPulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.35; transform: scale(0.85); }
-        }
-      `}</style>
+      <style>{bannerCSS}</style>
     </div>
   );
 }
+
+const bannerCSS = `
+  .trial-banner {
+    width: 100%;
+    background: linear-gradient(90deg, #0f1923 0%, #0d2035 100%);
+    border-bottom: 1px solid #1e3a5f;
+    padding: 10px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-sizing: border-box;
+  }
+  .trial-urgent {
+    background: linear-gradient(90deg, #1a0a00 0%, #2d1500 100%);
+    border-bottom: 1px solid #f59e0b55;
+  }
+  .trial-expired {
+    background: linear-gradient(90deg, #1a0000 0%, #2d0000 100%);
+    border-bottom: 2px solid #ef4444;
+    padding: 14px 24px;
+  }
+  .trial-inner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .trial-badge {
+    background: #1d4ed8;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .trial-cta {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #000;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    padding: 8px 18px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    margin-left: auto;
+  }
+  .trial-cta:disabled { opacity: 0.6; cursor: not-allowed; }
+  .trial-cta-secondary {
+    background: transparent;
+    color: #38bdf8;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid #1e3a5f;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+`;

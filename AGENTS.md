@@ -1,4 +1,4 @@
-# AGENTS.md — SecuPRO
+﻿# AGENTS.md — SecuPRO
 
 > Fichier de configuration pour agents IA (Claude Code, Cursor, Copilot, etc.)
 > Projet : **SecuPRO** — SaaS B2B pour la sécurité privée française
@@ -309,7 +309,7 @@ try {
 | **Pro** | 99,99€/mois | 150 | + Dashboard performances, SecuIA assistant légal |
 | **Premium** | 199,99€/mois | Illimité | + Rapports PDF, support prioritaire, onboarding dédié |
 
-Tous les plans incluent un essai gratuit de 7 jours.  
+Tous les plans incluent un essai gratuit de 30 jours.  
 IDs produits Stripe à récupérer depuis `.env.local`.
 
 ---

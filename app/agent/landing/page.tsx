@@ -6,18 +6,17 @@ import AgentTopBar from "@/components/AgentTopBar";
 import TrialBanner from "@/components/TrialBanner";
 import { supabase } from "@/lib/supabaseClient";
 
-export default function PageAgent() {
-  const [agentId, setAgentId]           = useState<string | null>(null);
-  const [hasAccess, setHasAccess]       = useState(false);
-  const [loading, setLoading]           = useState(true);
-  const [isOnTrial, setIsOnTrial]       = useState(false);
-  const [isExpired, setIsExpired]       = useState(false);
+export default function AgentLandingPage() {
+  const [agentId, setAgentId]             = useState<string | null>(null);
+  const [hasAccess, setHasAccess]         = useState(false);
+  const [loading, setLoading]             = useState(true);
+  const [isOnTrial, setIsOnTrial]         = useState(false);
+  const [isExpired, setIsExpired]         = useState(false);
   const [daysRemaining, setDaysRemaining] = useState(30);
 
   useEffect(() => {
     async function checkAccess() {
       try {
-        // 1. Récupère l'utilisateur connecté
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           setHasAccess(false);
@@ -26,7 +25,7 @@ export default function PageAgent() {
         }
         setAgentId(user.id);
 
-        // 2. Vérifie subscription_status dans la table agents
+        // 1. subscription_status dans la table agents
         const { data: agent } = await supabase
           .from('agents')
           .select('subscription_status')
@@ -39,32 +38,30 @@ export default function PageAgent() {
           return;
         }
 
-        // 3. Initialise le trial si pas encore démarré
+        // 2. Initialise le trial si nécessaire
         await supabase.rpc('init_agent_trial', { p_agent_id: user.id });
 
-        // 4. Récupère le statut du trial
+        // 3. Statut du trial
         const { data: trial, error } = await supabase.rpc('get_trial_status', {
           p_agent_id: user.id,
         });
 
         if (!error && trial) {
-          const days    = (trial.days_remaining as number) ?? 0;
-          const expired = (trial.is_expired as boolean)   ?? true;
-          const hasTrial = (trial.has_trial as boolean)   ?? false;
+          const days     = (trial.days_remaining as number) ?? 0;
+          const expired  = (trial.is_expired as boolean)   ?? true;
+          const hasTrial = (trial.has_trial as boolean)    ?? false;
 
           setDaysRemaining(days);
           setIsExpired(expired);
           setIsOnTrial(hasTrial && !expired);
-          // Accès si days_remaining > 0
           setHasAccess(days > 0);
         } else {
-          // RPC non disponible (SQL pas encore exécuté) → accès autorisé par défaut
+          // Fallback : RPC absent → accès autorisé
           setHasAccess(true);
           setIsOnTrial(true);
           setDaysRemaining(30);
         }
       } catch {
-        // Fallback sécurisé : on ouvre l'accès plutôt que de bloquer à tort
         setHasAccess(true);
         setIsOnTrial(true);
         setDaysRemaining(30);
@@ -76,8 +73,6 @@ export default function PageAgent() {
     checkAccess();
   }, []);
 
-  // Pendant le chargement : affiche le shell sans le contenu
-  // → évite le flash "paywall" pour les agents qui ont accès
   if (loading) {
     return (
       <main className="min-h-screen bg-[#0A1F2F] p-4 pb-20">
@@ -107,8 +102,6 @@ export default function PageAgent() {
           agentName="Agent Mustapha"
           theme="nocturne"
         />
-        {/* hasAccess = true  → modules premium débloqués */}
-        {/* hasAccess = false → paywall "Accès Premium Requis" */}
         <AgentLanding hasAccess={hasAccess} />
       </div>
     </main>
