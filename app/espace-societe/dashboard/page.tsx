@@ -853,7 +853,10 @@ function BlocPortailContact({
         </div>
       </div>
 
-      <div className="grid gap-0 portail-grid" style={{ gridTemplateColumns: "1fr 1fr", minHeight: "0" }}>
+      <div
+        className="grid gap-0 portail-grid"
+        style={{ gridTemplateColumns: "1fr 1fr", minHeight: "0" }}
+      >
         {/* Colonne gauche : liste agents */}
         <div style={{ borderRight: `1px solid ${C.blockBdr}`, padding: "12px 0" }}>
           {[...online, ...offline].map(d => (
