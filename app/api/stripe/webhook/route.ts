@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { sendWelcomeB2BEmail, sendActivationCodeEmail } from '@/lib/emails';
+import { sendWelcomeB2BEmail, sendActivationCodeEmail, sendTrialEndingReminderEmail } from '@/lib/emails';
 import { z } from 'zod';
 
 const stripeCheckoutSchema = z.object({
@@ -115,6 +115,30 @@ export async function POST(req: Request) {
         break;
       }
       
+      case 'customer.subscription.trial_will_end': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const customerId =
+          typeof subscription.customer === 'string'
+            ? subscription.customer
+            : subscription.customer.id;
+
+        try {
+          const { data: soc } = await supabaseAdmin
+            .from('societes')
+            .select('nom, email_contact')
+            .eq('stripe_customer_id', customerId)
+            .maybeSingle();
+
+          if (soc?.email_contact) {
+            await sendTrialEndingReminderEmail(soc.email_contact, soc.nom ?? 'Client');
+            console.log(`[Email] Rappel fin d'essai envoyé à ${soc.email_contact}`);
+          }
+        } catch (e) {
+          console.error('[Email] Rappel trial:', e);
+        }
+        break;
+      }
+
       case 'customer.subscription.deleted':
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;

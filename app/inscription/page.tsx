@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Building2, Mail, Lock, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { Building2, Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 const CYAN  = "#00d1ff";
@@ -20,7 +20,6 @@ export default function InscriptionPage() {
   const [showPass, setShowPass]     = useState(false);
   const [loading, setLoading]       = useState(false);
   const [error, setError]           = useState<string | null>(null);
-  const [success, setSuccess]       = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,11 +61,15 @@ export default function InscriptionPage() {
         throw new Error(data.error ?? "Impossible de créer votre espace société.");
       }
 
-      // 3. Stocker le societe_id pour le dashboard
+      // 3. Stocker le societe_id et poursuivre vers la collecte CB (Stripe, essai 7j)
       localStorage.setItem("societe_id", data.societe_id);
       localStorage.setItem("societe_nom", nomSociete.trim());
+      sessionStorage.setItem(
+        "inscription_checkout",
+        JSON.stringify({ societe_id: data.societe_id, email }),
+      );
 
-      setSuccess(true);
+      router.push("/inscription/paiement");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erreur inconnue.";
       // Traduction des erreurs Supabase
@@ -121,53 +124,8 @@ export default function InscriptionPage() {
         </div>
 
         <AnimatePresence mode="wait">
-          {success ? (
-            /* ── Confirmation email ── */
-            <motion.div
-              key="success"
-              initial={{ opacity: 0, scale: 0.92 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="rounded-2xl p-8 flex flex-col items-center gap-5 text-center"
-              style={{
-                background: "rgba(52,211,153,0.07)",
-                border: "1px solid rgba(52,211,153,0.25)",
-                backdropFilter: "blur(20px)",
-              }}
-            >
-              <div className="flex items-center justify-center w-16 h-16 rounded-2xl"
-                style={{ background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.3)" }}>
-                <CheckCircle2 size={32} style={{ color: GREEN }} />
-              </div>
-              <div>
-                <h2 className="text-[20px] font-black" style={{ color: GREEN }}>
-                  Compte créé !
-                </h2>
-                <p className="text-[13px] font-medium mt-2 leading-relaxed"
-                  style={{ color: "rgba(148,163,184,0.8)" }}>
-                  Vérifiez votre boîte mail pour confirmer votre compte.
-                  <br />
-                  <span style={{ color: "rgba(148,163,184,0.5)" }}>
-                    Cliquez sur le lien reçu pour accéder à votre dashboard.
-                  </span>
-                </p>
-              </div>
-              <div className="w-full rounded-xl px-4 py-3 text-center"
-                style={{ background: "rgba(0,209,255,0.05)", border: "1px solid rgba(0,209,255,0.12)" }}>
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-1"
-                  style={{ color: "rgba(0,209,255,0.5)" }}>Email envoyé à</p>
-                <p className="text-[13px] font-semibold" style={{ color: CYAN }}>{email}</p>
-              </div>
-              <button
-                onClick={() => router.push("/espace-societe/dashboard")}
-                className="text-[10px] font-black uppercase tracking-[0.22em] underline"
-                style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(148,163,184,0.4)" }}>
-                Accéder au dashboard quand même →
-              </button>
-            </motion.div>
-          ) : (
-            /* ── Formulaire ── */
-            <motion.div
-              key="form"
+          <motion.div
+            key="form"
               className="rounded-2xl overflow-hidden"
               style={{
                 background: "rgba(10,20,44,0.88)",
@@ -184,7 +142,7 @@ export default function InscriptionPage() {
                   <span className="w-1.5 h-1.5 rounded-full" style={{ background: GREEN }} />
                   <span className="text-[9px] font-black uppercase tracking-[0.28em]"
                     style={{ color: "rgba(52,211,153,0.8)" }}>
-                    7 jours gratuits · Sans CB
+                    Essai 7 jours · CB après inscription (aucun débit immédiat)
                   </span>
                 </div>
                 <h1 className="text-[18px] font-black tracking-tight">
@@ -192,7 +150,7 @@ export default function InscriptionPage() {
                 </h1>
                 <p className="text-[11px] font-medium mt-1"
                   style={{ color: "rgba(148,163,184,0.5)" }}>
-                  Accès complet pendant 7 jours — aucune carte requise
+                  Étape 1 sur 2 — vous enregistrerez votre carte sur une page sécurisée Stripe.
                 </p>
               </div>
 
@@ -333,7 +291,7 @@ export default function InscriptionPage() {
 
                 {/* Légal */}
                 <p className="text-center text-[9px]" style={{ color: "rgba(148,163,184,0.3)" }}>
-                  Sans CB · Sans engagement · Résiliation en 1 clic
+                  Puis 69,99 €/mois après l’essai · Résiliable à tout moment
                 </p>
 
                 {/* Lien connexion */}
@@ -346,7 +304,6 @@ export default function InscriptionPage() {
                 </p>
               </form>
             </motion.div>
-          )}
         </AnimatePresence>
       </motion.div>
     </div>

@@ -151,6 +151,44 @@ export const sendActivationCodeEmail = async (
   });
 };
 
+/** Rappel fin d’essai (webhook Stripe trial_will_end — en général ~3 j avant la fin) */
+export const sendTrialEndingReminderEmail = async (
+  email: string,
+  societeNom: string,
+) => {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://secupro.app";
+  const billingUrl = `${appUrl}/espace-societe/support`;
+
+  return resend.emails.send({
+    from: "SecuPRO <noreply@secupro.app>",
+    to: email,
+    subject: "SecuPRO — Votre essai gratuit se termine bientôt",
+    html: `
+      <div style="${BASE_STYLES}">
+        <div style="${CONTAINER_STYLES}">
+          <h1 style="color: #00d1ff; font-size: 22px; margin-bottom: 8px;">SecuPRO Business</h1>
+          <h2 style="font-size: 18px; margin-bottom: 16px;">Bonjour ${societeNom},</h2>
+          <p style="color: #e2e8f0;">
+            Votre <strong>essai gratuit de 7 jours</strong> arrive à son terme dans environ
+            <strong>2 à 3 jours</strong> (rappel automatique Stripe).
+          </p>
+          <p style="color: #9ca3af;">
+            Aucun changement tant que l’essai est actif : vous continuez à profiter de SecuPRO
+            sans débit supplémentaire jusqu’à la date de renouvellement. Vous pouvez gérer votre
+            abonnement ou annuler à tout moment depuis votre espace.
+          </p>
+          <a href="${billingUrl}" style="${BUTTON_STYLES}; background:#00d1ff; color:#0a0d12;">
+            Gérer mon abonnement
+          </a>
+          <p style="margin-top:24px; font-size:13px; color:#6b7280;">
+            Besoin d’aide ? <a href="mailto:support@secupro.app" style="color:#00d1ff;">support@secupro.app</a>
+          </p>
+        </div>
+      </div>
+    `,
+  });
+};
+
 export const sendCarteProAlertEmail = async (email: string, agentNom: string, prenom: string, expireLe: string, urgency: 'informatif' | 'urgent' | 'critique', jRestant: number) => {
   const isCritique = urgency === 'critique';
   return resend.emails.send({

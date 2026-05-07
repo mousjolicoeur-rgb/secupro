@@ -1368,6 +1368,19 @@ export default function ChefExploitationDashboard() {
   const [alertes, setAlertes] = useState<Alerte[]>(ALERTES);
   const [agentsDocs]          = useState<AgentDoc[]>(AGENTS_DOCS);
   const [messages, setMessages] = useState<ContactMessage[]>(INIT_MESSAGES);
+  const [trialStartedFlash, setTrialStartedFlash] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("trial_started") === "1") {
+      setTrialStartedFlash(true);
+      sp.delete("trial_started");
+      const q = sp.toString();
+      const path = window.location.pathname;
+      window.history.replaceState(null, "", q ? `${path}?${q}` : path);
+    }
+  }, []);
 
   useEffect(() => {
     async function initDashboard() {
@@ -1531,6 +1544,32 @@ export default function ChefExploitationDashboard() {
             style={{ color: "rgba(52,211,153,0.75)" }}>En direct</span>
         </div>
       </header>
+
+      {trialStartedFlash && (
+        <div
+          className="mx-4 mt-3 max-w-[1440px] md:mx-auto rounded-xl px-4 py-3 flex items-center gap-3"
+          style={{
+            background: "rgba(52,211,153,0.08)",
+            border: "1px solid rgba(52,211,153,0.28)",
+            boxShadow: "0 0 24px rgba(52,211,153,0.06)",
+          }}
+          role="status"
+        >
+          <CheckCircle2 className="shrink-0" style={{ width: 20, height: 20, color: C.green }} />
+          <p className="text-[12px] sm:text-[13px] font-semibold flex-1 leading-snug" style={{ color: "#e2e8f0" }}>
+            Votre essai de 7 jours commence maintenant !
+          </p>
+          <button
+            type="button"
+            aria-label="Fermer"
+            onClick={() => setTrialStartedFlash(false)}
+            className="shrink-0 p-1.5 rounded-lg transition-opacity hover:opacity-80"
+            style={{ color: C.muted, background: "transparent", border: "none", cursor: "pointer" }}
+          >
+            <XCircle size={18} />
+          </button>
+        </div>
+      )}
 
       {/* ── BANNIÈRE ESSAI GRATUIT ── */}
       {agentDbPhase !== "loading" && !subscriptionActive && trialDaysLeft !== null && (
