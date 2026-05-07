@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   Users, AlertTriangle, Building2, Bell, Bot,
   FileText, Table2, Phone, CheckCircle2, XCircle,
-  Activity, MapPin, Zap, ArrowLeft, Shield, Eye, Clock,
+  Activity, MapPin, Zap, ArrowLeft, Shield, Eye, Clock, Upload,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -1127,6 +1127,184 @@ function BlocPortailContact({
   );
 }
 
+/** Nouveau client : pas d'agents en base — accueil et actions prioritaires */
+function OnboardingPanel({
+  trialDaysLeft,
+  subscriptionActive,
+  onAgentsImported,
+}: {
+  trialDaysLeft: number | null;
+  subscriptionActive: boolean;
+  onAgentsImported: (next: Agent[]) => void;
+}) {
+  const router = useRouter();
+  const fileRef    = useRef<HTMLInputElement>(null);
+  const [toast, setToast] = useState<ToastState>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = window.setTimeout(() => setToast(null), 3200);
+    return () => window.clearTimeout(t);
+  }, [toast]);
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    try {
+      const next = await parsePlanningFromFile(file);
+      onAgentsImported(next);
+      setToast({ message: `Planning importé — ${next.length} agent${next.length > 1 ? "s" : ""} chargé${next.length > 1 ? "s" : ""}`, variant: "ok" });
+    } catch {
+      setToast({ message: "Format invalide", variant: "err" });
+    }
+  };
+
+  const showTrial = !subscriptionActive && trialDaysLeft !== null;
+  const trialColor =
+    trialDaysLeft !== null
+      ? (trialDaysLeft > 3 ? "#60a5fa" : trialDaysLeft >= 2 ? "#fbbf24" : "#f87171")
+      : C.cyan;
+  const progressPct =
+    trialDaysLeft !== null ? Math.round(((7 - trialDaysLeft) / 7) * 100) : 0;
+
+  const cardStyle = (accent: string) => ({
+    background: `${accent}08`,
+    border: `1px solid ${accent}25`,
+    borderRadius: "14px",
+    padding: "20px",
+    cursor: "pointer",
+    textAlign: "left" as const,
+    transition: "all 0.2s",
+  });
+
+  return (
+    <div style={{ gridColumn: "1 / -1" }}>
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".xlsx,.xls,.csv"
+        className="hidden"
+        aria-hidden
+        onChange={onFileChange}
+      />
+
+      {/* Message bienvenue */}
+      <div className="rounded-2xl px-6 py-8 mb-6 text-center"
+        style={{
+          background: "rgba(0,209,255,0.05)",
+          border: "1px solid rgba(0,209,255,0.14)",
+          boxShadow: "0 0 40px rgba(0,209,255,0.06)",
+        }}>
+        <p className="text-[clamp(1.25rem,3.5vw,1.75rem)] font-black tracking-tight mb-2">
+          Bienvenue sur SecuPRO 👋
+        </p>
+        <p className="text-[12px] font-medium max-w-xl mx-auto" style={{ color: C.muted }}>
+          Ajoutez vos effectifs et vos sites pour activer le tableau de bord opérationnel.
+          Votre essai gratuit de 7 jours a déjà démarré.
+        </p>
+
+        {/* Compte à rebours mis en avant */}
+        {showTrial && trialDaysLeft !== null && (
+          <div className="mt-6 mx-auto max-w-md rounded-xl px-5 py-4"
+            style={{
+              background: `${trialColor}10`,
+              border: `1px solid ${trialColor}30`,
+            }}>
+            <p className="text-[9px] font-black uppercase tracking-[0.35em] mb-2" style={{ color: trialColor }}>
+              Essai gratuit — temps restant
+            </p>
+            <div className="flex items-baseline justify-center gap-2">
+              <span className="text-[42px] font-black tabular-nums leading-none" style={{ color: trialColor }}>
+                {trialDaysLeft}
+              </span>
+              <span className="text-[13px] font-bold" style={{ color: "rgba(241,245,249,0.75)" }}>
+                jour{trialDaysLeft > 1 ? "s" : ""} sur 7
+              </span>
+            </div>
+            <div className="h-1.5 w-full rounded-full mt-3" style={{ background: "rgba(255,255,255,0.06)" }}>
+              <div className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${progressPct}%`,
+                  background: `linear-gradient(90deg, ${trialColor}66, ${trialColor})`,
+                }} />
+            </div>
+          </div>
+        )}
+        {subscriptionActive && (
+          <p className="mt-4 text-[11px] font-semibold" style={{ color: C.green }}>
+            Abonnement actif — complétez vos données pour exploiter toutes les fonctionnalités.
+          </p>
+        )}
+      </div>
+
+      {/* 3 cartes d'action */}
+      <div className="grid gap-3 onboarding-cards" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+        <button type="button" style={cardStyle(C.cyan)}
+          onClick={() => router.push("/espace-societe/agents")}
+          className="onboarding-card flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <Upload size={18} style={{ color: C.cyan }} />
+            <span className="text-[11px] font-black uppercase tracking-[0.2em]" style={{ color: C.cyan }}>
+              Importer mes agents
+            </span>
+          </div>
+          <p className="text-[11px] leading-snug" style={{ color: C.muted }}>
+            CSV ou saisie : alimentez vos effectifs pour les plannings et la conformité documents.
+          </p>
+        </button>
+
+        <button type="button" style={cardStyle(C.violet)}
+          onClick={() => router.push("/espace-societe/sites")}
+          className="onboarding-card flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <MapPin size={18} style={{ color: C.violet }} />
+            <span className="text-[11px] font-black uppercase tracking-[0.2em]" style={{ color: C.violet }}>
+              Configurer mes sites
+            </span>
+          </div>
+          <p className="text-[11px] leading-snug" style={{ color: C.muted }}>
+            Sites et affectations : préparez le terrain avant les missions.
+          </p>
+        </button>
+
+        <button type="button" style={cardStyle(C.green)}
+          onClick={() => fileRef.current?.click()}
+          className="onboarding-card flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-[16px]" aria-hidden>📥</span>
+            <span className="text-[11px] font-black uppercase tracking-[0.2em]" style={{ color: C.green }}>
+              Importer mon planning
+            </span>
+          </div>
+          <p className="text-[11px] leading-snug" style={{ color: C.muted }}>
+            Fichier Excel / CSV avec colonnes Agent, Site, Horaires, Statut.
+          </p>
+        </button>
+      </div>
+
+      {toast && (
+        <div
+          className="fixed bottom-6 left-1/2 z-[100] -translate-x-1/2 px-4 py-3 rounded-xl text-[11px] font-semibold shadow-lg max-w-[90vw]"
+          style={{
+            background: toast.variant === "ok" ? "rgba(52,211,153,0.15)" : "rgba(248,113,113,0.15)",
+            border: `1px solid ${toast.variant === "ok" ? "rgba(52,211,153,0.35)" : "rgba(248,113,113,0.4)"}`,
+            color: toast.variant === "ok" ? "#34d399" : "#f87171",
+            backdropFilter: "blur(12px)",
+          }}
+          role="status"
+        >
+          {toast.message}
+        </div>
+      )}
+
+      <style>{`
+        @media (max-width: 900px) { .onboarding-cards { grid-template-columns: 1fr !important; } }
+      `}</style>
+    </div>
+  );
+}
+
 // ── Bannière essai ────────────────────────────────────────────────────────
 function TrialBanner({ daysLeft, onUpgrade }: { daysLeft: number; onUpgrade: () => void }) {
   // Couleur dynamique : bleu >3j, orange 2-3j, rouge ≤1j
@@ -1177,31 +1355,72 @@ function TrialBanner({ daysLeft, onUpgrade }: { daysLeft: number; onUpgrade: () 
 export default function ChefExploitationDashboard() {
   const router = useRouter();
 
-  // ── Essai gratuit : calcul jours restants depuis created_at ──────────────
+  type AgentDbPhase = "loading" | "empty" | "has";
+  const [agentDbPhase, setAgentDbPhase] = useState<AgentDbPhase>("loading");
+
+  // ── Essai gratuit : calcul jours restants depuis created_at + count agents ─
   const [trialDaysLeft, setTrialDaysLeft]     = useState<number | null>(null);
   const [subscriptionActive, setSubscriptionActive] = useState(false);
 
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [anomalies] = useState<Anomalie[]>(ANOMALIES);
+  const [sites]    = useState<Site[]>(SITES);
+  const [alertes, setAlertes] = useState<Alerte[]>(ALERTES);
+  const [agentsDocs]          = useState<AgentDoc[]>(AGENTS_DOCS);
+  const [messages, setMessages] = useState<ContactMessage[]>(INIT_MESSAGES);
+
   useEffect(() => {
-    async function checkTrial() {
+    async function initDashboard() {
       try {
         const societeId =
           typeof window !== "undefined" ? localStorage.getItem("societe_id") : null;
-        if (!societeId) return;
 
-        const { data } = await supabase
-          .from("societes")
-          .select("created_at, subscription_status")
-          .eq("id", societeId)
-          .single();
-
-        if (!data) return;
-
-        if (data.subscription_status === "active") {
-          setSubscriptionActive(true);
+        if (!societeId) {
+          setSubscriptionActive(false);
+          setTrialDaysLeft(null);
+          setAgentDbPhase("has");
+          setAgents(AGENTS);
           return;
         }
 
-        const created  = new Date(data.created_at);
+        const [{ data: soc, error: socErr }, countRes] = await Promise.all([
+          supabase
+            .from("societes")
+            .select("created_at, subscription_status")
+            .eq("id", societeId)
+            .single(),
+          supabase
+            .from("agents")
+            .select("id", { count: "exact", head: true })
+            .eq("societe_id", societeId),
+        ]);
+
+        if (countRes.error) {
+          console.warn("[Dashboard] agents count:", countRes.error);
+          setAgentDbPhase("has");
+          setAgents(AGENTS);
+        } else {
+          const cnt = countRes.count ?? 0;
+          if (cnt === 0) {
+            setAgentDbPhase("empty");
+            setAgents([]);
+          } else {
+            setAgentDbPhase("has");
+            setAgents(AGENTS);
+          }
+        }
+
+        if (socErr || !soc) {
+          return;
+        }
+
+        if (soc.subscription_status === "active") {
+          setSubscriptionActive(true);
+          setTrialDaysLeft(null);
+          return;
+        }
+
+        const created  = new Date(soc.created_at);
         const now      = new Date();
         const elapsed  = Math.floor((now.getTime() - created.getTime()) / 86_400_000);
         const daysLeft = Math.max(0, 7 - elapsed);
@@ -1212,22 +1431,16 @@ export default function ChefExploitationDashboard() {
           router.push("/espace-societe/activation");
         }
       } catch {
-        // Silencieux en dev — le mock continue
+        setAgentDbPhase("has");
+        setAgents(AGENTS);
       }
     }
-    checkTrial();
+    initDashboard();
   }, [router]);
 
-  // État global — source de vérité partagée entre tous les blocs
-  const [agents, setAgents] = useState<Agent[]>(AGENTS);
-  const [anomalies] = useState<Anomalie[]>(ANOMALIES);
-  const [sites]    = useState<Site[]>(SITES);
-  const [alertes, setAlertes] = useState<Alerte[]>(ALERTES);
-  const [agentsDocs]          = useState<AgentDoc[]>(AGENTS_DOCS);
-  const [messages, setMessages] = useState<ContactMessage[]>(INIT_MESSAGES);
-
-  // SecuIA : injecte les alertes documents au montage
+  // SecuIA : alertes documents (dashboard complet uniquement)
   useEffect(() => {
+    if (agentDbPhase !== "has") return;
     const docAlerts = genDocAlerts(AGENTS_DOCS);
     if (docAlerts.length > 0) {
       setAlertes(prev => {
@@ -1235,7 +1448,7 @@ export default function ChefExploitationDashboard() {
         return [...prev, ...docAlerts.filter(a => !existingIds.has(a.id))];
       });
     }
-  }, []);
+  }, [agentDbPhase]);
 
   // Envoi message agent (sauvegarde Supabase + état local)
   const handleSendMessage = async (agentId: string, agentNom: string, content: string) => {
@@ -1261,6 +1474,9 @@ export default function ChefExploitationDashboard() {
     () => genererSuggestions(anomalies, agents),
     [anomalies, agents],
   );
+
+  const societeIdForReports =
+    typeof window !== "undefined" ? localStorage.getItem("societe_id") : null;
 
   return (
     <div className="relative min-h-screen"
@@ -1317,76 +1533,104 @@ export default function ChefExploitationDashboard() {
       </header>
 
       {/* ── BANNIÈRE ESSAI GRATUIT ── */}
-      {!subscriptionActive && trialDaysLeft !== null && (
+      {agentDbPhase !== "loading" && !subscriptionActive && trialDaysLeft !== null && (
         <TrialBanner
           daysLeft={trialDaysLeft}
           onUpgrade={() => router.push("/tarifs-entreprise")}
         />
       )}
 
-      {/* ── GRILLE 7 BLOCS ── */}
+      {/* ── GRILLE ── */}
       <main className="px-4 py-4 max-w-[1440px] mx-auto dash-grid">
-        <div id="agents">  <BlocKPIs    agents={agents} anomalies={anomalies} /></div>
-        <div id="planning"><BlocPlannings agents={agents} onAgentsImported={setAgents} /></div>
-        <BlocAnomalies anomalies={anomalies} />
-        <BlocSites   sites={sites} />
-        <div id="alertes"> <BlocAlertes alertes={alertes} /></div>
-        <BlocIA      suggestions={suggestions} anomalies={anomalies} />
-        <BoutonRapportMensuel
-          societeId={MOCK_SOCIETE.id}
-          societeName={MOCK_SOCIETE.nom}
-        />
-
-        {/* ── EFFECTIFS & CONFORMITÉ DOCUMENTS ── */}
-        <div style={{ gridColumn: "1 / -1", marginTop: "4px" }}>
-          <BlocAgentsDocuments docs={agentsDocs} />
-        </div>
-
-        {/* ── PORTAIL CONTACT AGENTS LIVE ── */}
-        <div style={{ gridColumn: "1 / -1", marginTop: "4px" }}>
-          <BlocPortailContact
-            docs={agentsDocs}
-            messages={messages}
-            onSend={handleSendMessage}
-          />
-        </div>
-
-        {/* ── CONFORMITÉ CNAPS — MODULES DE PRÉVENTION ── */}
-        <div style={{ gridColumn: "1 / -1", marginTop: "4px" }}>
-          <BlockWrap>
-            {/* En-tête */}
-            <div className="px-4 py-3 flex items-center justify-between flex-wrap gap-2"
-              style={{ borderBottom: `1px solid ${C.blockBdr}` }}>
-              <div className="flex items-center gap-2">
-                <Shield className="shrink-0" style={{ width: "13px", height: "13px", color: C.cyan }} />
-                <span className="text-[9px] font-black uppercase tracking-[0.22em]"
-                  style={{ color: C.muted }}>Conformité CNAPS</span>
-                <span className="text-[9px] font-black uppercase tracking-[0.22em]"
-                  style={{ color: C.cyan }}>— Modules de prévention</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge label={`${CNAPS_MODULES.filter(m => m.statut === "critique").length} critique${CNAPS_MODULES.filter(m => m.statut === "critique").length > 1 ? "s" : ""}`}   color={C.red} />
-                <Badge label={`${CNAPS_MODULES.filter(m => m.statut === "a_verifier").length} à vérifier`} color={C.amber} />
-                <Badge label={`${CNAPS_MODULES.filter(m => m.statut === "conforme").length} conformes`}    color={C.green} />
-              </div>
-            </div>
-
-            {/* Grille cartes */}
-            <div style={{ padding: "16px" }}>
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, 1fr)",
-                gap: "10px",
+        {agentDbPhase === "loading" && (
+          <div style={{ gridColumn: "1 / -1" }}
+            className="flex flex-col items-center justify-center py-24 gap-4">
+            <div
+              className="w-9 h-9 rounded-full animate-spin"
+              style={{
+                border: "2px solid rgba(0,209,255,0.15)",
+                borderTopColor: C.cyan,
               }}
-                className="cnaps-grid"
-              >
-                {CNAPS_MODULES.map((m) => (
-                  <CnapsCard key={m.num} {...m} />
-                ))}
-              </div>
+            />
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: C.muted }}>
+              Chargement du tableau de bord…
+            </p>
+          </div>
+        )}
+
+        {agentDbPhase === "empty" && (
+          <OnboardingPanel
+            trialDaysLeft={trialDaysLeft}
+            subscriptionActive={subscriptionActive}
+            onAgentsImported={setAgents}
+          />
+        )}
+
+        {agentDbPhase === "has" && (
+          <>
+            <div id="agents">  <BlocKPIs    agents={agents} anomalies={anomalies} /></div>
+            <div id="planning"><BlocPlannings agents={agents} onAgentsImported={setAgents} /></div>
+            <BlocAnomalies anomalies={anomalies} />
+            <BlocSites   sites={sites} />
+            <div id="alertes"> <BlocAlertes alertes={alertes} /></div>
+            <BlocIA      suggestions={suggestions} anomalies={anomalies} />
+            <BoutonRapportMensuel
+              societeId={societeIdForReports ?? MOCK_SOCIETE.id}
+              societeName={MOCK_SOCIETE.nom}
+            />
+
+            {/* ── EFFECTIFS & CONFORMITÉ DOCUMENTS ── */}
+            <div style={{ gridColumn: "1 / -1", marginTop: "4px" }}>
+              <BlocAgentsDocuments docs={agentsDocs} />
             </div>
-          </BlockWrap>
-        </div>
+
+            {/* ── PORTAIL CONTACT AGENTS LIVE ── */}
+            <div style={{ gridColumn: "1 / -1", marginTop: "4px" }}>
+              <BlocPortailContact
+                docs={agentsDocs}
+                messages={messages}
+                onSend={handleSendMessage}
+              />
+            </div>
+
+            {/* ── CONFORMITÉ CNAPS — MODULES DE PRÉVENTION ── */}
+            <div style={{ gridColumn: "1 / -1", marginTop: "4px" }}>
+              <BlockWrap>
+                {/* En-tête */}
+                <div className="px-4 py-3 flex items-center justify-between flex-wrap gap-2"
+                  style={{ borderBottom: `1px solid ${C.blockBdr}` }}>
+                  <div className="flex items-center gap-2">
+                    <Shield className="shrink-0" style={{ width: "13px", height: "13px", color: C.cyan }} />
+                    <span className="text-[9px] font-black uppercase tracking-[0.22em]"
+                      style={{ color: C.muted }}>Conformité CNAPS</span>
+                    <span className="text-[9px] font-black uppercase tracking-[0.22em]"
+                      style={{ color: C.cyan }}>— Modules de prévention</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge label={`${CNAPS_MODULES.filter(m => m.statut === "critique").length} critique${CNAPS_MODULES.filter(m => m.statut === "critique").length > 1 ? "s" : ""}`}   color={C.red} />
+                    <Badge label={`${CNAPS_MODULES.filter(m => m.statut === "a_verifier").length} à vérifier`} color={C.amber} />
+                    <Badge label={`${CNAPS_MODULES.filter(m => m.statut === "conforme").length} conformes`}    color={C.green} />
+                  </div>
+                </div>
+
+                {/* Grille cartes */}
+                <div style={{ padding: "16px" }}>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(2, 1fr)",
+                    gap: "10px",
+                  }}
+                    className="cnaps-grid"
+                  >
+                    {CNAPS_MODULES.map((m) => (
+                      <CnapsCard key={m.num} {...m} />
+                    ))}
+                  </div>
+                </div>
+              </BlockWrap>
+            </div>
+          </>
+        )}
       </main>
 
       <footer className="px-5 py-4 text-center">
