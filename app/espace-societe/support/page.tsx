@@ -1,9 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle, Settings, CreditCard,
-  ArrowLeft, Phone, ChevronRight,
+  ArrowLeft, Phone, ChevronRight, Loader2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -43,22 +44,121 @@ const CARDS = [
     badgeText:"rgba(0,209,255,0.75)",
     href:     "mailto:support@secupro.app",
   },
-  {
-    id:       "facturation",
-    label:    "FACTURATION & LICENCE",
-    icon:     CreditCard,
-    accent:   GREEN,
-    accentBg: "rgba(52,211,153,0.07)",
-    border:   "rgba(52,211,153,0.25)",
-    glow:     "rgba(52,211,153,0.20)",
-    desc:     "Gérer votre abonnement Stripe",
-    btn:      "Accéder au portail",
-    badge:    "ACCÈS DIRECT",
-    badgeBg:  "rgba(52,211,153,0.10)",
-    badgeText:"rgba(52,211,153,0.75)",
-    href:     "https://billing.stripe.com/p/login/test_00g00000000000000000",
-  },
 ] as const;
+
+// ── Carte Facturation (portail Stripe dynamique) ───────────────────────────
+function FacturationCard() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState<string | null>(null);
+
+  const handlePortal = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Récupère le societe_id depuis le localStorage (stocké au login B2B)
+      const societeId = typeof window !== "undefined"
+        ? localStorage.getItem("societe_id")
+        : null;
+
+      const res = await fetch("/api/stripe/portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ societe_id: societeId }),
+      });
+
+      const data = await res.json() as { url?: string; error?: string };
+
+      if (!res.ok || !data.url) {
+        throw new Error(data.error ?? "Impossible d'ouvrir le portail.");
+      }
+
+      window.location.href = data.url;
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erreur inconnue.");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <motion.div
+      role="button"
+      tabIndex={0}
+      onClick={handlePortal}
+      onKeyDown={(e) => e.key === "Enter" && handlePortal()}
+      whileHover={{ y: -6, boxShadow: `0 20px 50px rgba(52,211,153,0.20), 0 0 0 1px rgba(52,211,153,0.25)` }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 360, damping: 28 }}
+      className="relative flex flex-col gap-5 rounded-2xl p-6 cursor-pointer"
+      style={{
+        background: "rgba(52,211,153,0.07)",
+        backdropFilter: "blur(18px)",
+        WebkitBackdropFilter: "blur(18px)",
+        border: "1px solid rgba(52,211,153,0.25)",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+        color: "inherit",
+      }}
+    >
+      {/* Liseré haut */}
+      <div
+        aria-hidden
+        className="absolute top-0 left-[20%] right-[20%] h-px rounded-full"
+        style={{ background: "linear-gradient(90deg, transparent, rgba(52,211,153,0.6), transparent)" }}
+      />
+
+      {/* Icône + Badge */}
+      <div className="flex items-start justify-between">
+        <div
+          className="flex items-center justify-center w-12 h-12 rounded-xl"
+          style={{
+            background: "rgba(52,211,153,0.14)",
+            border: "1px solid rgba(52,211,153,0.30)",
+            boxShadow: "0 0 18px rgba(52,211,153,0.20)",
+          }}
+        >
+          {loading
+            ? <Loader2 size={22} className="animate-spin" style={{ color: GREEN }} />
+            : <CreditCard size={22} style={{ color: GREEN }} />}
+        </div>
+        <span
+          className="text-[8px] font-black uppercase tracking-[0.28em] px-2.5 py-1 rounded-full"
+          style={{
+            background: "rgba(52,211,153,0.10)",
+            border: "1px solid rgba(52,211,153,0.25)",
+            color: "rgba(52,211,153,0.75)",
+          }}
+        >
+          ACCÈS DIRECT
+        </span>
+      </div>
+
+      {/* Texte */}
+      <div className="flex flex-col gap-1.5">
+        <h2 className="text-[13px] font-black uppercase tracking-[0.1em]" style={{ color: "#f1f5f9" }}>
+          FACTURATION &amp; LICENCE
+        </h2>
+        <p className="text-[12px] font-medium leading-snug" style={{ color: "rgba(148,163,184,0.7)" }}>
+          {loading ? "Connexion au portail Stripe…" : "Gérer votre abonnement Stripe"}
+        </p>
+        {error && (
+          <p className="text-[10px] font-semibold mt-1" style={{ color: "#f87171" }}>
+            {error}
+          </p>
+        )}
+      </div>
+
+      {/* Bouton */}
+      <div
+        className="flex items-center justify-between mt-auto pt-4"
+        style={{ borderTop: "1px solid rgba(52,211,153,0.15)" }}
+      >
+        <span className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: GREEN }}>
+          {loading ? "Chargement…" : "Accéder au portail"}
+        </span>
+        <ChevronRight size={14} style={{ color: GREEN }} />
+      </div>
+    </motion.div>
+  );
+}
 
 // ── Composant tuile ────────────────────────────────────────────────────────
 function SupportCard({ card }: { card: typeof CARDS[number] }) {
@@ -280,6 +380,7 @@ export default function EspaceSocieteSupport() {
         {CARDS.map((card) => (
           <SupportCard key={card.id} card={card} />
         ))}
+        <FacturationCard />
       </motion.div>
 
       {/* ── LIGNE VIP ── */}
