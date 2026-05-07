@@ -259,11 +259,11 @@ export default function HomePage() {
           <div className="sp-trial" style={{ background: 'linear-gradient(135deg,rgba(0,170,255,0.12),rgba(0,232,160,0.08))', border: '1px solid rgba(0,170,255,0.25)', borderRadius: '14px', padding: '1.5rem 2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
             <div style={{ fontSize: '2rem', flexShrink: 0 }}>🗓️</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.3rem', fontWeight: 700 }}>30 jours d'essai gratuit — puis abonnement automatique</div>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.3rem', fontWeight: 700 }}>7 jours d'essai gratuit — puis abonnement automatique</div>
               <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5, marginTop: '2px' }}>Aucune interruption de service. Résiliable à tout moment depuis votre espace client.</div>
             </div>
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem', width: '100%' }}>
-              {["Inscription en 2 minutes", "30 jours d'accès complet gratuit", "Abonnement activé automatiquement", "Résiliation en 1 clic si besoin"].map((s, i) => (
+              {["Inscription en 2 minutes", "7 jours d'accès complet gratuit", "Abonnement activé automatiquement", "Résiliation en 1 clic si besoin"].map((s, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)' }}>
                   <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(0,170,255,0.2)', border: '1px solid rgba(0,170,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: '#0af', fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
                   {s}
@@ -288,7 +288,7 @@ export default function HomePage() {
           <div style={{ maxWidth: '900px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', fontSize: '0.72rem', letterSpacing: '4px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: '0.6rem' }}>Choisissez votre espace</div>
             <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.8rem', fontWeight: 700, textAlign: 'center', marginBottom: '0.4rem' }}>Quel est votre profil ?</div>
-            <div style={{ textAlign: 'center', fontSize: '0.85rem', color: 'rgba(255,255,255,0.35)', marginBottom: '2rem' }}>30 jours gratuits · Abonnement automatique ensuite · Résiliation en 1 clic</div>
+            <div style={{ textAlign: 'center', fontSize: '0.85rem', color: 'rgba(255,255,255,0.35)', marginBottom: '2rem' }}>7 jours gratuits · Abonnement automatique ensuite · Résiliation en 1 clic</div>
             <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link href="/agent" className="sp-access-card agent" style={{ flex: 1, minWidth: '240px', maxWidth: '300px', textDecoration: 'none', display: 'block' }}>
                 <span style={{ fontSize: '2.8rem', marginBottom: '1rem', display: 'block' }}>👮</span>
