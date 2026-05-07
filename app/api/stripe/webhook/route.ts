@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { sendWelcomeB2BEmail, sendActivationCodeEmail, sendTrialEndingReminderEmail } from '@/lib/emails';
+import { sendWelcomeSociete, sendActivationCodeEmail, sendTrialEndingReminderEmail } from '@/lib/emails';
 import { z } from 'zod';
 
 const stripeCheckoutSchema = z.object({
@@ -103,10 +103,12 @@ export async function POST(req: Request) {
 
           if (soc && soc.email_contact) {
             await Promise.all([
-              sendWelcomeB2BEmail(soc.email_contact, soc.nom, plan),
+              sendWelcomeSociete(soc.email_contact, soc.nom ?? 'Client', {
+                trialEnd: subscription.trial_end,
+              }),
               sendActivationCodeEmail(soc.email_contact, soc.nom, plan, activationCode),
             ]);
-            console.log(`[Email] Bienvenue + code activation envoyés à ${soc.email_contact}`);
+            console.log(`[Email] Bienvenue société + code activation envoyés à ${soc.email_contact}`);
           }
         } catch (emailErr) {
           console.error('[Email] Erreur envoi emails post-checkout:', emailErr);

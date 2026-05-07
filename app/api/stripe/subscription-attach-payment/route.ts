@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import { sendWelcomeSociete } from "@/lib/emails";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -75,6 +76,23 @@ export async function POST(req: Request): Promise<NextResponse> {
       });
     } catch (err) {
       console.warn("[Stripe attach PM] (peut être déjà défini par Stripe):", err);
+    }
+
+    try {
+      const { data: socRow } = await supabaseAdmin
+        .from("societes")
+        .select("nom, email_contact")
+        .eq("id", societe_id)
+        .single();
+
+      if (socRow?.email_contact) {
+        const sub = await stripe.subscriptions.retrieve(subscription_id);
+        await sendWelcomeSociete(socRow.email_contact, socRow.nom ?? "Client", {
+          trialEnd: sub.trial_end ?? undefined,
+        });
+      }
+    } catch (emailErr) {
+      console.warn("[Email] sendWelcomeSociete (inscription CB):", emailErr);
     }
 
     return NextResponse.json({ ok: true });

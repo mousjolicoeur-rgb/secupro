@@ -2,6 +2,26 @@ import { Resend } from 'resend';
 
 export const resend = new Resend(process.env.RESEND_API_KEY!);
 
+function htmlEscape(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** Accepte une Date ou un timestamp Stripe (secondes). */
+export function toTrialEndDate(trialEnd: Date | number | null | undefined): Date {
+  if (trialEnd == null) {
+    return new Date(Date.now() + 7 * 86_400_000);
+  }
+  if (trialEnd instanceof Date) {
+    return trialEnd;
+  }
+  const ms = trialEnd < 1e12 ? trialEnd * 1000 : trialEnd;
+  return new Date(ms);
+}
+
 const BASE_STYLES = `
   font-family: 'DM Sans', system-ui, sans-serif;
   background-color: #0a0d12;
@@ -29,6 +49,124 @@ const BUTTON_STYLES = `
   font-weight: bold;
   margin-top: 24px;
 `;
+
+const BTN_PRIMARY_SOCIETE = `
+  display: inline-block;
+  background-color: #00d1ff;
+  color: #0B1426;
+  padding: 14px 28px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+`;
+
+const BTN_SECONDARY_SOCIETE = `
+  display: inline-block;
+  background-color: transparent;
+  color: #00d1ff;
+  padding: 12px 24px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 12px;
+  border: 1px solid rgba(0, 209, 255, 0.45);
+`;
+
+/** Bienvenue espace société — essai 7 j (distinct du mail agents). */
+export async function sendWelcomeSociete(
+  email: string,
+  societeNom: string,
+  options?: { trialEnd?: Date | number | null; siret?: string | null },
+) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://secupro.app';
+  const dashboardUrl = `${appUrl}/espace-societe/dashboard`;
+  const tarifsUrl = `${appUrl}/tarifs-entreprise`;
+
+  const end = toTrialEndDate(options?.trialEnd ?? null);
+  const dateExpiration = end.toLocaleDateString('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const safeNom = htmlEscape(societeNom.trim() || 'Client');
+  const rawSiret = (options?.siret ?? '').replace(/\s/g, '');
+  const siretLine =
+    rawSiret.length > 0
+      ? `SIRET ${htmlEscape(rawSiret)}`
+      : 'SIRET (à renseigner dans votre espace)';
+
+  const headerBg = '#0B1426';
+  const bodyBg = '#0a0f18';
+
+  return resend.emails.send({
+    from: 'SecuPRO <noreply@secupro.app>',
+    to: email,
+    subject: 'Votre essai SecuPRO démarre maintenant — 7 jours offerts',
+    html: `
+      <div style="margin:0;padding:0;background:${bodyBg};font-family:'DM Sans',system-ui,sans-serif;color:#e2e8f0;line-height:1.55;">
+        <div style="max-width:640px;margin:0 auto;">
+          <!-- Header -->
+          <div style="background:${headerBg};padding:28px 24px;text-align:center;border-bottom:1px solid rgba(0,209,255,0.2);">
+            <span style="font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;letter-spacing:3px;">
+              <span style="color:#ffffff;">Secu</span><span style="color:#00aaff;">PRO</span>
+            </span>
+            <p style="margin:10px 0 0;font-size:10px;font-weight:700;letter-spacing:0.35em;text-transform:uppercase;color:rgba(0,209,255,0.5);">
+              Business
+            </p>
+          </div>
+
+          <div style="padding:32px 28px 40px;background:#111a2a;border:1px solid rgba(0,209,255,0.12);border-top:none;border-radius:0 0 14px 14px;">
+            <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f8fafc;">
+              Bienvenue sur SecuPRO, ${safeNom} 👋
+            </h1>
+            <p style="margin:0 0 24px;font-size:15px;color:#94a3b8;">
+              Votre essai gratuit de 7 jours commence aujourd'hui
+            </p>
+
+            <!-- Compte à rebours -->
+            <div style="background:rgba(0,209,255,0.08);border:1px solid rgba(0,209,255,0.25);border-radius:12px;padding:18px 20px;margin-bottom:28px;text-align:center;">
+              <p style="margin:0;font-size:11px;font-weight:800;letter-spacing:0.25em;text-transform:uppercase;color:rgba(0,209,255,0.75);">
+                J-7 · Essai actif
+              </p>
+              <p style="margin:8px 0 0;font-size:15px;font-weight:600;color:#f1f5f9;">
+                jusqu'au ${htmlEscape(dateExpiration)}
+              </p>
+            </div>
+
+            <h2 style="margin:0 0 14px;font-size:13px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#00d1ff;">
+              Vos prochaines étapes
+            </h2>
+            <ol style="margin:0 0 28px;padding-left:22px;color:#cbd5e1;font-size:14px;">
+              <li style="margin-bottom:10px;">Importer vos agents (CSV)</li>
+              <li style="margin-bottom:10px;">Configurer vos sites</li>
+              <li style="margin-bottom:0;">Importer votre planning</li>
+            </ol>
+
+            <div style="margin-bottom:8px;">
+              <a href="${dashboardUrl}" style="${BTN_PRIMARY_SOCIETE}">
+                ACCÉDER À MON DASHBOARD →
+              </a>
+            </div>
+            <div style="margin-top:4px;">
+              <a href="${tarifsUrl}" style="${BTN_SECONDARY_SOCIETE}">
+                Choisir mon abonnement
+              </a>
+            </div>
+          </div>
+
+          <p style="text-align:center;font-size:11px;color:#64748b;padding:20px 16px 32px;margin:0;">
+            contact@secupro.app · ${siretLine} · RGPD — données traitées conformément au règlement européen sur la protection des données
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}
 
 export const sendWelcomeB2BEmail = async (email: string, societeNom: string, plan: string) => {
   return resend.emails.send({

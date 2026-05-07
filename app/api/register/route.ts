@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+/**
+ * Création société — l’email de bienvenue essai (sendWelcomeSociete) est envoyé
+ * après saisie CB : POST /api/stripe/subscription-attach-payment. Le webhook
+ * checkout.session.completed l’envoie pour les souscriptions via Stripe Checkout.
+ */
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!
