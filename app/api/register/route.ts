@@ -5,6 +5,10 @@ import { createClient } from "@supabase/supabase-js";
  * Création société — l’email de bienvenue essai (sendWelcomeSociete) est envoyé
  * après saisie CB : POST /api/stripe/subscription-attach-payment. Le webhook
  * checkout.session.completed l’envoie pour les souscriptions via Stripe Checkout.
+ *
+ * Schéma `public.societes` (colonnes exposées PostgREST, vérifié sur le projet) :
+ * notamment `nom`, `nom_entreprise`, `email`, `email_contact`, `user_id`,
+ * `plan`, `status`, `date_creation`, etc. — pas de `nom_societe` ni `subscription_status`.
  */
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -64,14 +68,20 @@ export async function POST(req: Request): Promise<NextResponse> {
       return NextResponse.json({ societe_id: existing.id });
     }
 
-    // Crée la société avec subscription_status='trial' (colonnes DB : nom, email_contact, …)
+    const nomTrim = nom_societe.trim();
+    const emailLower = email.trim().toLowerCase();
+
+    // INSERT aligné sur les colonnes réelles de `societes` (cf. information_schema / OpenAPI).
     const { data: societe, error } = await supabaseAdmin
       .from("societes")
       .insert({
         user_id,
-        nom: nom_societe,
-        email_contact: email,
-        subscription_status: "trial",
+        nom: nomTrim,
+        nom_entreprise: nomTrim,
+        email: emailLower,
+        email_contact: emailLower,
+        plan: "trial",
+        status: "pending",
       })
       .select("id")
       .single();

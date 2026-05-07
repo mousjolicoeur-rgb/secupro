@@ -1399,7 +1399,7 @@ export default function ChefExploitationDashboard() {
         const [{ data: soc, error: socErr }, countRes] = await Promise.all([
           supabase
             .from("societes")
-            .select("created_at, subscription_status")
+            .select("date_creation, plan, status")
             .eq("id", societeId)
             .single(),
           supabase
@@ -1427,13 +1427,26 @@ export default function ChefExploitationDashboard() {
           return;
         }
 
-        if (soc.subscription_status === "active") {
+        const planLower = (soc.plan ?? "").toString().toLowerCase();
+        const statusLower = (soc.status ?? "").toString().toLowerCase();
+
+        const subscriptionActive =
+          statusLower === "active" ||
+          ["essentiel", "pro", "premium"].includes(planLower);
+
+        if (subscriptionActive) {
           setSubscriptionActive(true);
           setTrialDaysLeft(null);
           return;
         }
 
-        const created  = new Date(soc.created_at);
+        const startRaw = soc.date_creation;
+        if (!startRaw) {
+          setTrialDaysLeft(7);
+          return;
+        }
+
+        const created  = new Date(startRaw);
         const now      = new Date();
         const elapsed  = Math.floor((now.getTime() - created.getTime()) / 86_400_000);
         const daysLeft = Math.max(0, 7 - elapsed);
