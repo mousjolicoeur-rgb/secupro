@@ -13,14 +13,20 @@ const NAVY  = "#0B1426";
 const RED   = "#f87171";
 const MUTED = "rgba(148,163,184,0.55)";
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
-);
+const pk = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
+
+if (typeof window !== "undefined" && !pk) {
+  console.error(
+    "[Stripe] NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY est vide — les Elements ne s’afficheront pas.",
+  );
+}
+
+const stripePromise = loadStripe(pk);
 
 const cardStyle = {
   style: {
     base: {
-      color: "#f1f5f9",
+      color: "#ffffff",
       fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
       fontSize: "16px",
       "::placeholder": { color: "rgba(148,163,184,0.45)" },
@@ -173,6 +179,14 @@ export default function InscriptionPaiementPage() {
     let cancelled = false;
 
     (async () => {
+      if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
+        if (!cancelled) {
+          setInitErr("Clé publique Stripe manquante (NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY).");
+          setLoading(false);
+        }
+        return;
+      }
+
       const raw = sessionStorage.getItem("inscription_checkout");
       if (!raw) {
         router.replace("/inscription");
@@ -213,6 +227,16 @@ export default function InscriptionPaiementPage() {
         already_complete?: boolean;
         error?: string;
       };
+
+      console.log("[inscription/paiement] POST /api/stripe/setup", {
+        ok: res.ok,
+        status: res.status,
+        hasClientSecret: Boolean(data.client_secret),
+        clientSecretPrefix: data.client_secret?.slice(0, 12),
+        subscription_id: data.subscription_id,
+        already_complete: data.already_complete,
+        error: data.error,
+      });
 
       if (cancelled) return;
 
@@ -317,8 +341,23 @@ export default function InscriptionPaiementPage() {
           )}
 
           {!loading && !initErr && clientSecret && subscriptionId && societeId && (
-            <Elements stripe={stripePromise}>
+            <Elements
+              stripe={stripePromise}
+              options={{
+                clientSecret,
+                appearance: {
+                  theme: "night",
+                  variables: {
+                    colorPrimary: CYAN,
+                    colorText: "#ffffff",
+                    colorDanger: RED,
+                    fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+                  },
+                },
+              }}
+            >
               <PaiementForm
+                key={clientSecret}
                 clientSecret={clientSecret}
                 subscriptionId={subscriptionId}
                 societeId={societeId}
