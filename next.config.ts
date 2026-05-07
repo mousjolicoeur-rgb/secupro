@@ -17,6 +17,7 @@ const securityHeaders = [
         " https://js.stripe.com https://js.stripe.com/dahlia/" +
         " https://platform.linkedin.com" +
         " https://static.licdn.com" +
+        " https://snap.licdn.com" +
         " https://*.sentry.io",
 
       // Styles : self + inline (Tailwind/CSS-in-JS) + Google Fonts + LinkedIn
