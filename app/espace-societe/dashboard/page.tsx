@@ -279,14 +279,10 @@ Analyse ce fichier et retourne UNIQUEMENT un JSON (sans balises markdown) avec :
   "action_suggeree": "description de l'import"
 }`;
 
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("/api/analyze-import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [{ role: "user", content: prompt }],
-        }),
+        body: JSON.stringify({ prompt }),
       });
       const data = await response.json();
       const raw  = (data.content as Array<{ type: string; text?: string }>)?.find((b) => b.type === "text")?.text ?? "";
