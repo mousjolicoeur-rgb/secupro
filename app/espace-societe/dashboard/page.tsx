@@ -4,7 +4,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 "use client";
-import { useState, useRef, CSSProperties, ReactNode } from "react";
+import { useState, useRef, useEffect, CSSProperties, ReactNode } from "react";
+import Link from "next/link";
+import { supabase } from "@/lib/supabaseClient";
 
 // ─── 1. TYPES ────────────────────────────────────────────────────────────────
 
@@ -599,7 +601,77 @@ function ModalConfirm({ icon, accentColor, title, message, labelConfirm, onConfi
   );
 }
 
-// ─── 7. COMPOSANT PRINCIPAL ───────────────────────────────────────────────────
+// ─── 7. GESTION DES AGENTS ───────────────────────────────────────────────────
+
+function GestionAgents() {
+  const [approuves, setApprouves] = useState(0);
+  const [enAttente, setEnAttente] = useState(0);
+  const [loading,   setLoading]   = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchCounts() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || cancelled) return;
+        const { data } = await supabase
+          .from("agent_societe")
+          .select("status")
+          .eq("societe_id", user.id);
+        if (!data || cancelled) return;
+        setApprouves(data.filter((r) => r.status === "approved").length);
+        setEnAttente(data.filter((r) => r.status === "pending").length);
+      } catch { /* silently fail */ } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    fetchCounts();
+    return () => { cancelled = true; };
+  }, []);
+
+  const actionBtn = (accent: string): CSSProperties => ({
+    display: "block", textAlign: "center", textDecoration: "none",
+    background: "#0a1828", border: `1px solid ${accent}`,
+    color: accent, fontSize: "10px", padding: "8px 12px",
+    borderRadius: "4px", cursor: "pointer",
+    letterSpacing: "2px", textTransform: "uppercase", fontWeight: 700,
+  });
+
+  return (
+    <div style={T.card}>
+      <div style={T.cardTitle}>
+        <span style={D.dot("blue")} /> Gestion des agents
+        <span style={{ marginLeft: "auto", ...D.badge("blue") }}>
+          {loading ? "…" : `${approuves + enAttente} LIÉS`}
+        </span>
+      </div>
+
+      {/* Compteurs temps réel */}
+      <div style={{ display: "flex", gap: "6px", marginBottom: "12px" }}>
+        <span style={{ ...D.badge("green"), display: "flex", alignItems: "center", gap: "4px" }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.green, display: "inline-block" }} />
+          {loading ? "…" : approuves} APPROUVÉS
+        </span>
+        <span style={{ ...D.badge("amber"), display: "flex", alignItems: "center", gap: "4px" }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.amber, display: "inline-block" }} />
+          {loading ? "…" : enAttente} EN ATTENTE
+        </span>
+      </div>
+
+      {/* Actions rapides */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+        <Link href="/entreprises/agents/invite" style={actionBtn(C.blue)}>
+          + Inviter un agent
+        </Link>
+        <Link href="/entreprises/agents" style={{ ...actionBtn(C.border), color: C.textMuted, background: "transparent" }}>
+          Voir mes agents
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// ─── 8. COMPOSANT PRINCIPAL ───────────────────────────────────────────────────
 
 export default function ChefExploitationDashboard() {
   const [agents,    setAgents]    = useState<Agent[]>(AGENTS_INIT);
@@ -638,6 +710,7 @@ export default function ChefExploitationDashboard() {
         <SitesActifs sites={sites} />
         <AlertesIncidents alertes={alertes} />
         <IABusiness remplacements={IA_REMPLACEMENTS} />
+        <GestionAgents />
       </div>
 
       {showImport && <ModalImport imp={imp} onClose={() => setShowImport(false)} />}
