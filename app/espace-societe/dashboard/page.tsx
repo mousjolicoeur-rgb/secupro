@@ -225,13 +225,13 @@ function Header({ time, onReset, onExit, onImport }: { time: string; onReset: ()
       padding: "0 24px", height: "60px", gap: "16px",
     }}>
       <div style={{ display: "flex", gap: "8px" }}>
-        <button style={ghostBtn()} onClick={onExit}>
+        <button type="button" style={ghostBtn()} onClick={onExit}>
           <ArrowLeft size={14} /> Retour
         </button>
-        <button style={ghostBtn(P.amber)} onClick={onReset}>
+        <button type="button" style={ghostBtn(P.amber)} onClick={onReset}>
           <RefreshCw size={14} /> Réinitialiser
         </button>
-        <button style={ghostBtn(P.blue)} onClick={onImport}>
+        <button type="button" style={ghostBtn(P.blue)} onClick={onImport}>
           <Upload size={14} /> Importer
         </button>
       </div>
@@ -472,7 +472,7 @@ function IABusiness({ remplacements }: { remplacements: Remplacement[] }) {
               <div style={{ fontSize: "12px", fontWeight: 600, color: P.green }}>{r.remplace.nom}</div>
               <div style={{ fontSize: "11px", color: P.muted, marginTop: "2px" }}>{r.remplace.info}</div>
             </div>
-            <button style={{
+            <button type="button" style={{
               display: "inline-flex", alignItems: "center", gap: "5px",
               padding: "5px 10px", borderRadius: "6px", cursor: "pointer",
               background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)",
@@ -629,7 +629,7 @@ function ModalImport({ imp, onClose }: { imp: ImportHook; onClose: () => void })
           onChange={(e) => handleFile(e.target.files?.[0])} />
 
         {fileName && !aiResult && !aiLoading && (
-          <button onClick={analyzeWithAI} style={{
+          <button type="button" onClick={analyzeWithAI} style={{
             width: "100%", marginTop: "12px", padding: "10px",
             borderRadius: "8px", cursor: "pointer",
             background: "rgba(59,130,246,0.08)", border: `1px solid ${P.blue}`,
@@ -675,12 +675,13 @@ function ModalImport({ imp, onClose }: { imp: ImportHook; onClose: () => void })
 
         {!importDone && (
           <div style={{ display: "flex", gap: "8px", marginTop: "16px", justifyContent: "flex-end" }}>
-            <button onClick={onClose} style={{
+            <button type="button" onClick={onClose} style={{
               padding: "8px 20px", borderRadius: "8px", cursor: "pointer",
               background: "transparent", border: `1px solid ${P.border}`,
               color: P.sub, fontSize: "12px", fontWeight: 600,
             }}>Annuler</button>
             <button
+              type="button"
               disabled={!aiResult}
               onClick={aiResult ? () => confirmImport(onClose) : undefined}
               style={{
@@ -714,12 +715,12 @@ function ModalConfirm({ icon, accentColor, title, message, labelConfirm, onConfi
         <div style={{ fontSize: "15px", fontWeight: 800, color: accentColor, marginBottom: "10px" }}>{title}</div>
         <div style={{ fontSize: "13px", color: P.sub, marginBottom: "24px", lineHeight: 1.6 }}>{message}</div>
         <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-          <button onClick={onCancel} style={{
+          <button type="button" onClick={onCancel} style={{
             padding: "9px 20px", borderRadius: "8px", cursor: "pointer",
             background: "transparent", border: `1px solid ${P.border}`,
             color: P.sub, fontSize: "13px", fontWeight: 600,
           }}>Annuler</button>
-          <button onClick={onConfirm} style={{
+          <button type="button" onClick={onConfirm} style={{
             padding: "9px 20px", borderRadius: "8px", cursor: "pointer",
             background: accentColor + "1A", border: `1px solid ${accentColor}4D`,
             color: accentColor, fontSize: "13px", fontWeight: 700,
@@ -753,7 +754,15 @@ export default function ChefExploitationDashboard() {
 
   const actifs    = agents.filter((a) => ["actif", "alerte", "critique"].includes(a.statut)).length;
   const dispos    = agents.filter((a) => a.statut === "disponible").length;
-  const time      = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+  // Initialise to "--:--" so server and client agree, then sync after mount
+  const [time, setTime] = useState("--:--");
+  useEffect(() => {
+    const fmt = () => new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    setTime(fmt());
+    const id = setInterval(() => setTime(fmt()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const handleReset = () => { setAgents(AGENTS_INIT); setShowReset(false); };
   const handleExit  = () => { setShowExit(false); window.history.back(); };
