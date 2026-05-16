@@ -130,8 +130,7 @@ export default function HomePage() {
           .sp-section { padding: 1.5rem 1rem; }
           .sp-hero-inner { padding: 1rem !important; }
           .sp-comp-label { width: 120px; }
-          .sp-trial { flex-direction: column !important; align-items: flex-start !important; }
-          .sp-access-card { min-width: 100% !important; max-width: 100% !important; flex: unset !important; width: 100%; }
+.sp-access-card { min-width: 100% !important; max-width: 100% !important; flex: unset !important; width: 100%; }
         }
       `}</style>
 
@@ -254,24 +253,48 @@ export default function HomePage() {
 
         <div className="sp-divider" />
 
-        {/* TRIAL */}
+        {/* HOW IT WORKS */}
         <div className="sp-section">
           <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.3rem', fontWeight: 600, letterSpacing: '1px', marginBottom: '0.3rem' }}>Comment ça fonctionne</div>
-          <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.35)', marginBottom: '1.5rem' }}>Démarrage sans risque, abonnement automatique après l'essai</div>
-          <div className="sp-trial" style={{ background: 'linear-gradient(135deg,rgba(0,170,255,0.12),rgba(0,232,160,0.08))', border: '1px solid rgba(0,170,255,0.25)', borderRadius: '14px', padding: '1.5rem 2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-            <div style={{ fontSize: '2rem', flexShrink: 0 }}>🗓️</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.3rem', fontWeight: 700 }}>7 jours d'essai gratuit — puis abonnement automatique</div>
-              <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5, marginTop: '2px' }}>Aucune interruption de service. Résiliable à tout moment depuis votre espace client.</div>
-            </div>
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem', width: '100%' }}>
-              {["Inscription en 2 minutes", "7 jours d'accès complet gratuit", "Abonnement activé automatiquement", "Résiliation en 1 clic si besoin"].map((s, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)' }}>
-                  <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(0,170,255,0.2)', border: '1px solid rgba(0,170,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: '#0af', fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+          <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.35)', marginBottom: '1.5rem' }}>Deux parcours distincts, deux engagements différents</div>
+          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+
+            {/* Parcours Agent */}
+            <div style={{ flex: 1, minWidth: '260px', background: 'rgba(0,232,160,0.05)', border: '1px solid rgba(0,232,160,0.2)', borderRadius: '14px', padding: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.8rem' }}>
+                <div style={{ fontSize: '1.5rem' }}>👮</div>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(0,232,160,0.15)', border: '1px solid rgba(0,232,160,0.4)', borderRadius: '20px', padding: '2px 10px', fontSize: '0.62rem', letterSpacing: '1.5px', color: '#00e8a0', textTransform: 'uppercase', fontWeight: 700 }}>
+                  ✓ GRATUIT — Aucun abonnement
+                </span>
+              </div>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.25rem' }}>Espace Agent — 100% gratuit, pour toujours</div>
+              <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '1rem', lineHeight: 1.5 }}>Un cadeau pour les agents de sécurité de toute la France</div>
+              {["Inscription en 2 minutes", "Accès immédiat et permanent", "Aucune carte bancaire requise"].map((s, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)', marginBottom: '8px' }}>
+                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'rgba(0,232,160,0.15)', border: '1px solid rgba(0,232,160,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#00e8a0', fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
                   {s}
                 </div>
               ))}
             </div>
+
+            {/* Parcours Société */}
+            <div style={{ flex: 1, minWidth: '260px', background: 'rgba(0,170,255,0.05)', border: '1px solid rgba(0,170,255,0.2)', borderRadius: '14px', padding: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.8rem' }}>
+                <div style={{ fontSize: '1.5rem' }}>🏢</div>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(0,170,255,0.15)', border: '1px solid rgba(0,170,255,0.4)', borderRadius: '20px', padding: '2px 10px', fontSize: '0.62rem', letterSpacing: '1.5px', color: '#0af', textTransform: 'uppercase', fontWeight: 700 }}>
+                  30 JOURS OFFERTS
+                </span>
+              </div>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.25rem' }}>Espace Société — Essai 30 jours offerts</div>
+              <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '1rem', lineHeight: 1.5 }}>Pour les exploitants et chefs d&apos;exploitation</div>
+              {["Inscription", "30 jours d'accès complet gratuit", "Abonnement si vous êtes convaincus"].map((s, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)', marginBottom: '8px' }}>
+                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'rgba(0,170,255,0.15)', border: '1px solid rgba(0,170,255,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#0af', fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                  {s}
+                </div>
+              ))}
+            </div>
+
           </div>
         </div>
 
@@ -290,25 +313,31 @@ export default function HomePage() {
           <div style={{ maxWidth: '900px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', fontSize: '0.72rem', letterSpacing: '4px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: '0.6rem' }}>Choisissez votre espace</div>
             <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.8rem', fontWeight: 700, textAlign: 'center', marginBottom: '0.4rem' }}>Quel est votre profil ?</div>
-            <div style={{ textAlign: 'center', fontSize: '0.85rem', color: 'rgba(255,255,255,0.35)', marginBottom: '2rem' }}>7 jours gratuits · Abonnement automatique ensuite · Résiliation en 1 clic</div>
+            <div style={{ textAlign: 'center', fontSize: '0.85rem', color: 'rgba(255,255,255,0.35)', marginBottom: '2rem' }}>Agents : accès gratuit permanent · Sociétés : 30 jours offerts</div>
             <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link href="/agent" className="sp-access-card agent" style={{ flex: 1, minWidth: '240px', maxWidth: '300px', textDecoration: 'none', display: 'block' }}>
                 <span style={{ fontSize: '2.8rem', marginBottom: '1rem', display: 'block' }}>👮</span>
                 <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '1px', marginBottom: '0.2rem' }}>Espace Agent</div>
-                <div style={{ fontSize: '0.68rem', letterSpacing: '3px', textTransform: 'uppercase', color: '#00e8a0', marginBottom: '1rem' }}>Terrain · Hub</div>
-                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, marginBottom: '1.5rem' }}>Planning, fiches de paie, documents, alertes CNAPS. Tout ce dont l'agent a besoin, en temps réel.</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.68rem', letterSpacing: '3px', textTransform: 'uppercase', color: '#00e8a0' }}>Terrain · Hub</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(0,232,160,0.12)', border: '1px solid rgba(0,232,160,0.35)', borderRadius: '20px', padding: '1px 8px', fontSize: '0.6rem', letterSpacing: '1px', color: '#00e8a0', fontWeight: 700, textTransform: 'uppercase' }}>100% GRATUIT</span>
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, marginBottom: '1.5rem' }}>Planning, fiches de paie, documents, alertes CNAPS. Tout ce dont l&apos;agent a besoin — gratuitement, pour toujours.</div>
                 <div style={{ display: 'inline-block', fontSize: '0.72rem', letterSpacing: '2px', textTransform: 'uppercase', padding: '0.55rem 1.4rem', borderRadius: '6px', fontWeight: 600, border: '1px solid rgba(0,232,160,0.4)', color: '#00e8a0' }}>Accéder →</div>
               </Link>
               <Link href="/entreprises" className="sp-access-card societe" style={{ flex: 1, minWidth: '240px', maxWidth: '300px', textDecoration: 'none', display: 'block' }}>
                 <span style={{ fontSize: '2.8rem', marginBottom: '1rem', display: 'block' }}>🏢</span>
                 <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '1px', marginBottom: '0.2rem' }}>Espace Société</div>
-                <div style={{ fontSize: '0.68rem', letterSpacing: '3px', textTransform: 'uppercase', color: '#0af', marginBottom: '1rem' }}>Gestion · Exploitation</div>
-                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, marginBottom: '1.5rem' }}>Gestion des équipes, provisioning, conformité IDCC 1351. La plateforme des chefs d'exploitation.</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.68rem', letterSpacing: '3px', textTransform: 'uppercase', color: '#0af' }}>Gestion · Exploitation</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(0,170,255,0.12)', border: '1px solid rgba(0,170,255,0.35)', borderRadius: '20px', padding: '1px 8px', fontSize: '0.6rem', letterSpacing: '1px', color: '#0af', fontWeight: 700, textTransform: 'uppercase' }}>30 JOURS OFFERTS</span>
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, marginBottom: '1.5rem' }}>Gestion des équipes, provisioning, conformité IDCC 1351. Essayez 30 jours — abonnez-vous seulement si vous êtes convaincus.</div>
                 <div style={{ display: 'inline-block', fontSize: '0.72rem', letterSpacing: '2px', textTransform: 'uppercase', padding: '0.55rem 1.4rem', borderRadius: '6px', fontWeight: 600, border: '1px solid rgba(0,170,255,0.4)', color: '#0af' }}>Accéder →</div>
               </Link>
             </div>
             <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.72rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '1px' }}>
-              Sans engagement · Paiement sécurisé via Stripe · secupro.app
+              Agents : 100% gratuit pour toujours · Sociétés : 30 jours offerts, puis abonnement · Paiement sécurisé via Stripe · secupro.app
             </div>
           </div>
         </div>
