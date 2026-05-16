@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import {
   Shield, MapPin, Clock, AlertTriangle, CheckCircle2,
   Zap, ArrowLeft, FileText, Send, Radio, Phone,
   ChevronRight, Activity, RotateCcw, LogOut, Lock,
 } from "lucide-react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -803,6 +803,16 @@ function LockScreen({ userEmail, onUnlock }: { userEmail: string; onUnlock: () =
       <div aria-hidden className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-96 h-48"
         style={{ background:"radial-gradient(ellipse, rgba(0,100,255,0.18), transparent 70%)" }} />
 
+      <Link
+        href="/agent/hub"
+        className="absolute top-4 left-4 z-20 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] transition-colors duration-150 no-underline"
+        style={{ color: "rgba(148,163,184,0.45)" }}
+        onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = C.cyan; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = "rgba(148,163,184,0.45)"; }}
+      >
+        <ArrowLeft size={11} /> Retour au Hub
+      </Link>
+
       <div className="relative z-10 w-full max-w-sm flex flex-col items-center gap-6">
 
         {/* Branding */}
@@ -938,8 +948,6 @@ function LockScreen({ userEmail, onUnlock }: { userEmail: string; onUnlock: () =
 // ══════════════════════════════════════════════════════════════════════════════
 
 export default function EspaceProPage() {
-  const router = useRouter();
-
   // ══════════════════════════════════════════════════════════════
   // TOUS LES HOOKS EN HAUT — règle absolue React
   // ══════════════════════════════════════════════════════════════
@@ -1099,13 +1107,15 @@ export default function EspaceProPage() {
           transition: "all 500ms ease",
         }}>
 
-        <button onClick={() => router.push("/agent/hub")}
-          className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] transition-colors duration-150"
+        <Link
+          href="/agent/hub"
+          className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] transition-colors duration-150 no-underline"
           style={{ color:"rgba(148,163,184,0.5)" }}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = C.cyan; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(148,163,184,0.5)"; }}>
-          <ArrowLeft size={11} /> Hub
-        </button>
+          onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = C.cyan; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = "rgba(148,163,184,0.5)"; }}
+        >
+          <ArrowLeft size={11} /> Retour au Hub
+        </Link>
 
         <div className="flex items-center gap-2">
           <span style={{fontFamily:"'Rajdhani', sans-serif", fontWeight:700, fontSize:'1.5rem', letterSpacing:'2px'}}>
