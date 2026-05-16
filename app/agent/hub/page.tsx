@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -288,6 +289,23 @@ function HubTile({ tile }: { tile: Tile }) {
 // ── PAGE PRINCIPALE ────────────────────────────────────────────────────────
 export default function AgentHubPage() {
   const router = useRouter();
+  const [firstName, setFirstName] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
+      if (data?.full_name) {
+        setFirstName(data.full_name.split(" ")[0]);
+      } else if (user.email) {
+        setFirstName(user.email.split("@")[0]);
+      }
+    });
+  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -385,6 +403,40 @@ export default function AgentHubPage() {
           padding: "40px 24px 64px",
         }}
       >
+        {/* ── BANDEAU BIENVENUE ── */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+            padding: "9px 20px",
+            borderRadius: "10px",
+            marginBottom: "24px",
+            background: "rgba(34,197,94,0.06)",
+            border: "1px solid rgba(34,197,94,0.15)",
+            fontSize: "12px",
+            fontWeight: 600,
+            color: "rgba(34,197,94,0.75)",
+          }}
+        >
+          <span
+            style={{
+              width: 6, height: 6, borderRadius: "50%",
+              background: "#22c55e",
+              boxShadow: "0 0 6px rgba(34,197,94,0.8)",
+              display: "inline-block", flexShrink: 0,
+            }}
+          />
+          Espace Agent — 100% gratuit
+          {firstName && (
+            <>
+              <span style={{ color: "rgba(34,197,94,0.35)", margin: "0 2px" }}>·</span>
+              Bienvenue {firstName}
+            </>
+          )}
+        </div>
+
         {/* ── HEADER ── */}
         <header
           style={{
@@ -475,6 +527,35 @@ export default function AgentHubPage() {
         </header>
 
         {/* ── GRILLE DES MODULES ── */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            marginBottom: "16px",
+          }}
+        >
+          <span
+            style={{
+              fontSize: "10px",
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: "0.3em",
+              color: "rgba(0,209,255,0.45)",
+            }}
+          >
+            Mes modules
+          </span>
+          <div
+            style={{
+              flex: 1,
+              height: "1px",
+              background:
+                "linear-gradient(to right, rgba(0,209,255,0.12), transparent)",
+            }}
+          />
+        </div>
+
         <nav
           aria-label="Modules agent"
           style={{
