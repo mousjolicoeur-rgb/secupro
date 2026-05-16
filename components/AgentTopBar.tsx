@@ -1,8 +1,7 @@
 ﻿"use client";
 
 import AgentAvatar from "@/components/AgentAvatar";
-import { Moon, Sun, Crown } from "lucide-react";
-import Link from "next/link";
+import { Moon, Sun } from "lucide-react";
 
 export default function AgentTopBar(props: {
   title: string;
@@ -60,17 +59,6 @@ export default function AgentTopBar(props: {
       {/* SECTION DROITE : Boutons et Avatar */}
       <div className="flex items-center gap-3 shrink-0">
         
-        {/* 🔥 BOUTON PREMIUM STRATÉGIQUE */}
-        <Link 
-          href="/abonnement" 
-          className="flex items-center gap-2 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(251,191,36,0.3)] hover:scale-105 active:scale-95 transition-all group"
-        >
-          <Crown size={14} className="text-black fill-black" />
-          <span className="hidden sm:inline text-[10px] font-black text-black uppercase tracking-tighter">
-            Premium
-          </span>
-        </Link>
-
         {/* BOUTON THÈME */}
         <button
           onClick={props.onToggleTheme}
