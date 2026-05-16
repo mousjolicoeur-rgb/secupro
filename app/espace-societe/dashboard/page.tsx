@@ -741,6 +741,7 @@ export default function ChefExploitationDashboard() {
   const [showImport, setShowImport] = useState(false);
   const [showReset,  setShowReset]  = useState(false);
   const [showExit,   setShowExit]   = useState(false);
+  const [toast,      setToast]      = useState<string | null>(null);
 
   const imp = useImport((newNames: string[]) => {
     setAgents((prev) => {
@@ -764,7 +765,18 @@ export default function ChefExploitationDashboard() {
     return () => clearInterval(id);
   }, []);
 
-  const handleReset = () => { setAgents(AGENTS_INIT); setShowReset(false); };
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleReset = () => {
+    // Spread into fresh arrays so React always detects a change, even if state
+    // already equals the initial data (same reference would cause a bail-out).
+    setAgents([...AGENTS_INIT]);
+    setShowReset(false);
+    showToast("Tableau de bord réinitialisé");
+  };
   const handleExit  = () => { setShowExit(false); window.history.back(); };
 
   return (
@@ -795,6 +807,23 @@ export default function ChefExploitationDashboard() {
           <GestionAgents />
         </div>
       </div>
+
+      {/* Toast feedback */}
+      {toast && (
+        <div style={{
+          position: "fixed", bottom: "28px", left: "50%", transform: "translateX(-50%)",
+          zIndex: 10000, pointerEvents: "none",
+          display: "flex", alignItems: "center", gap: "10px",
+          padding: "12px 20px", borderRadius: "10px",
+          background: "#1A1D27", border: "1px solid rgba(16,185,129,0.4)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+          fontSize: "13px", fontWeight: 600, color: P.green,
+          animation: "fadeIn 0.2s ease",
+        }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: P.green, display: "inline-block", flexShrink: 0 }} />
+          {toast}
+        </div>
+      )}
 
       {showImport && <ModalImport imp={imp} onClose={() => setShowImport(false)} />}
 
