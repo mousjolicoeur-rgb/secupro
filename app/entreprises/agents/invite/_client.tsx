@@ -162,7 +162,7 @@ function InviteForm() {
             transition: 'all 0.2s',
           }}
         >
-          {isPending ? 'Envoi en cours…' : '+ Envoyer l'invitation'}
+          {isPending ? 'Envoi en cours…' : "+ Envoyer l'invitation"}
         </button>
       </form>
 
