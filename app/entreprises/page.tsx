@@ -702,7 +702,7 @@ function PricingCard({ plan }: { plan: PlanItem }) {
           lineHeight: 1.5,
         }}
       >
-        7 jours gratuits · Sans engagement · Résiliation en 1 clic
+        1 mois gratuit · Sans engagement · Résiliation en 1 clic
       </p>
     </div>
   );
@@ -1159,7 +1159,7 @@ export default function EntreprisesPage() {
               (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 0 44px rgba(0,200,240,0.38)`;
             }}
           >
-            Essai gratuit 7 jours →
+            Essai gratuit 1 mois →
           </button>
           <a
             href="#modules"
@@ -1517,7 +1517,7 @@ export default function EntreprisesPage() {
               lineHeight: 1.65,
             }}
           >
-            7 jours d&apos;essai gratuit. Sans engagement. Résiliation en 1 clic.
+            1 mois d&apos;essai gratuit. Sans engagement. Résiliation en 1 clic.
           </p>
         </div>
 

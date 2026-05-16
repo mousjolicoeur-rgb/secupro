@@ -221,7 +221,7 @@ function PlanCard({
           className="text-[9px] font-black uppercase tracking-[0.22em]"
           style={{ color: "rgba(52,211,153,0.85)" }}
         >
-          7 jours gratuits
+          1 mois gratuit
         </span>
       </div>
 
@@ -454,7 +454,7 @@ export default function TarifsEntreprise() {
         className="text-center text-[10px] font-semibold mt-8"
         style={{ color: "rgba(148,163,184,0.35)" }}
       >
-        Essai 7 jours sans engagement · Aucun prélèvement pendant la période d'essai
+        Essai 1 mois sans engagement · Aucun prélèvement pendant la période d'essai
       </motion.p>
 
       {/* ── FOOTER ── */}

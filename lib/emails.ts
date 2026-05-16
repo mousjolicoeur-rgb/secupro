@@ -106,7 +106,7 @@ export async function sendWelcomeSociete(
   return resend.emails.send({
     from: 'SecuPRO <noreply@secupro.app>',
     to: email,
-    subject: 'Votre essai SecuPRO démarre maintenant — 7 jours offerts',
+    subject: 'Votre essai SecuPRO démarre maintenant — 1 mois offert',
     html: `
       <div style="margin:0;padding:0;background:${bodyBg};font-family:'DM Sans',system-ui,sans-serif;color:#e2e8f0;line-height:1.55;">
         <div style="max-width:640px;margin:0 auto;">
@@ -125,13 +125,13 @@ export async function sendWelcomeSociete(
               Bienvenue sur SecuPRO, ${safeNom} 👋
             </h1>
             <p style="margin:0 0 24px;font-size:15px;color:#94a3b8;">
-              Votre essai gratuit de 7 jours commence aujourd'hui
+              Votre essai gratuit d'1 mois commence aujourd'hui
             </p>
 
             <!-- Compte à rebours -->
             <div style="background:rgba(0,209,255,0.08);border:1px solid rgba(0,209,255,0.25);border-radius:12px;padding:18px 20px;margin-bottom:28px;text-align:center;">
               <p style="margin:0;font-size:11px;font-weight:800;letter-spacing:0.25em;text-transform:uppercase;color:rgba(0,209,255,0.75);">
-                J-7 · Essai actif
+                1 mois · Essai actif
               </p>
               <p style="margin:8px 0 0;font-size:15px;font-weight:600;color:#f1f5f9;">
                 jusqu'au ${htmlEscape(dateExpiration)}
@@ -307,7 +307,7 @@ export const sendTrialEndingReminderEmail = async (
           <h1 style="color: #00d1ff; font-size: 22px; margin-bottom: 8px;">SecuPRO Business</h1>
           <h2 style="font-size: 18px; margin-bottom: 16px;">Bonjour ${societeNom},</h2>
           <p style="color: #e2e8f0;">
-            Votre <strong>essai gratuit de 7 jours</strong> arrive à son terme dans environ
+            Votre <strong>essai gratuit d'1 mois</strong> arrive à son terme dans environ
             <strong>2 à 3 jours</strong> (rappel automatique Stripe).
           </p>
           <p style="color: #9ca3af;">

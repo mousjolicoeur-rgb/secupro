@@ -252,7 +252,7 @@ function CheckoutPageInner() {
               Démarrez votre essai gratuit
             </h1>
             <p style={{ fontSize: 15, color: C.muted, marginTop: 8 }}>
-              7 jours offerts · Sans carte bancaire · Résiliable à tout moment
+              1 mois offert · Sans carte bancaire · Résiliable à tout moment
             </p>
           </div>
 
@@ -338,13 +338,13 @@ function CheckoutPageInner() {
                     <span style={{ fontSize: 22, fontWeight: 900, color: "#22c55e", fontFamily: C.fontCond }}>0,00 €</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-                    <span style={{ fontSize: 13, color: C.muted }}>Après 7 jours</span>
+                    <span style={{ fontSize: 13, color: C.muted }}>Après 1 mois</span>
                     <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{plan.price}€ / mois</span>
                   </div>
                   <div style={{ marginTop: 14, padding: "10px 14px", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 10, display: "flex", alignItems: "flex-start", gap: 8 }}>
                     <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>🎁</span>
                     <p style={{ fontSize: 12, color: "#86efac", lineHeight: 1.5 }}>
-                      <strong>7 jours gratuits</strong> — Aucun débit avant 7 jours. Résiliable à tout moment depuis votre espace.
+                      <strong>1 mois gratuit</strong> — Aucun débit avant 1 mois. Résiliable à tout moment depuis votre espace.
                     </p>
                   </div>
                 </div>

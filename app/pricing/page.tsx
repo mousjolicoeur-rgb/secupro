@@ -73,7 +73,7 @@ export default function PricingPage() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">Des tarifs transparents pour la sécurité</h1>
-          <p className="text-xl text-slate-400 max-w-2xl mx-auto">Choisissez le plan adapté à votre société. Tous les plans incluent un essai gratuit de 7 jours.</p>
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto">Choisissez le plan adapté à votre société. Tous les plans incluent un essai gratuit d'1 mois.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
