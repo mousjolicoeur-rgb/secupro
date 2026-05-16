@@ -282,12 +282,12 @@ export default function HomePage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.8rem' }}>
                 <div style={{ fontSize: '1.5rem' }}>🏢</div>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(0,170,255,0.15)', border: '1px solid rgba(0,170,255,0.4)', borderRadius: '20px', padding: '2px 10px', fontSize: '0.62rem', letterSpacing: '1.5px', color: '#0af', textTransform: 'uppercase', fontWeight: 700 }}>
-                  30 JOURS OFFERTS
+                  1 MOIS OFFERT
                 </span>
               </div>
-              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.25rem' }}>Espace Société — Essai 30 jours offerts</div>
+              <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.25rem' }}>Espace Société — Essai 1 mois offert</div>
               <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '1rem', lineHeight: 1.5 }}>Pour les exploitants et chefs d&apos;exploitation</div>
-              {["Inscription", "30 jours d'accès complet gratuit", "Abonnement si vous êtes convaincus"].map((s, i) => (
+              {["Inscription", "1 mois d'accès complet gratuit", "Abonnement si vous êtes convaincus"].map((s, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)', marginBottom: '8px' }}>
                   <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'rgba(0,170,255,0.15)', border: '1px solid rgba(0,170,255,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#0af', fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
                   {s}
@@ -313,7 +313,7 @@ export default function HomePage() {
           <div style={{ maxWidth: '900px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', fontSize: '0.72rem', letterSpacing: '4px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: '0.6rem' }}>Choisissez votre espace</div>
             <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.8rem', fontWeight: 700, textAlign: 'center', marginBottom: '0.4rem' }}>Quel est votre profil ?</div>
-            <div style={{ textAlign: 'center', fontSize: '0.85rem', color: 'rgba(255,255,255,0.35)', marginBottom: '2rem' }}>Agents : accès gratuit permanent · Sociétés : 30 jours offerts</div>
+            <div style={{ textAlign: 'center', fontSize: '0.85rem', color: 'rgba(255,255,255,0.35)', marginBottom: '2rem' }}>Agents : accès gratuit permanent · Sociétés : 1 mois offert</div>
             <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link href="/agent" className="sp-access-card agent" style={{ flex: 1, minWidth: '240px', maxWidth: '300px', textDecoration: 'none', display: 'block' }}>
                 <span style={{ fontSize: '2.8rem', marginBottom: '1rem', display: 'block' }}>👮</span>
@@ -330,14 +330,14 @@ export default function HomePage() {
                 <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '1px', marginBottom: '0.2rem' }}>Espace Société</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '0.68rem', letterSpacing: '3px', textTransform: 'uppercase', color: '#0af' }}>Gestion · Exploitation</span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(0,170,255,0.12)', border: '1px solid rgba(0,170,255,0.35)', borderRadius: '20px', padding: '1px 8px', fontSize: '0.6rem', letterSpacing: '1px', color: '#0af', fontWeight: 700, textTransform: 'uppercase' }}>30 JOURS OFFERTS</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(0,170,255,0.12)', border: '1px solid rgba(0,170,255,0.35)', borderRadius: '20px', padding: '1px 8px', fontSize: '0.6rem', letterSpacing: '1px', color: '#0af', fontWeight: 700, textTransform: 'uppercase' }}>1 MOIS OFFERT</span>
                 </div>
-                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, marginBottom: '1.5rem' }}>Gestion des équipes, provisioning, conformité IDCC 1351. Essayez 30 jours — abonnez-vous seulement si vous êtes convaincus.</div>
+                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, marginBottom: '1.5rem' }}>Gestion des équipes, provisioning, conformité IDCC 1351. Essayez 1 mois — abonnez-vous seulement si vous êtes convaincus.</div>
                 <div style={{ display: 'inline-block', fontSize: '0.72rem', letterSpacing: '2px', textTransform: 'uppercase', padding: '0.55rem 1.4rem', borderRadius: '6px', fontWeight: 600, border: '1px solid rgba(0,170,255,0.4)', color: '#0af' }}>Accéder →</div>
               </Link>
             </div>
             <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.72rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '1px' }}>
-              Agents : 100% gratuit pour toujours · Sociétés : 30 jours offerts, puis abonnement · Paiement sécurisé via Stripe · secupro.app
+              Agents : 100% gratuit pour toujours · Sociétés : 1 mois offert, puis abonnement · Paiement sécurisé via Stripe · secupro.app
             </div>
           </div>
         </div>
