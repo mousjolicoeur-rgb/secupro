@@ -113,13 +113,13 @@ const cardStyle: CSSProperties = {
   background: P.card, border: `1px solid ${P.border}`, borderRadius: "12px", padding: "20px",
 };
 
-const panelTitle = (color = P.sub): CSSProperties => ({
+const panelTitle = (color: string = P.sub): CSSProperties => ({
   fontSize: "12px", fontWeight: 700, color, textTransform: "uppercase" as const,
   letterSpacing: "0.06em", marginBottom: "16px",
   display: "flex", alignItems: "center", gap: "8px",
 });
 
-const ghostBtn = (accent = P.sub): CSSProperties => ({
+const ghostBtn = (accent: string = P.sub): CSSProperties => ({
   display: "inline-flex", alignItems: "center", gap: "6px",
   padding: "6px 12px", borderRadius: "8px",
   background: "transparent", border: `1px solid ${P.border}`,
