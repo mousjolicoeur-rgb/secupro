@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabaseClient';
 
+// Plans Espace Société uniquement — l'Espace Agent est 100% gratuit.
 export type PlanType = 'gratuit' | 'essentiel' | 'pro' | 'premium';
 
 /**

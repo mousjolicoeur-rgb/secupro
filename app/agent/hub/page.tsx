@@ -15,12 +15,6 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import TrialBanner from "@/components/TrialBanner";
-
-// ── CONFIG ACCÈS ───────────────────────────────────────────────────────────
-// true  → abonné confirmé, boutons verts + aucune bannière trial
-// false → période d'essai, boutons verts + TrialBanner actif
-const isPremium = false;
 
 // ── DÉFINITION DES TUILES ──────────────────────────────────────────────────
 type Tile = {
@@ -479,9 +473,6 @@ export default function AgentHubPage() {
             </span>
           </div>
         </header>
-
-        {/* ── TRIAL BANNER ── */}
-        {!isPremium && <TrialBanner />}
 
         {/* ── GRILLE DES MODULES ── */}
         <nav
