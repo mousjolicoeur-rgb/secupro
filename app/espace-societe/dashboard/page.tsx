@@ -9,7 +9,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import {
   Users, UserCheck, AlertTriangle, Clock, MapPin, Bell, Bot,
-  UserPlus, Eye, ArrowLeft, RefreshCw, Upload, X, Phone,
+  UserPlus, Eye, ArrowLeft, RefreshCw, Upload, X, Phone, ShieldAlert,
   type LucideIcon,
 } from "lucide-react";
 
@@ -731,6 +731,171 @@ function ModalConfirm({ icon, accentColor, title, message, labelConfirm, onConfi
   );
 }
 
+// ─── 9b. CHECKLIST CNAPS ─────────────────────────────────────────────────────
+
+interface Infraction { num: string; label: string; badge?: string; }
+
+const INFRACTIONS: Infraction[] = [
+  { num: "01", label: "Exercice sans carte professionnelle valide",        badge: "75% DES DOSSIERS CNAPS" },
+  { num: "02", label: "Défaut d'habilitation préalable du dirigeant" },
+  { num: "03", label: "Emploi d'agents non titulaires du TFP APS" },
+  { num: "04", label: "Absence du livre de police (registre d'activité)" },
+  { num: "05", label: "Défaut d'assurance responsabilité civile professionnelle" },
+  { num: "06", label: "Non-respect de la tenue réglementaire" },
+  { num: "07", label: "Sous-traitance à une entreprise non autorisée CNAPS" },
+  { num: "08", label: "Dépassement des plafonds horaires légaux" },
+  { num: "09", label: "Absence du DUERP (Document Unique des Risques)" },
+  { num: "10", label: "Défaut de formation continue obligatoire" },
+];
+
+function CnapsChecklist() {
+  const [checked, setChecked] = useState<boolean[]>(new Array(10).fill(false));
+  const [userId,  setUserId]  = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      const uid = user?.id ?? "guest";
+      setUserId(uid);
+      try {
+        const saved = localStorage.getItem(`cnaps_checklist_${uid}`);
+        if (saved) setChecked(JSON.parse(saved) as boolean[]);
+      } catch { /* ignore parse errors */ }
+    });
+  }, []);
+
+  const toggle = (i: number) => {
+    setChecked((prev) => {
+      const next = [...prev];
+      next[i] = !next[i];
+      if (userId) {
+        try { localStorage.setItem(`cnaps_checklist_${userId}`, JSON.stringify(next)); } catch { /* ignore */ }
+      }
+      return next;
+    });
+  };
+
+  const score    = checked.filter(Boolean).length;
+  const barColor = score > 8 ? P.green : score >= 5 ? P.amber : P.red;
+  const riskAlert = score < 7;
+
+  return (
+    <div style={{ padding: "0 24px 32px" }}>
+      <div style={{ ...cardStyle }}>
+
+        {/* ── Title ── */}
+        <div style={panelTitle(P.amber)}>
+          <ShieldAlert size={14} />
+          Infractions CNAPS les plus fréquentes
+        </div>
+
+        {/* ── Score bar ── */}
+        <div style={{ marginBottom: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+            <span style={{ fontSize: "13px", fontWeight: 700, color: P.text }}>
+              {score}/10 points de contrôle validés
+            </span>
+            {riskAlert && (
+              <span style={{
+                padding: "3px 10px", borderRadius: "999px",
+                background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)",
+                color: P.red, fontSize: "10px", fontWeight: 800,
+                letterSpacing: "0.08em", textTransform: "uppercase",
+              }}>
+                ⚠ RISQUE DE CONTRÔLE CNAPS
+              </span>
+            )}
+          </div>
+          <div style={{ height: "6px", background: P.border, borderRadius: "999px", overflow: "hidden" }}>
+            <div style={{
+              height: "100%", borderRadius: "999px",
+              width: `${(score / 10) * 100}%`,
+              background: barColor,
+              transition: "width 0.3s ease, background 0.3s ease",
+            }} />
+          </div>
+        </div>
+
+        {/* ── Rows ── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+          {INFRACTIONS.map((inf, i) => (
+            <button
+              key={inf.num}
+              type="button"
+              onClick={() => toggle(i)}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.03)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+              style={{
+                display: "flex", alignItems: "center", gap: "12px",
+                padding: "10px 12px", borderRadius: "8px",
+                background: "transparent", border: "none",
+                cursor: "pointer", textAlign: "left", width: "100%",
+                transition: "background 0.15s",
+              }}
+            >
+              {/* Numéro */}
+              <span style={{
+                minWidth: "22px", fontSize: "11px", fontWeight: 800,
+                color: P.amber, letterSpacing: "0.05em", flexShrink: 0,
+              }}>
+                {inf.num}
+              </span>
+
+              {/* Checkbox */}
+              <span style={{
+                width: "18px", height: "18px", borderRadius: "5px", flexShrink: 0,
+                border: `2px solid ${checked[i] ? P.green : P.border}`,
+                background: checked[i] ? P.green + "22" : "transparent",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all 0.15s",
+              }}>
+                {checked[i] && <span style={{ color: P.green, fontSize: "11px", fontWeight: 900, lineHeight: 1 }}>✓</span>}
+              </span>
+
+              {/* Label */}
+              <span style={{
+                flex: 1, fontSize: "13px",
+                color: checked[i] ? P.muted : P.text,
+                textDecoration: checked[i] ? "line-through" : "none",
+                transition: "color 0.15s",
+              }}>
+                {inf.label}
+              </span>
+
+              {/* Badge infraction 01 */}
+              {inf.badge && (
+                <span style={{
+                  padding: "2px 8px", borderRadius: "999px",
+                  background: "rgba(239,68,68,0.10)", border: "1px solid rgba(239,68,68,0.25)",
+                  color: P.red, fontSize: "9px", fontWeight: 800,
+                  letterSpacing: "0.06em", textTransform: "uppercase",
+                  whiteSpace: "nowrap", flexShrink: 0,
+                }}>
+                  {inf.badge}
+                </span>
+              )}
+
+              {/* Statut pill */}
+              <span style={{
+                padding: "2px 8px", borderRadius: "999px", flexShrink: 0,
+                background: checked[i] ? "rgba(16,185,129,0.10)" : "rgba(245,158,11,0.10)",
+                border: `1px solid ${checked[i] ? "rgba(16,185,129,0.25)" : "rgba(245,158,11,0.25)"}`,
+                color: checked[i] ? P.green : P.amber,
+                fontSize: "9px", fontWeight: 700,
+                letterSpacing: "0.06em", textTransform: "uppercase",
+                whiteSpace: "nowrap",
+                transition: "all 0.15s",
+              }}>
+                {checked[i] ? "Conforme" : "À vérifier"}
+              </span>
+            </button>
+          ))}
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 // ─── 10. COMPOSANT PRINCIPAL ──────────────────────────────────────────────────
 
 export default function ChefExploitationDashboard() {
@@ -807,6 +972,9 @@ export default function ChefExploitationDashboard() {
           <GestionAgents />
         </div>
       </div>
+
+      {/* ── Checklist CNAPS (pleine largeur) ── */}
+      <CnapsChecklist />
 
       {/* Toast feedback */}
       {toast && (
