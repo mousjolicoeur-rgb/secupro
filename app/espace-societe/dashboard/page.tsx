@@ -1,17 +1,21 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// SecuPRO — Cockpit Chef d'Exploitation
+// SecuPRO — Cockpit Chef d'Exploitation — Enterprise Light Design
 // Route : /espace-societe/dashboard
 // ─────────────────────────────────────────────────────────────────────────────
 
 "use client";
-import { useState, useRef, useEffect, CSSProperties } from "react";
+
+import { useState, useRef, useEffect, CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
+import { DM_Sans } from "next/font/google";
 import { supabase } from "@/lib/supabaseClient";
 import {
   Users, UserCheck, AlertTriangle, Clock, MapPin, Bell, Bot,
   UserPlus, Eye, ArrowLeft, RefreshCw, Upload, X, Phone, ShieldAlert,
   type LucideIcon,
 } from "lucide-react";
+
+const dmSans = DM_Sans({ subsets: ["latin"] });
 
 // ─── 1. TYPES ────────────────────────────────────────────────────────────────
 
@@ -24,6 +28,7 @@ interface Site         { nom: string; ville: string; effectif: string; statut: S
 interface Alerte       { type: TypeAlerte; msg: string; h: string; }
 interface Anomalie     { site: string; agent: string; tel: string; }
 interface Remplacement { site: string; absent: string; remplace: { nom: string; info: string }; }
+interface Infraction   { num: string; label: string; badge?: string; }
 interface AIImportResult {
   type_detecte?:       string;
   nb_lignes?:          number;
@@ -78,65 +83,123 @@ const IA_REMPLACEMENTS: Remplacement[] = [
   { site: "Bureau Préfecture",   absent: "Sophie LAMBERT", remplace: { nom: "Aïssatou KONÉ", info: "Disponible · Habilitation valide · Zone compatible" } },
 ];
 
-// ─── 3. DESIGN TOKENS ────────────────────────────────────────────────────────
+const INFRACTIONS: Infraction[] = [
+  { num: "01", label: "Exercice sans carte professionnelle valide",        badge: "75% DES DOSSIERS CNAPS" },
+  { num: "02", label: "Défaut d'habilitation préalable du dirigeant" },
+  { num: "03", label: "Emploi d'agents non titulaires du TFP APS" },
+  { num: "04", label: "Absence du livre de police (registre d'activité)" },
+  { num: "05", label: "Défaut d'assurance responsabilité civile professionnelle" },
+  { num: "06", label: "Non-respect de la tenue réglementaire" },
+  { num: "07", label: "Sous-traitance à une entreprise non autorisée CNAPS" },
+  { num: "08", label: "Dépassement des plafonds horaires légaux" },
+  { num: "09", label: "Absence du DUERP (Document Unique des Risques)" },
+  { num: "10", label: "Défaut de formation continue obligatoire" },
+];
 
-const P = {
-  bg:     "#0F1117",
-  card:   "#1A1D27",
-  border: "#252836",
-  text:   "#F1F5F9",
-  sub:    "#94A3B8",
-  muted:  "#64748B",
-  blue:   "#3B82F6",
-  green:  "#10B981",
-  amber:  "#F59E0B",
-  red:    "#EF4444",
-  font:   "var(--font-geist-sans), system-ui, -apple-system, sans-serif",
+// ─── 3. DESIGN TOKENS — ENTERPRISE LIGHT ─────────────────────────────────────
+
+const L = {
+  bgPage:    "#F8F9FB",
+  bgCard:    "#FFFFFF",
+  bgMuted:   "#F8F9FB",
+  border:    "#E2E8F0",
+  borderSub: "#F1F5F9",
+  text:      "#0F172A",
+  textSec:   "#64748B",
+  textMuted: "#94A3B8",
+  blue:      "#2563EB",
+  red:       "#DC2626",
+  amber:     "#D97706",
+  green:     "#16A34A",
+  // Tinted pill backgrounds + text
+  blueBg:    "#EFF6FF",   blueText:  "#1D4ED8",
+  redBg:     "#FEE2E2",   redText:   "#991B1B",
+  amberBg:   "#FEF3C7",   amberText: "#92400E",
+  greenBg:   "#DCFCE7",   greenText: "#166534",
 } as const;
 
-const statusColor: Record<Statut, string> = {
-  actif: P.green, alerte: P.amber, critique: P.red, disponible: P.blue,
+// ─── 4. STATUS CONFIGS ────────────────────────────────────────────────────────
+
+const STATUT_CFG: Record<Statut, { bg: string; text: string; label: string }> = {
+  actif:      { bg: L.greenBg, text: L.greenText, label: "En poste"   },
+  alerte:     { bg: L.amberBg, text: L.amberText, label: "Alerte"     },
+  critique:   { bg: L.redBg,   text: L.redText,   label: "Critique"   },
+  disponible: { bg: L.blueBg,  text: L.blueText,  label: "Disponible" },
 };
 
-const alertColor: Record<TypeAlerte, string> = {
-  critique: P.red, danger: "#F97316", alerte: P.amber, warning: "#A78BFA", info: "#60A5FA",
+const SITE_CFG: Record<StatutSite, { bg: string; text: string; label: string }> = {
+  ALERTE:   { bg: L.amberBg, text: L.amberText, label: "Alerte"   },
+  CRITIQUE: { bg: L.redBg,   text: L.redText,   label: "Critique" },
+  OK:       { bg: L.greenBg, text: L.greenText, label: "OK"       },
 };
 
-const siteCfg: Record<StatutSite, { color: string; bg: string; border: string; label: string }> = {
-  ALERTE:   { color: P.amber, bg: "rgba(245,158,11,0.1)",  border: "rgba(245,158,11,0.3)",  label: "Alerte"   },
-  CRITIQUE: { color: P.red,   bg: "rgba(239,68,68,0.1)",   border: "rgba(239,68,68,0.3)",   label: "Critique" },
-  OK:       { color: P.green, bg: "rgba(16,185,129,0.1)",  border: "rgba(16,185,129,0.3)",  label: "OK"       },
+const ALERTE_DOT: Record<TypeAlerte, string> = {
+  critique: L.red, danger: "#EA580C", alerte: L.amber, warning: "#7C3AED", info: "#0284C7",
 };
 
-// Shared style helpers
-const cardStyle: CSSProperties = {
-  background: P.card, border: `1px solid ${P.border}`, borderRadius: "12px", padding: "20px",
+// ─── 5. STYLE HELPERS ─────────────────────────────────────────────────────────
+
+const card: CSSProperties = {
+  background:   L.bgCard,
+  border:       `1px solid ${L.border}`,
+  borderRadius: "8px",
 };
 
-const panelTitle = (color: string = P.sub): CSSProperties => ({
-  fontSize: "12px", fontWeight: 700, color, textTransform: "uppercase" as const,
-  letterSpacing: "0.06em", marginBottom: "16px",
-  display: "flex", alignItems: "center", gap: "8px",
-});
-
-const ghostBtn = (accent: string = P.sub): CSSProperties => ({
-  display: "inline-flex", alignItems: "center", gap: "6px",
-  padding: "6px 12px", borderRadius: "8px",
-  background: "transparent", border: `1px solid ${P.border}`,
-  color: accent, fontSize: "12px", fontWeight: 600, cursor: "pointer",
-  transition: "background 0.15s",
-});
-
-const pillBadge = (color: string): CSSProperties => ({
-  display: "inline-flex", alignItems: "center", gap: "5px",
-  padding: "3px 10px", borderRadius: "999px",
+const sectionLabel: CSSProperties = {
   fontSize: "11px", fontWeight: 600,
-  color,
-  background: color + "1A",
-  border: `1px solid ${color}4D`,
+  color: L.textSec, textTransform: "uppercase", letterSpacing: "0.08em",
+};
+
+const pill = (bg: string, text: string): CSSProperties => ({
+  display: "inline-flex", alignItems: "center",
+  padding: "2px 8px", borderRadius: "999px",
+  fontSize: "11px", fontWeight: 600,
+  background: bg, color: text, whiteSpace: "nowrap",
 });
 
-// ─── 4. HOOK — Import IA ─────────────────────────────────────────────────────
+const btnPrimary: CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: "6px",
+  height: "36px", padding: "0 16px", borderRadius: "6px",
+  background: L.blue, color: "#FFFFFF",
+  border: "none", fontSize: "13px", fontWeight: 500, cursor: "pointer",
+};
+
+const btnSecondary: CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: "6px",
+  height: "36px", padding: "0 14px", borderRadius: "6px",
+  background: L.bgCard, color: "#374151",
+  border: `1px solid ${L.border}`,
+  fontSize: "13px", fontWeight: 500, cursor: "pointer",
+};
+
+const btnDestructive: CSSProperties = {
+  ...btnSecondary, color: L.red, border: "1px solid #FCA5A5",
+};
+
+// ─── 6. PANEL WRAPPER ─────────────────────────────────────────────────────────
+
+function Panel({
+  title, icon: Icon, badge, children,
+}: {
+  title: string; icon: LucideIcon; badge?: ReactNode; children: ReactNode;
+}) {
+  return (
+    <div style={{ ...card, overflow: "hidden" }}>
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "12px 16px", borderBottom: `1px solid ${L.borderSub}`,
+      }}>
+        <div style={{ ...sectionLabel, display: "flex", alignItems: "center", gap: "7px" }}>
+          <Icon size={14} color={L.textMuted} /> {title}
+        </div>
+        {badge && <div>{badge}</div>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ─── 7. HOOK — Import IA ─────────────────────────────────────────────────────
 
 function useImport(onAgentsImported: (names: string[]) => void) {
   const fileRef                                   = useRef<HTMLInputElement>(null);
@@ -155,9 +218,7 @@ function useImport(onAgentsImported: (names: string[]) => void) {
 
   const handleFile = (file: File | null | undefined) => {
     if (!file) return;
-    setFileName(file.name);
-    setAiResult(null);
-    setImportDone(false);
+    setFileName(file.name); setAiResult(null); setImportDone(false);
     const reader = new FileReader();
     reader.onload = (e) => setFileContent(e.target?.result as string);
     reader.readAsText(file);
@@ -165,8 +226,7 @@ function useImport(onAgentsImported: (names: string[]) => void) {
 
   const analyzeWithAI = async () => {
     if (!fileContent) return;
-    setAiLoading(true);
-    setAiResult(null);
+    setAiLoading(true); setAiResult(null);
     try {
       const prompt = `Tu es SecuPRO IA, assistant d'import pour une plateforme de sécurité privée.
 Le chef d'exploitation vient d'importer un fichier ${fileType} nommé "${fileName}".
@@ -186,10 +246,8 @@ Analyse ce fichier et retourne UNIQUEMENT un JSON (sans balises markdown) avec :
   "avertissements": ["..."],
   "action_suggeree": "description de l'import"
 }`;
-
       const response = await fetch("/api/analyze-import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
       });
       const data = await response.json();
@@ -215,74 +273,99 @@ Analyse ce fichier et retourne UNIQUEMENT un JSON (sans balises markdown) avec :
   return { fileRef, fileType, setFileType, dragOver, setDragOver, fileName, fileContent, aiResult, aiLoading, importDone, handleFile, analyzeWithAI, confirmImport, reset };
 }
 
-// ─── 5. HEADER ───────────────────────────────────────────────────────────────
+// ─── 8. HEADER ───────────────────────────────────────────────────────────────
 
-function Header({ time, onReset, onExit, onImport }: { time: string; onReset: () => void; onExit: () => void; onImport: () => void }) {
+function Header({ time, onReset, onExit, onImport }: {
+  time: string; onReset: () => void; onExit: () => void; onImport: () => void;
+}) {
   return (
     <header style={{
-      background: P.card, borderBottom: `1px solid ${P.border}`,
+      position: "sticky", top: 0, zIndex: 100,
+      background: L.bgCard, borderBottom: `1px solid ${L.border}`,
       display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "0 24px", height: "60px", gap: "16px",
+      padding: "0 24px", height: "56px", gap: "16px",
     }}>
-      <div style={{ display: "flex", gap: "8px" }}>
-        <button type="button" style={ghostBtn()} onClick={onExit}>
-          <ArrowLeft size={14} /> Retour
-        </button>
-        <button type="button" style={ghostBtn(P.amber)} onClick={onReset}>
-          <RefreshCw size={14} /> Réinitialiser
-        </button>
-        <button type="button" style={ghostBtn(P.blue)} onClick={onImport}>
-          <Upload size={14} /> Importer
-        </button>
-      </div>
-
-      <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: "17px", fontWeight: 800, color: P.text, letterSpacing: "-0.01em" }}>
-          Secu<span style={{ color: P.blue }}>PRO</span>{" "}
-          <span style={{ fontSize: "12px", fontWeight: 500, color: P.muted }}>Business</span>
+      {/* Logo + nav */}
+      <div style={{ display: "flex", alignItems: "center", gap: "24px", flexShrink: 0 }}>
+        <div>
+          <div style={{ fontSize: "15px", fontWeight: 700, color: L.text, letterSpacing: "-0.01em", lineHeight: 1.2 }}>
+            Secu<span style={{ color: L.blue }}>PRO</span>
+            <span style={{ fontSize: "11px", fontWeight: 400, color: L.textMuted, marginLeft: "6px" }}>Business</span>
+          </div>
+          <div style={{ fontSize: "10px", color: L.textMuted, letterSpacing: "0.04em", marginTop: "1px" }}>Chef d'exploitation</div>
         </div>
-        <div style={{ fontSize: "11px", color: P.muted, marginTop: "1px" }}>Cockpit chef d'exploitation</div>
+
+        <nav style={{ display: "flex", alignItems: "stretch", height: "56px", gap: "2px" }}>
+          {[
+            { label: "Tableau de bord", active: true  },
+            { label: "Conformité",      active: false },
+            { label: "Agents",          active: false },
+          ].map(({ label, active }) => (
+            <div key={label} style={{
+              display: "flex", alignItems: "center", padding: "0 14px",
+              fontSize: "13px", fontWeight: active ? 600 : 400,
+              color: active ? L.blue : L.textSec,
+              borderBottom: `2px solid ${active ? L.blue : "transparent"}`,
+              cursor: active ? "default" : "pointer",
+            }}>
+              {label}
+            </div>
+          ))}
+        </nav>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-        <span style={{ fontSize: "13px", color: P.sub }}>{time}</span>
+      {/* Right controls */}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+        <span style={{ fontSize: "12px", color: L.textMuted, fontVariantNumeric: "tabular-nums", marginRight: "4px" }}>
+          {time}
+        </span>
         <span style={{
-          display: "inline-flex", alignItems: "center", gap: "6px",
-          padding: "4px 12px", borderRadius: "999px",
-          background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)",
-          fontSize: "12px", fontWeight: 600, color: P.green,
+          ...pill("#F0FDF4", L.green),
+          border: "1px solid #BBF7D0", padding: "3px 10px",
         }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: P.green, display: "inline-block" }} />
+          <span style={{ width: 5, height: 5, borderRadius: "50%", background: L.green, display: "inline-block", marginRight: "5px" }} />
           En direct
         </span>
+        <div style={{ width: "1px", height: "20px", background: L.border, margin: "0 4px" }} />
+        <button type="button" style={btnSecondary} onClick={onExit}>
+          <ArrowLeft size={14} /> Retour
+        </button>
+        <button type="button" style={btnSecondary} onClick={onReset}>
+          <RefreshCw size={14} /> Réinitialiser
+        </button>
+        <button type="button" style={btnPrimary} onClick={onImport}>
+          <Upload size={14} /> Importer
+        </button>
       </div>
     </header>
   );
 }
 
-// ─── 6. KPI ROW ───────────────────────────────────────────────────────────────
+// ─── 9. KPI ROW ──────────────────────────────────────────────────────────────
 
-function KpiRow({ total, actifs, anomalies, dispos }: { total: number; actifs: number; anomalies: number; dispos: number }) {
-  const items: { icon: LucideIcon; val: number; label: string; sub: string; color: string }[] = [
-    { icon: Users,         val: total,     label: "Agents total",  sub: "inscrits",     color: P.blue  },
-    { icon: UserCheck,     val: actifs,    label: "En poste",      sub: "actifs",       color: P.green },
-    { icon: AlertTriangle, val: anomalies, label: "Anomalies",     sub: "pointage",     color: P.amber },
-    { icon: Clock,         val: dispos,    label: "Disponibles",   sub: "mobilisables", color: P.blue  },
+function KpiRow({ total, actifs, anomalies, dispos }: {
+  total: number; actifs: number; anomalies: number; dispos: number;
+}) {
+  const items: { icon: LucideIcon; val: number; label: string; sub: string; iconBg: string; iconColor: string }[] = [
+    { icon: Users,         val: total,     label: "Agents total",  sub: "inscrits",     iconBg: L.blueBg,  iconColor: L.blue  },
+    { icon: UserCheck,     val: actifs,    label: "En poste",      sub: "actifs",       iconBg: L.greenBg, iconColor: L.green },
+    { icon: AlertTriangle, val: anomalies, label: "Anomalies",     sub: "pointage",     iconBg: L.amberBg, iconColor: L.amber },
+    { icon: Clock,         val: dispos,    label: "Disponibles",   sub: "mobilisables", iconBg: L.blueBg,  iconColor: L.blue  },
   ];
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", padding: "20px 24px 0" }}>
-      {items.map(({ icon: Icon, val, label, sub, color }) => (
-        <div key={label} style={{ ...cardStyle, display: "flex", alignItems: "center", gap: "16px" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "12px" }}>
+      {items.map(({ icon: Icon, val, label, sub, iconBg, iconColor }) => (
+        <div key={label} style={{ ...card, padding: "20px", display: "flex", alignItems: "center", gap: "16px" }}>
           <div style={{
-            width: 44, height: 44, borderRadius: "10px", flexShrink: 0,
-            background: color + "1A", display: "flex", alignItems: "center", justifyContent: "center",
+            width: 40, height: 40, borderRadius: "8px", flexShrink: 0,
+            background: iconBg, display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            <Icon size={20} color={color} />
+            <Icon size={18} color={iconColor} />
           </div>
           <div>
-            <div style={{ fontSize: "30px", fontWeight: 800, color: P.text, lineHeight: 1 }}>{val}</div>
-            <div style={{ fontSize: "12px", fontWeight: 600, color: P.sub, marginTop: "2px" }}>{label}</div>
-            <div style={{ fontSize: "11px", color: P.muted }}>{sub}</div>
+            <div style={{ fontSize: "28px", fontWeight: 700, color: L.text, lineHeight: 1 }}>{val}</div>
+            <div style={{ fontSize: "13px", fontWeight: 500, color: L.text, marginTop: "2px" }}>{label}</div>
+            <div style={{ fontSize: "11px", color: L.textMuted }}>{sub}</div>
           </div>
         </div>
       ))}
@@ -290,204 +373,188 @@ function KpiRow({ total, actifs, anomalies, dispos }: { total: number; actifs: n
   );
 }
 
-// ─── 7. PANNEAUX ─────────────────────────────────────────────────────────────
+// ─── 10. PLANNINGS ───────────────────────────────────────────────────────────
 
 function Plannings({ agents }: { agents: Agent[] }) {
-  const thStyle: CSSProperties = {
-    fontSize: "11px", fontWeight: 600, color: P.muted, textAlign: "left",
-    padding: "8px 10px", borderBottom: `1px solid ${P.border}`,
-  };
-  const tdStyle: CSSProperties = {
-    fontSize: "13px", color: P.sub, padding: "10px 10px", borderBottom: `1px solid ${P.border}`,
-  };
   return (
-    <div style={{ ...cardStyle, height: "100%" }}>
-      <div style={{ ...panelTitle(), justifyContent: "space-between" }}>
-        <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Users size={14} /> Plannings du jour
-        </span>
+    <Panel
+      title="Plannings du jour"
+      icon={Users}
+      badge={
         <div style={{ display: "flex", gap: "6px" }}>
-          <span style={pillBadge(P.blue)}>{agents.length} agents</span>
-          <span style={{ ...pillBadge(P.muted), cursor: "pointer" }}>PDF</span>
-          <span style={{ ...pillBadge(P.muted), cursor: "pointer" }}>XLSX</span>
+          <span style={pill(L.blueBg, L.blueText)}>{agents.length} agents</span>
+          <button type="button" style={{ ...btnSecondary, height: "26px", padding: "0 10px", fontSize: "11px" }}>PDF</button>
+          <button type="button" style={{ ...btnSecondary, height: "26px", padding: "0 10px", fontSize: "11px" }}>XLSX</button>
         </div>
-      </div>
+      }
+    >
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr>
-              <th style={thStyle}>Agent</th>
-              <th style={thStyle}>Site</th>
-              <th style={thStyle}>Horaires</th>
-              <th style={{ ...thStyle, textAlign: "center" }}>Statut</th>
+            <tr style={{ background: L.bgMuted, borderBottom: `2px solid ${L.border}` }}>
+              {["Agent", "Site", "Horaires", "Statut"].map((h, i) => (
+                <th key={h} style={{
+                  ...sectionLabel,
+                  padding: "10px 16px",
+                  textAlign: i === 3 ? "center" : "left",
+                  fontWeight: 600,
+                }}>
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {agents.slice(0, 8).map((a) => (
-              <tr key={a.id}>
-                <td style={{ ...tdStyle, fontWeight: 600, color: P.text }}>{a.nom}</td>
-                <td style={tdStyle}>{a.site}</td>
-                <td style={{ ...tdStyle, color: a.statut === "critique" ? P.red : a.statut === "alerte" ? P.amber : P.sub }}>
-                  {a.horaires}
-                </td>
-                <td style={{ ...tdStyle, textAlign: "center" }}>
-                  <span style={{
-                    display: "inline-block", width: 8, height: 8, borderRadius: "50%",
-                    background: statusColor[a.statut],
-                  }} />
-                </td>
-              </tr>
-            ))}
+            {agents.map((a, i) => {
+              const cfg = STATUT_CFG[a.statut];
+              return (
+                <tr
+                  key={a.id}
+                  style={{ borderBottom: i < agents.length - 1 ? `1px solid ${L.borderSub}` : "none" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = L.bgMuted; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = "transparent"; }}
+                >
+                  <td style={{ padding: "12px 16px", fontSize: "13px", fontWeight: 600, color: L.text }}>{a.nom}</td>
+                  <td style={{ padding: "12px 16px", fontSize: "13px", color: L.textSec }}>{a.site}</td>
+                  <td style={{ padding: "12px 16px", fontSize: "13px", color: L.textSec }}>{a.horaires}</td>
+                  <td style={{ padding: "12px 16px", textAlign: "center" }}>
+                    <span style={pill(cfg.bg, cfg.text)}>{cfg.label}</span>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
-    </div>
+    </Panel>
   );
 }
+
+// ─── 11. SITES ACTIFS ────────────────────────────────────────────────────────
 
 function SitesActifs({ sites }: { sites: Site[] }) {
   return (
-    <div style={cardStyle}>
-      <div style={panelTitle()}>
-        <MapPin size={14} /> Sites actifs
-        <span style={{ marginLeft: "auto", ...pillBadge(P.blue) }}>{sites.length} sites</span>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-        {sites.map((s, i) => {
-          const cfg = siteCfg[s.statut];
-          return (
-            <div key={i} style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "10px 0", borderBottom: i < sites.length - 1 ? `1px solid ${P.border}` : "none",
-            }}>
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 600, color: P.text }}>{s.nom}</div>
-                <div style={{ fontSize: "11px", color: P.muted, marginTop: "2px" }}>{s.ville}</div>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span style={{ fontSize: "12px", color: P.sub }}>{s.effectif}</span>
-                <span style={{ ...pillBadge(cfg.color), fontSize: "10px" }}>{cfg.label}</span>
-              </div>
+    <Panel title="Sites actifs" icon={MapPin} badge={<span style={pill(L.blueBg, L.blueText)}>{sites.length} sites</span>}>
+      {sites.map((s, i) => {
+        const cfg = SITE_CFG[s.statut];
+        return (
+          <div key={i} style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "11px 16px",
+            borderBottom: i < sites.length - 1 ? `1px solid ${L.borderSub}` : "none",
+          }}>
+            <div>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: L.text }}>{s.nom}</div>
+              <div style={{ fontSize: "11px", color: L.textMuted, marginTop: "1px" }}>{s.ville}</div>
             </div>
-          );
-        })}
-      </div>
-    </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "12px", color: L.textSec, fontVariantNumeric: "tabular-nums" }}>{s.effectif}</span>
+              <span style={pill(cfg.bg, cfg.text)}>{cfg.label}</span>
+            </div>
+          </div>
+        );
+      })}
+    </Panel>
   );
 }
 
+// ─── 12. ANOMALIES POINTAGE ──────────────────────────────────────────────────
+
 function AnomaliesPointage({ anomalies }: { anomalies: Anomalie[] }) {
   return (
-    <div style={cardStyle}>
-      <div style={panelTitle()}>
-        <AlertTriangle size={14} /> Anomalies pointage
-        <span style={{ marginLeft: "auto", ...pillBadge(P.red) }}>{anomalies.length} alertes</span>
+    <Panel
+      title="Anomalies pointage"
+      icon={AlertTriangle}
+      badge={<span style={pill(L.redBg, L.redText)}>{anomalies.length} alerte{anomalies.length > 1 ? "s" : ""}</span>}
+    >
+      <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+        {anomalies.length === 0 ? (
+          <p style={{ fontSize: "13px", color: L.textMuted }}>Aucune anomalie</p>
+        ) : anomalies.map((a, i) => (
+          <div key={i} style={{
+            background: L.bgMuted, borderRadius: "6px",
+            border: `1px solid ${L.border}`, padding: "12px 14px",
+          }}>
+            <div style={{ fontSize: "13px", fontWeight: 600, color: L.text, marginBottom: "2px" }}>{a.agent}</div>
+            <div style={{ fontSize: "12px", color: L.textMuted, marginBottom: "10px" }}>{a.site}</div>
+            <a href={`tel:${a.tel}`} style={{ ...btnSecondary, height: "28px", padding: "0 10px", fontSize: "12px", textDecoration: "none" }}>
+              <Phone size={12} /> {a.tel}
+            </a>
+          </div>
+        ))}
       </div>
-      {anomalies.length === 0 ? (
-        <p style={{ fontSize: "12px", color: P.muted }}>Aucune anomalie</p>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          {anomalies.map((a, i) => (
-            <div key={i} style={{
-              background: P.bg, borderRadius: "8px", padding: "12px",
-              border: `1px solid ${P.border}`,
-            }}>
-              <div style={{ fontSize: "13px", fontWeight: 600, color: P.text, marginBottom: "4px" }}>{a.agent}</div>
-              <div style={{ fontSize: "11px", color: P.muted, marginBottom: "8px" }}>{a.site}</div>
-              <a href={`tel:${a.tel}`} style={{
-                display: "inline-flex", alignItems: "center", gap: "5px",
-                fontSize: "12px", color: P.blue, textDecoration: "none",
-                padding: "4px 10px", borderRadius: "6px",
-                background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)",
-              }}>
-                <Phone size={11} /> {a.tel}
-              </a>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+    </Panel>
   );
 }
+
+// ─── 13. ALERTES & INCIDENTS ─────────────────────────────────────────────────
 
 function AlertesIncidents({ alertes }: { alertes: Alerte[] }) {
   const critiques = alertes.filter((a) => a.type === "critique" || a.type === "danger").length;
   return (
-    <div style={cardStyle}>
-      <div style={panelTitle()}>
-        <Bell size={14} /> Alertes & incidents
-        <span style={{ marginLeft: "auto", ...pillBadge(P.red) }}>{critiques} critiques</span>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", maxHeight: "240px", overflowY: "auto", gap: "1px" }}>
+    <Panel
+      title="Alertes & incidents"
+      icon={Bell}
+      badge={<span style={pill(L.redBg, L.redText)}>{critiques} critique{critiques > 1 ? "s" : ""}</span>}
+    >
+      <div style={{ maxHeight: "240px", overflowY: "auto" }}>
         {alertes.map((a, i) => (
           <div key={i} style={{
             display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-            gap: "10px", padding: "8px 0",
-            borderBottom: i < alertes.length - 1 ? `1px solid ${P.border}` : "none",
+            gap: "10px", padding: "10px 16px",
+            borderBottom: i < alertes.length - 1 ? `1px solid ${L.borderSub}` : "none",
           }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", flex: 1 }}>
               <span style={{
-                width: 6, height: 6, borderRadius: "50%", flexShrink: 0, marginTop: "5px",
-                background: alertColor[a.type],
+                width: 7, height: 7, borderRadius: "50%", flexShrink: 0, marginTop: "5px",
+                background: ALERTE_DOT[a.type],
               }} />
-              <span style={{ fontSize: "12px", color: P.sub, lineHeight: 1.5 }}>{a.msg}</span>
+              <span style={{ fontSize: "12px", color: L.textSec, lineHeight: 1.5 }}>{a.msg}</span>
             </div>
-            <span style={{ fontSize: "11px", color: P.muted, whiteSpace: "nowrap", flexShrink: 0 }}>{a.h}</span>
+            <span style={{ fontSize: "11px", color: L.textMuted, whiteSpace: "nowrap", flexShrink: 0 }}>{a.h}</span>
           </div>
         ))}
       </div>
-    </div>
+    </Panel>
   );
 }
+
+// ─── 14. IA BUSINESS ─────────────────────────────────────────────────────────
 
 function IABusiness({ remplacements }: { remplacements: Remplacement[] }) {
   return (
-    <div style={cardStyle}>
-      <div style={panelTitle()}>
-        <Bot size={14} /> IA Business
-        <span style={{ marginLeft: "auto", ...pillBadge(P.green) }}>Actif</span>
-      </div>
-      <div style={{
-        padding: "10px 12px", background: P.bg, borderRadius: "8px",
-        border: `1px solid ${P.border}`, fontSize: "12px", color: P.sub,
-        marginBottom: "14px",
-      }}>
-        Analyse en cours · {remplacements.length} absences détectées · {remplacements.length} solutions identifiées.
-      </div>
-      {remplacements.map((r, i) => (
-        <div key={i} style={{ marginBottom: i < remplacements.length - 1 ? "14px" : 0 }}>
-          <div style={{ fontSize: "11px", color: P.muted, marginBottom: "6px", fontWeight: 600 }}>{r.site}</div>
-          <div style={{
-            borderLeft: `3px solid ${P.red}`, background: P.bg,
-            borderRadius: "0 8px 8px 0", padding: "8px 10px", marginBottom: "4px",
-          }}>
-            <div style={{ fontSize: "12px", fontWeight: 600, color: P.red }}>{r.absent} — absent</div>
-          </div>
-          <div style={{
-            borderLeft: `3px solid ${P.green}`, background: P.bg,
-            borderRadius: "0 8px 8px 0", padding: "8px 10px",
-            display: "flex", justifyContent: "space-between", alignItems: "center",
-          }}>
-            <div>
-              <div style={{ fontSize: "12px", fontWeight: 600, color: P.green }}>{r.remplace.nom}</div>
-              <div style={{ fontSize: "11px", color: P.muted, marginTop: "2px" }}>{r.remplace.info}</div>
-            </div>
-            <button type="button" style={{
-              display: "inline-flex", alignItems: "center", gap: "5px",
-              padding: "5px 10px", borderRadius: "6px", cursor: "pointer",
-              background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)",
-              color: P.blue, fontSize: "11px", fontWeight: 600,
-            }}>
-              <Phone size={10} /> Appeler
-            </button>
-          </div>
+    <Panel title="IA Business" icon={Bot} badge={<span style={pill(L.greenBg, L.greenText)}>Actif</span>}>
+      <div style={{ padding: "12px 16px" }}>
+        <div style={{
+          padding: "10px 12px", background: "#EFF6FF",
+          border: "1px solid #BFDBFE", borderRadius: "6px",
+          fontSize: "12px", color: "#1E40AF", lineHeight: 1.5, marginBottom: "14px",
+        }}>
+          Analyse en cours · {remplacements.length} absences · {remplacements.length} solutions identifiées.
         </div>
-      ))}
-    </div>
+        {remplacements.map((r, i) => (
+          <div key={i} style={{ marginBottom: i < remplacements.length - 1 ? "14px" : 0 }}>
+            <div style={{ ...sectionLabel, marginBottom: "6px" }}>{r.site}</div>
+            <div style={{ borderLeft: `3px solid ${L.red}`, background: "#FFF8F8", borderRadius: "0 6px 6px 0", padding: "8px 12px", marginBottom: "4px" }}>
+              <div style={{ fontSize: "12px", fontWeight: 600, color: L.red }}>{r.absent} — absent</div>
+            </div>
+            <div style={{ borderLeft: `3px solid ${L.green}`, background: "#F0FDF4", borderRadius: "0 6px 6px 0", padding: "8px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: "12px", fontWeight: 600, color: L.green }}>{r.remplace.nom}</div>
+                <div style={{ fontSize: "11px", color: L.textMuted, marginTop: "2px" }}>{r.remplace.info}</div>
+              </div>
+              <button type="button" style={{ ...btnSecondary, height: "28px", padding: "0 10px", fontSize: "12px" }}>
+                <Phone size={12} /> Appeler
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Panel>
   );
 }
 
-// ─── 8. GESTION DES AGENTS ───────────────────────────────────────────────────
+// ─── 15. GESTION DES AGENTS ──────────────────────────────────────────────────
 
 function GestionAgents() {
   const [approuves, setApprouves] = useState(0);
@@ -501,9 +568,7 @@ function GestionAgents() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user || cancelled) return;
         const { data } = await supabase
-          .from("agent_societe")
-          .select("status")
-          .eq("societe_id", user.id);
+          .from("agent_societe").select("status").eq("societe_id", user.id);
         if (!data || cancelled) return;
         setApprouves(data.filter((r) => r.status === "approved").length);
         setEnAttente(data.filter((r) => r.status === "pending").length);
@@ -516,237 +581,30 @@ function GestionAgents() {
   }, []);
 
   return (
-    <div style={cardStyle}>
-      <div style={panelTitle()}>
-        <Users size={14} /> Gestion des agents
-        <span style={{ marginLeft: "auto", ...pillBadge(P.blue) }}>
-          {loading ? "…" : `${approuves + enAttente} liés`}
-        </span>
+    <Panel
+      title="Gestion des agents"
+      icon={Users}
+      badge={<span style={pill(L.blueBg, L.blueText)}>{loading ? "…" : `${approuves + enAttente} liés`}</span>}
+    >
+      <div style={{ padding: "14px 16px" }}>
+        <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+          <span style={pill(L.greenBg, L.greenText)}>✓ {loading ? "…" : approuves} approuvés</span>
+          <span style={pill(L.amberBg, L.amberText)}>⏳ {loading ? "…" : enAttente} en attente</span>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <Link href="/entreprises/agents/invite" style={{ ...btnPrimary, justifyContent: "center", textDecoration: "none", width: "100%" }}>
+            <UserPlus size={14} /> Inviter un agent
+          </Link>
+          <Link href="/entreprises/agents" style={{ ...btnSecondary, justifyContent: "center", textDecoration: "none", width: "100%" }}>
+            <Eye size={14} /> Voir mes agents
+          </Link>
+        </div>
       </div>
-
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-        <span style={pillBadge(P.green)}>
-          <span style={{ width: 5, height: 5, borderRadius: "50%", background: P.green, display: "inline-block" }} />
-          {loading ? "…" : approuves} approuvés
-        </span>
-        <span style={pillBadge(P.amber)}>
-          <span style={{ width: 5, height: 5, borderRadius: "50%", background: P.amber, display: "inline-block" }} />
-          {loading ? "…" : enAttente} en attente
-        </span>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <Link href="/entreprises/agents/invite" style={{
-          display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-          padding: "10px", borderRadius: "8px", textDecoration: "none",
-          background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.25)",
-          color: P.blue, fontSize: "12px", fontWeight: 700,
-        }}>
-          <UserPlus size={14} /> Inviter un agent
-        </Link>
-        <Link href="/entreprises/agents" style={{
-          display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-          padding: "10px", borderRadius: "8px", textDecoration: "none",
-          background: "transparent", border: `1px solid ${P.border}`,
-          color: P.sub, fontSize: "12px", fontWeight: 600,
-        }}>
-          <Eye size={14} /> Voir mes agents
-        </Link>
-      </div>
-    </div>
+    </Panel>
   );
 }
 
-// ─── 9. MODALES ──────────────────────────────────────────────────────────────
-
-type ImportHook = ReturnType<typeof useImport>;
-
-function ModalImport({ imp, onClose }: { imp: ImportHook; onClose: () => void }) {
-  const { fileRef, fileType, setFileType, dragOver, setDragOver, fileName, aiResult, aiLoading, importDone, handleFile, analyzeWithAI, confirmImport } = imp;
-
-  const FILE_ACCEPTS: Record<string, string> = { CSV: ".csv", Excel: ".xlsx,.xls", PDF: ".pdf" };
-  const FILE_HINTS: Record<string, string> = {
-    CSV:   "Fichiers .csv exportés depuis Comète, Bodet, Planning Auto...",
-    Excel: "Fichiers .xlsx/.xls — plannings, listes agents, pointages...",
-    PDF:   "Fichiers .pdf — plannings imprimés, cartes pro, contrats...",
-  };
-
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div style={{ background: P.card, border: `1px solid ${P.border}`, borderRadius: "16px", width: "520px", maxWidth: "95vw", padding: "28px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <div style={{ fontSize: "16px", fontWeight: 800, color: P.text, display: "flex", alignItems: "center", gap: "8px" }}>
-            <Upload size={16} color={P.blue} /> Import de données
-          </div>
-          <button onClick={onClose} style={{ background: "transparent", border: "none", color: P.muted, cursor: "pointer", padding: "4px" }}>
-            <X size={18} />
-          </button>
-        </div>
-
-        <div style={{ fontSize: "11px", fontWeight: 700, color: P.muted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>Format du fichier</div>
-        <div style={{ display: "flex", gap: "8px", marginBottom: "6px" }}>
-          {["CSV", "Excel", "PDF"].map((f) => (
-            <button key={f} onClick={() => setFileType(f)} style={{
-              flex: 1, padding: "8px", borderRadius: "8px", cursor: "pointer",
-              background: fileType === f ? "rgba(59,130,246,0.1)" : P.bg,
-              border: `1px solid ${fileType === f ? P.blue : P.border}`,
-              color: fileType === f ? P.blue : P.muted,
-              fontSize: "12px", fontWeight: 600,
-            }}>{f}</button>
-          ))}
-        </div>
-        <div style={{ fontSize: "11px", color: P.muted, marginBottom: "12px" }}>{FILE_HINTS[fileType]}</div>
-
-        <div
-          onClick={() => fileRef.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]); }}
-          style={{
-            border: `2px dashed ${dragOver ? P.blue : P.border}`,
-            borderRadius: "10px", padding: "28px", textAlign: "center",
-            cursor: "pointer", background: dragOver ? "rgba(59,130,246,0.04)" : "transparent",
-            transition: "all 0.2s",
-          }}
-        >
-          {fileName ? (
-            <>
-              <div style={{ fontSize: "13px", fontWeight: 700, color: P.blue, marginBottom: "4px" }}>✓ {fileName}</div>
-              <div style={{ fontSize: "11px", color: P.muted }}>Cliquez pour changer de fichier</div>
-            </>
-          ) : (
-            <>
-              <Upload size={24} color={P.muted} style={{ marginBottom: "8px" }} />
-              <div style={{ fontSize: "13px", color: P.sub }}>
-                Glissez votre fichier ici ou <span style={{ color: P.blue }}>cliquez pour parcourir</span>
-              </div>
-              <div style={{ fontSize: "11px", color: P.muted, marginTop: "4px" }}>{FILE_ACCEPTS[fileType]}</div>
-            </>
-          )}
-        </div>
-        <input ref={fileRef} type="file" accept={FILE_ACCEPTS[fileType]} style={{ display: "none" }}
-          onChange={(e) => handleFile(e.target.files?.[0])} />
-
-        {fileName && !aiResult && !aiLoading && (
-          <button type="button" onClick={analyzeWithAI} style={{
-            width: "100%", marginTop: "12px", padding: "10px",
-            borderRadius: "8px", cursor: "pointer",
-            background: "rgba(59,130,246,0.08)", border: `1px solid ${P.blue}`,
-            color: P.blue, fontSize: "13px", fontWeight: 700,
-            display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-          }}>
-            <Bot size={14} /> Analyser avec SecuIA
-          </button>
-        )}
-
-        {aiLoading && (
-          <div style={{ textAlign: "center", padding: "20px 0", color: P.blue, fontSize: "13px" }}>
-            <Bot size={20} style={{ marginBottom: "8px" }} />
-            <div>SecuIA analyse le fichier…</div>
-          </div>
-        )}
-
-        {aiResult && !importDone && (
-          <div style={{
-            background: P.bg, border: `1px solid rgba(16,185,129,0.2)`, borderRadius: "8px",
-            padding: "14px", marginTop: "12px", fontSize: "12px", color: P.green,
-            lineHeight: 1.6, maxHeight: "200px", overflowY: "auto",
-          }}>
-            {aiResult.type_detecte    && <div style={{ marginBottom: "4px" }}><span style={{ color: P.muted }}>Type :</span> {aiResult.type_detecte}</div>}
-            {aiResult.nb_lignes       && <div style={{ marginBottom: "4px" }}><span style={{ color: P.muted }}>Lignes :</span> {aiResult.nb_lignes}</div>}
-            {!!aiResult.colonnes_detectees?.length && <div style={{ marginBottom: "4px" }}><span style={{ color: P.muted }}>Colonnes :</span> {aiResult.colonnes_detectees!.join(", ")}</div>}
-            {!!aiResult.agents_detectes?.length    && <div style={{ marginBottom: "4px" }}><span style={{ color: P.muted }}>Agents :</span> {aiResult.agents_detectes!.join(", ")}</div>}
-            {aiResult.resume          && <div style={{ borderTop: `1px solid ${P.border}`, paddingTop: "8px", marginTop: "6px", color: P.sub }}>{aiResult.resume}</div>}
-            {aiResult.avertissements?.map((w, i) => <div key={i} style={{ color: P.amber, marginTop: "4px" }}>⚠ {w}</div>)}
-            {aiResult.action_suggeree && <div style={{ color: P.blue, borderTop: `1px solid ${P.border}`, paddingTop: "8px", marginTop: "6px" }}>{aiResult.action_suggeree}</div>}
-          </div>
-        )}
-
-        {importDone && (
-          <div style={{
-            textAlign: "center", padding: "14px", color: P.green, fontSize: "13px", fontWeight: 700,
-            border: `1px solid rgba(16,185,129,0.3)`, borderRadius: "8px", marginTop: "12px",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-          }}>
-            <span>✓</span> Import confirmé
-          </div>
-        )}
-
-        {!importDone && (
-          <div style={{ display: "flex", gap: "8px", marginTop: "16px", justifyContent: "flex-end" }}>
-            <button type="button" onClick={onClose} style={{
-              padding: "8px 20px", borderRadius: "8px", cursor: "pointer",
-              background: "transparent", border: `1px solid ${P.border}`,
-              color: P.sub, fontSize: "12px", fontWeight: 600,
-            }}>Annuler</button>
-            <button
-              type="button"
-              disabled={!aiResult}
-              onClick={aiResult ? () => confirmImport(onClose) : undefined}
-              style={{
-                padding: "8px 20px", borderRadius: "8px", cursor: aiResult ? "pointer" : "not-allowed",
-                background: aiResult ? P.blue : P.border,
-                border: "none", color: aiResult ? "#fff" : P.muted,
-                fontSize: "12px", fontWeight: 700, opacity: aiResult ? 1 : 0.5,
-              }}
-            >Importer dans SecuPRO</button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-interface ModalConfirmProps {
-  icon: string; accentColor: string; title: string;
-  message: string; labelConfirm: string;
-  onConfirm: () => void; onCancel: () => void;
-}
-function ModalConfirm({ icon, accentColor, title, message, labelConfirm, onConfirm, onCancel }: ModalConfirmProps) {
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}
-      onClick={(e) => e.target === e.currentTarget && onCancel()}>
-      <div style={{
-        background: P.card, border: `1px solid ${accentColor}33`,
-        borderRadius: "14px", width: "360px", padding: "28px", textAlign: "center",
-      }}>
-        <div style={{ fontSize: "28px", marginBottom: "12px" }}>{icon}</div>
-        <div style={{ fontSize: "15px", fontWeight: 800, color: accentColor, marginBottom: "10px" }}>{title}</div>
-        <div style={{ fontSize: "13px", color: P.sub, marginBottom: "24px", lineHeight: 1.6 }}>{message}</div>
-        <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-          <button type="button" onClick={onCancel} style={{
-            padding: "9px 20px", borderRadius: "8px", cursor: "pointer",
-            background: "transparent", border: `1px solid ${P.border}`,
-            color: P.sub, fontSize: "13px", fontWeight: 600,
-          }}>Annuler</button>
-          <button type="button" onClick={onConfirm} style={{
-            padding: "9px 20px", borderRadius: "8px", cursor: "pointer",
-            background: accentColor + "1A", border: `1px solid ${accentColor}4D`,
-            color: accentColor, fontSize: "13px", fontWeight: 700,
-          }}>{labelConfirm}</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── 9b. CHECKLIST CNAPS ─────────────────────────────────────────────────────
-
-interface Infraction { num: string; label: string; badge?: string; }
-
-const INFRACTIONS: Infraction[] = [
-  { num: "01", label: "Exercice sans carte professionnelle valide",        badge: "75% DES DOSSIERS CNAPS" },
-  { num: "02", label: "Défaut d'habilitation préalable du dirigeant" },
-  { num: "03", label: "Emploi d'agents non titulaires du TFP APS" },
-  { num: "04", label: "Absence du livre de police (registre d'activité)" },
-  { num: "05", label: "Défaut d'assurance responsabilité civile professionnelle" },
-  { num: "06", label: "Non-respect de la tenue réglementaire" },
-  { num: "07", label: "Sous-traitance à une entreprise non autorisée CNAPS" },
-  { num: "08", label: "Dépassement des plafonds horaires légaux" },
-  { num: "09", label: "Absence du DUERP (Document Unique des Risques)" },
-  { num: "10", label: "Défaut de formation continue obligatoire" },
-];
+// ─── 16. CHECKLIST CNAPS ─────────────────────────────────────────────────────
 
 function CnapsChecklist() {
   const [checked, setChecked] = useState<boolean[]>(new Array(10).fill(false));
@@ -759,7 +617,7 @@ function CnapsChecklist() {
       try {
         const saved = localStorage.getItem(`cnaps_checklist_${uid}`);
         if (saved) setChecked(JSON.parse(saved) as boolean[]);
-      } catch { /* ignore parse errors */ }
+      } catch { /* ignore */ }
     });
   }, []);
 
@@ -774,129 +632,263 @@ function CnapsChecklist() {
     });
   };
 
-  const score    = checked.filter(Boolean).length;
-  const barColor = score > 8 ? P.green : score >= 5 ? P.amber : P.red;
+  const score     = checked.filter(Boolean).length;
+  const barColor  = score > 8 ? L.green : score >= 5 ? L.amber : L.red;
   const riskAlert = score < 7;
 
   return (
-    <div style={{ padding: "0 24px 32px" }}>
-      <div style={{ ...cardStyle }}>
-
-        {/* ── Title ── */}
-        <div style={panelTitle(P.amber)}>
-          <ShieldAlert size={14} />
-          Infractions CNAPS les plus fréquentes
-        </div>
-
-        {/* ── Score bar ── */}
-        <div style={{ marginBottom: "20px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-            <span style={{ fontSize: "13px", fontWeight: 700, color: P.text }}>
-              {score}/10 points de contrôle validés
+    <Panel title="Infractions CNAPS les plus fréquentes" icon={ShieldAlert}>
+      {/* Score bar */}
+      <div style={{ padding: "14px 16px", borderBottom: `1px solid ${L.borderSub}` }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+          <span style={{ fontSize: "13px", fontWeight: 600, color: L.text }}>
+            {score}/10 points de contrôle validés
+          </span>
+          {riskAlert && (
+            <span style={{ ...pill(L.redBg, L.redText), fontWeight: 700 }}>
+              ⚠ RISQUE DE CONTRÔLE CNAPS
             </span>
-            {riskAlert && (
-              <span style={{
-                padding: "3px 10px", borderRadius: "999px",
-                background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)",
-                color: P.red, fontSize: "10px", fontWeight: 800,
-                letterSpacing: "0.08em", textTransform: "uppercase",
-              }}>
-                ⚠ RISQUE DE CONTRÔLE CNAPS
-              </span>
+          )}
+        </div>
+        <div style={{ height: "4px", background: L.border, borderRadius: "999px", overflow: "hidden" }}>
+          <div style={{
+            height: "100%", borderRadius: "999px",
+            width: `${(score / 10) * 100}%`,
+            background: barColor,
+            transition: "width 0.3s ease, background 0.3s ease",
+          }} />
+        </div>
+      </div>
+
+      {/* Infraction rows */}
+      {INFRACTIONS.map((inf, i) => (
+        <button
+          key={inf.num}
+          type="button"
+          onClick={() => toggle(i)}
+          style={{
+            display: "flex", alignItems: "center", gap: "12px",
+            width: "100%", height: "48px", padding: "0 16px",
+            background: "transparent", border: "none",
+            borderBottom: i < INFRACTIONS.length - 1 ? `1px solid ${L.borderSub}` : "none",
+            cursor: "pointer", textAlign: "left",
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = L.bgMuted; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+        >
+          {/* Numéro */}
+          <span style={{
+            width: "22px", height: "20px", borderRadius: "4px", flexShrink: 0,
+            background: checked[i] ? L.greenBg : L.bgMuted,
+            color:      checked[i] ? L.greenText : L.textMuted,
+            fontSize: "10px", fontWeight: 700,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all 0.15s",
+          }}>
+            {inf.num}
+          </span>
+
+          {/* Checkbox */}
+          <span style={{
+            width: "16px", height: "16px", borderRadius: "4px", flexShrink: 0,
+            border: `1.5px solid ${checked[i] ? L.blue : "#CBD5E1"}`,
+            background: checked[i] ? L.blue : L.bgCard,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all 0.15s",
+          }}>
+            {checked[i] && (
+              <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             )}
+          </span>
+
+          {/* Label */}
+          <span style={{
+            flex: 1, fontSize: "13px",
+            color: checked[i] ? L.textMuted : L.text,
+            textDecoration: checked[i] ? "line-through" : "none",
+            textDecorationColor: L.textMuted,
+            transition: "color 0.15s",
+          }}>
+            {inf.label}
+          </span>
+
+          {/* Badge #01 */}
+          {inf.badge && (
+            <span style={{ ...pill(L.redBg, L.redText), fontSize: "10px", flexShrink: 0 }}>
+              {inf.badge}
+            </span>
+          )}
+
+          {/* Statut pill */}
+          <span style={{
+            ...pill(checked[i] ? L.greenBg : L.amberBg, checked[i] ? L.greenText : L.amberText),
+            flexShrink: 0, transition: "all 0.15s",
+          }}>
+            {checked[i] ? "Conforme" : "À vérifier"}
+          </span>
+        </button>
+      ))}
+    </Panel>
+  );
+}
+
+// ─── 17. MODAL IMPORT ────────────────────────────────────────────────────────
+
+type ImportHook = ReturnType<typeof useImport>;
+
+function ModalImport({ imp, onClose }: { imp: ImportHook; onClose: () => void }) {
+  const {
+    fileRef, fileType, setFileType, dragOver, setDragOver,
+    fileName, aiResult, aiLoading, importDone,
+    handleFile, analyzeWithAI, confirmImport,
+  } = imp;
+
+  const FILE_ACCEPTS: Record<string, string> = { CSV: ".csv", Excel: ".xlsx,.xls", PDF: ".pdf" };
+  const FILE_HINTS: Record<string, string> = {
+    CSV:   "Fichiers .csv exportés depuis Comète, Bodet, Planning Auto...",
+    Excel: "Fichiers .xlsx/.xls — plannings, listes agents, pointages...",
+    PDF:   "Fichiers .pdf — plannings imprimés, cartes pro, contrats...",
+  };
+
+  return (
+    <div
+      style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div style={{ background: L.bgCard, border: `1px solid ${L.border}`, borderRadius: "12px", width: "520px", maxWidth: "95vw", padding: "24px", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+          <div style={{ fontSize: "15px", fontWeight: 700, color: L.text, display: "flex", alignItems: "center", gap: "8px" }}>
+            <Upload size={16} color={L.blue} /> Import de données
           </div>
-          <div style={{ height: "6px", background: P.border, borderRadius: "999px", overflow: "hidden" }}>
-            <div style={{
-              height: "100%", borderRadius: "999px",
-              width: `${(score / 10) * 100}%`,
-              background: barColor,
-              transition: "width 0.3s ease, background 0.3s ease",
-            }} />
-          </div>
+          <button type="button" onClick={onClose} style={{ background: "transparent", border: "none", color: L.textMuted, cursor: "pointer", padding: "4px" }}>
+            <X size={18} />
+          </button>
         </div>
 
-        {/* ── Rows ── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-          {INFRACTIONS.map((inf, i) => (
-            <button
-              key={inf.num}
-              type="button"
-              onClick={() => toggle(i)}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.03)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
-              style={{
-                display: "flex", alignItems: "center", gap: "12px",
-                padding: "10px 12px", borderRadius: "8px",
-                background: "transparent", border: "none",
-                cursor: "pointer", textAlign: "left", width: "100%",
-                transition: "background 0.15s",
-              }}
-            >
-              {/* Numéro */}
-              <span style={{
-                minWidth: "22px", fontSize: "11px", fontWeight: 800,
-                color: P.amber, letterSpacing: "0.05em", flexShrink: 0,
-              }}>
-                {inf.num}
-              </span>
-
-              {/* Checkbox */}
-              <span style={{
-                width: "18px", height: "18px", borderRadius: "5px", flexShrink: 0,
-                border: `2px solid ${checked[i] ? P.green : P.border}`,
-                background: checked[i] ? P.green + "22" : "transparent",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                transition: "all 0.15s",
-              }}>
-                {checked[i] && <span style={{ color: P.green, fontSize: "11px", fontWeight: 900, lineHeight: 1 }}>✓</span>}
-              </span>
-
-              {/* Label */}
-              <span style={{
-                flex: 1, fontSize: "13px",
-                color: checked[i] ? P.muted : P.text,
-                textDecoration: checked[i] ? "line-through" : "none",
-                transition: "color 0.15s",
-              }}>
-                {inf.label}
-              </span>
-
-              {/* Badge infraction 01 */}
-              {inf.badge && (
-                <span style={{
-                  padding: "2px 8px", borderRadius: "999px",
-                  background: "rgba(239,68,68,0.10)", border: "1px solid rgba(239,68,68,0.25)",
-                  color: P.red, fontSize: "9px", fontWeight: 800,
-                  letterSpacing: "0.06em", textTransform: "uppercase",
-                  whiteSpace: "nowrap", flexShrink: 0,
-                }}>
-                  {inf.badge}
-                </span>
-              )}
-
-              {/* Statut pill */}
-              <span style={{
-                padding: "2px 8px", borderRadius: "999px", flexShrink: 0,
-                background: checked[i] ? "rgba(16,185,129,0.10)" : "rgba(245,158,11,0.10)",
-                border: `1px solid ${checked[i] ? "rgba(16,185,129,0.25)" : "rgba(245,158,11,0.25)"}`,
-                color: checked[i] ? P.green : P.amber,
-                fontSize: "9px", fontWeight: 700,
-                letterSpacing: "0.06em", textTransform: "uppercase",
-                whiteSpace: "nowrap",
-                transition: "all 0.15s",
-              }}>
-                {checked[i] ? "Conforme" : "À vérifier"}
-              </span>
-            </button>
+        <div style={{ ...sectionLabel, marginBottom: "8px" }}>Format du fichier</div>
+        <div style={{ display: "flex", gap: "8px", marginBottom: "6px" }}>
+          {["CSV", "Excel", "PDF"].map((f) => (
+            <button key={f} type="button" onClick={() => setFileType(f)} style={{
+              flex: 1, height: "36px", borderRadius: "6px", cursor: "pointer",
+              background: fileType === f ? L.blueBg : L.bgMuted,
+              border: `1px solid ${fileType === f ? L.blue : L.border}`,
+              color: fileType === f ? L.blue : L.textSec,
+              fontSize: "13px", fontWeight: fileType === f ? 600 : 400,
+            }}>{f}</button>
           ))}
         </div>
+        <div style={{ fontSize: "12px", color: L.textMuted, marginBottom: "14px" }}>{FILE_HINTS[fileType]}</div>
 
+        <div
+          onClick={() => fileRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]); }}
+          style={{
+            border: `2px dashed ${dragOver ? L.blue : L.border}`, borderRadius: "8px",
+            padding: "28px", textAlign: "center", cursor: "pointer",
+            background: dragOver ? L.blueBg : L.bgMuted, transition: "all 0.15s",
+          }}
+        >
+          {fileName ? (
+            <>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: L.blue, marginBottom: "4px" }}>✓ {fileName}</div>
+              <div style={{ fontSize: "12px", color: L.textMuted }}>Cliquez pour changer</div>
+            </>
+          ) : (
+            <>
+              <Upload size={22} color={L.textMuted} style={{ marginBottom: "8px" }} />
+              <div style={{ fontSize: "13px", color: L.textSec }}>
+                Glissez votre fichier ici ou <span style={{ color: L.blue, fontWeight: 500 }}>cliquez pour parcourir</span>
+              </div>
+              <div style={{ fontSize: "12px", color: L.textMuted, marginTop: "4px" }}>{FILE_ACCEPTS[fileType]}</div>
+            </>
+          )}
+        </div>
+        <input ref={fileRef} type="file" accept={FILE_ACCEPTS[fileType]} style={{ display: "none" }}
+          onChange={(e) => handleFile(e.target.files?.[0])} />
+
+        {fileName && !aiResult && !aiLoading && (
+          <button type="button" onClick={analyzeWithAI} style={{ ...btnPrimary, width: "100%", justifyContent: "center", marginTop: "12px" }}>
+            <Bot size={14} /> Analyser avec SecuIA
+          </button>
+        )}
+
+        {aiLoading && (
+          <div style={{ textAlign: "center", padding: "20px 0", color: L.blue, fontSize: "13px" }}>
+            <Bot size={20} style={{ marginBottom: "8px" }} />
+            <div>SecuIA analyse le fichier…</div>
+          </div>
+        )}
+
+        {aiResult && !importDone && (
+          <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: "8px", padding: "14px", marginTop: "12px", fontSize: "12px", lineHeight: 1.6, maxHeight: "200px", overflowY: "auto" }}>
+            {aiResult.type_detecte    && <div style={{ marginBottom: "4px", color: L.text }}><span style={{ color: L.textMuted }}>Type :</span> {aiResult.type_detecte}</div>}
+            {aiResult.nb_lignes       && <div style={{ marginBottom: "4px", color: L.text }}><span style={{ color: L.textMuted }}>Lignes :</span> {aiResult.nb_lignes}</div>}
+            {!!aiResult.colonnes_detectees?.length && <div style={{ marginBottom: "4px", color: L.text }}><span style={{ color: L.textMuted }}>Colonnes :</span> {aiResult.colonnes_detectees!.join(", ")}</div>}
+            {!!aiResult.agents_detectes?.length    && <div style={{ marginBottom: "4px", color: L.text }}><span style={{ color: L.textMuted }}>Agents :</span> {aiResult.agents_detectes!.join(", ")}</div>}
+            {aiResult.resume          && <div style={{ borderTop: "1px solid #BBF7D0", paddingTop: "8px", marginTop: "6px", color: L.green }}>{aiResult.resume}</div>}
+            {aiResult.avertissements?.map((w, j) => <div key={j} style={{ color: L.amber, marginTop: "4px" }}>⚠ {w}</div>)}
+            {aiResult.action_suggeree && <div style={{ color: L.blue, borderTop: "1px solid #BBF7D0", paddingTop: "8px", marginTop: "6px" }}>{aiResult.action_suggeree}</div>}
+          </div>
+        )}
+
+        {importDone && (
+          <div style={{ textAlign: "center", padding: "14px", fontSize: "13px", fontWeight: 600, color: L.green, background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: "8px", marginTop: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+            ✓ Import confirmé
+          </div>
+        )}
+
+        {!importDone && (
+          <div style={{ display: "flex", gap: "8px", marginTop: "16px", justifyContent: "flex-end" }}>
+            <button type="button" onClick={onClose} style={btnSecondary}>Annuler</button>
+            <button type="button" disabled={!aiResult} onClick={aiResult ? () => confirmImport(onClose) : undefined}
+              style={{ ...btnPrimary, opacity: aiResult ? 1 : 0.4, cursor: aiResult ? "pointer" : "not-allowed" }}>
+              Importer dans SecuPRO
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-// ─── 10. COMPOSANT PRINCIPAL ──────────────────────────────────────────────────
+// ─── 18. MODAL CONFIRM ───────────────────────────────────────────────────────
+
+interface ModalConfirmProps {
+  icon: string; accentColor: string; title: string;
+  message: string; labelConfirm: string;
+  onConfirm: () => void; onCancel: () => void;
+}
+
+function ModalConfirm({ icon, accentColor, title, message, labelConfirm, onConfirm, onCancel }: ModalConfirmProps) {
+  return (
+    <div
+      style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}
+      onClick={(e) => e.target === e.currentTarget && onCancel()}
+    >
+      <div style={{ background: L.bgCard, border: `1px solid ${L.border}`, borderRadius: "10px", width: "380px", padding: "28px", textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.12)" }}>
+        <div style={{ fontSize: "28px", marginBottom: "12px" }}>{icon}</div>
+        <div style={{ fontSize: "16px", fontWeight: 700, color: L.text, marginBottom: "8px" }}>{title}</div>
+        <div style={{ fontSize: "13px", color: L.textSec, marginBottom: "24px", lineHeight: 1.6 }}>{message}</div>
+        <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+          <button type="button" onClick={onCancel} style={btnSecondary}>Annuler</button>
+          <button type="button" onClick={onConfirm} style={
+            accentColor === L.red
+              ? btnDestructive
+              : { ...btnPrimary, background: accentColor }
+          }>
+            {labelConfirm}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── 19. COMPOSANT PRINCIPAL ──────────────────────────────────────────────────
 
 export default function ChefExploitationDashboard() {
   const [agents,     setAgents]     = useState<Agent[]>(AGENTS_INIT);
@@ -918,10 +910,9 @@ export default function ChefExploitationDashboard() {
     });
   });
 
-  const actifs    = agents.filter((a) => ["actif", "alerte", "critique"].includes(a.statut)).length;
-  const dispos    = agents.filter((a) => a.statut === "disponible").length;
+  const actifs = agents.filter((a) => ["actif", "alerte", "critique"].includes(a.statut)).length;
+  const dispos = agents.filter((a) => a.statut === "disponible").length;
 
-  // Initialise to "--:--" so server and client agree, then sync after mount
   const [time, setTime] = useState("--:--");
   useEffect(() => {
     const fmt = () => new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
@@ -936,16 +927,15 @@ export default function ChefExploitationDashboard() {
   };
 
   const handleReset = () => {
-    // Spread into fresh arrays so React always detects a change, even if state
-    // already equals the initial data (same reference would cause a bail-out).
     setAgents([...AGENTS_INIT]);
     setShowReset(false);
     showToast("Tableau de bord réinitialisé");
   };
-  const handleExit  = () => { setShowExit(false); window.history.back(); };
+
+  const handleExit = () => { setShowExit(false); window.history.back(); };
 
   return (
-    <div style={{ background: P.bg, minHeight: "100vh", fontFamily: P.font, color: P.text, fontSize: "14px" }}>
+    <div className={dmSans.className} style={{ background: L.bgPage, minHeight: "100vh", color: L.text, fontSize: "14px" }}>
       <Header
         time={time}
         onReset={() => setShowReset(true)}
@@ -953,42 +943,42 @@ export default function ChefExploitationDashboard() {
         onImport={() => { imp.reset(); setShowImport(true); }}
       />
 
-      <KpiRow total={agents.length} actifs={actifs} anomalies={anomalies.length} dispos={dispos} />
+      <div style={{ maxWidth: "1440px", margin: "0 auto", padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+        {/* KPIs */}
+        <KpiRow total={agents.length} actifs={actifs} anomalies={anomalies.length} dispos={dispos} />
 
-      <div style={{ display: "grid", gridTemplateColumns: "5fr 4fr 4fr", gap: "16px", padding: "16px 24px 32px" }}>
-        {/* Colonne gauche */}
-        <Plannings agents={agents} />
+        {/* Main 3-col grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "5fr 4fr 4fr", gap: "16px", alignItems: "start" }}>
+          <Plannings agents={agents} />
 
-        {/* Colonne centrale */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <SitesActifs sites={sites} />
-          <AnomaliesPointage anomalies={anomalies} />
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <SitesActifs sites={sites} />
+            <AnomaliesPointage anomalies={anomalies} />
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <AlertesIncidents alertes={alertes} />
+            <IABusiness remplacements={IA_REMPLACEMENTS} />
+            <GestionAgents />
+          </div>
         </div>
 
-        {/* Colonne droite */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <AlertesIncidents alertes={alertes} />
-          <IABusiness remplacements={IA_REMPLACEMENTS} />
-          <GestionAgents />
-        </div>
+        {/* CNAPS Checklist — full width */}
+        <CnapsChecklist />
       </div>
 
-      {/* ── Checklist CNAPS (pleine largeur) ── */}
-      <CnapsChecklist />
-
-      {/* Toast feedback */}
+      {/* Toast */}
       {toast && (
         <div style={{
-          position: "fixed", bottom: "28px", left: "50%", transform: "translateX(-50%)",
+          position: "fixed", bottom: "24px", left: "50%", transform: "translateX(-50%)",
           zIndex: 10000, pointerEvents: "none",
-          display: "flex", alignItems: "center", gap: "10px",
-          padding: "12px 20px", borderRadius: "10px",
-          background: "#1A1D27", border: "1px solid rgba(16,185,129,0.4)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-          fontSize: "13px", fontWeight: 600, color: P.green,
-          animation: "fadeIn 0.2s ease",
+          display: "flex", alignItems: "center", gap: "8px",
+          padding: "12px 20px", borderRadius: "8px",
+          background: L.bgCard, border: `1px solid ${L.border}`,
+          boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+          fontSize: "13px", fontWeight: 600, color: L.green,
         }}>
-          <span style={{ width: 8, height: 8, borderRadius: "50%", background: P.green, display: "inline-block", flexShrink: 0 }} />
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: L.green, display: "inline-block" }} />
           {toast}
         </div>
       )}
@@ -997,7 +987,7 @@ export default function ChefExploitationDashboard() {
 
       {showReset && (
         <ModalConfirm
-          icon="↺" accentColor={P.amber}
+          icon="↺" accentColor={L.amber}
           title="Réinitialiser le tableau de bord"
           message="Toutes les modifications seront perdues. Les données initiales seront restaurées."
           labelConfirm="Confirmer le reset"
@@ -1006,7 +996,7 @@ export default function ChefExploitationDashboard() {
       )}
       {showExit && (
         <ModalConfirm
-          icon="←" accentColor={P.red}
+          icon="←" accentColor={L.red}
           title="Quitter le tableau de bord"
           message="Voulez-vous vraiment quitter la vue Chef d'exploitation ?"
           labelConfirm="Quitter"
