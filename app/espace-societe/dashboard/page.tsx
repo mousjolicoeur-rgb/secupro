@@ -296,21 +296,34 @@ function Header({ time, onReset, onExit, onImport }: {
         </div>
 
         <nav style={{ display: "flex", alignItems: "stretch", height: "56px", gap: "2px" }}>
-          {[
-            { label: "Tableau de bord", active: true  },
-            { label: "Conformité",      active: false },
-            { label: "Agents",          active: false },
-          ].map(({ label, active }) => (
-            <div key={label} style={{
-              display: "flex", alignItems: "center", padding: "0 14px",
-              fontSize: "13px", fontWeight: active ? 600 : 400,
-              color: active ? L.blue : L.textSec,
-              borderBottom: `2px solid ${active ? L.blue : "transparent"}`,
-              cursor: active ? "default" : "pointer",
-            }}>
-              {label}
-            </div>
-          ))}
+          {([
+            { label: "Tableau de bord", href: "/espace-societe/dashboard",  active: true  },
+            { label: "Conformité",      href: "/espace-societe/conformite", active: false },
+            { label: "Agents",          href: "/espace-societe/agents",     active: false },
+          ] as const).map(({ label, href, active }) =>
+            active ? (
+              <div key={label} style={{
+                display: "flex", alignItems: "center", padding: "0 14px",
+                fontSize: "13px", fontWeight: 600,
+                color: L.blue,
+                borderBottom: `2px solid ${L.blue}`,
+                cursor: "default",
+              }}>
+                {label}
+              </div>
+            ) : (
+              <Link key={label} href={href} style={{
+                display: "flex", alignItems: "center", padding: "0 14px",
+                fontSize: "13px", fontWeight: 400,
+                color: L.textSec,
+                borderBottom: "2px solid transparent",
+                textDecoration: "none",
+                cursor: "pointer",
+              }}>
+                {label}
+              </Link>
+            )
+          )}
         </nav>
       </div>
 
