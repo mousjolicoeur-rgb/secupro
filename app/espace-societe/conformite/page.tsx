@@ -61,7 +61,7 @@ const navTabStyle = (active: boolean): React.CSSProperties => ({
 const NAV_TABS = [
   { label: "Tableau de bord", href: "/espace-societe/dashboard",  active: false },
   { label: "Conformité",      href: "/espace-societe/conformite", active: true  },
-  { label: "Agents",          href: "/espace-societe/agents",     active: false },
+  { label: "Agents",          href: "/entreprises/agents",        active: false },
 ] as const;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

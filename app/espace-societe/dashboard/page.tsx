@@ -299,7 +299,7 @@ function Header({ time, onReset, onExit, onImport }: {
           {([
             { label: "Tableau de bord", href: "/espace-societe/dashboard",  active: true  },
             { label: "Conformité",      href: "/espace-societe/conformite", active: false },
-            { label: "Agents",          href: "/espace-societe/agents",     active: false },
+            { label: "Agents",          href: "/entreprises/agents",        active: false },
           ] as const).map(({ label, href, active }) =>
             active ? (
               <div key={label} style={{
