@@ -11,9 +11,10 @@ import { DM_Sans } from "next/font/google";
 import { supabase } from "@/lib/supabaseClient";
 import {
   Users, UserCheck, AlertTriangle, Clock, MapPin, Bell, Bot,
-  UserPlus, Eye, ArrowLeft, RefreshCw, Upload, X, Phone, ShieldAlert,
+  UserPlus, Eye, ArrowLeft, RefreshCw, Upload, X, Phone, ShieldAlert, LogOut,
   type LucideIcon,
 } from "lucide-react";
+import { signOutAction } from "./actions";
 
 const dmSans = DM_Sans({ subsets: ["latin"] });
 
@@ -275,8 +276,8 @@ Analyse ce fichier et retourne UNIQUEMENT un JSON (sans balises markdown) avec :
 
 // ─── 8. HEADER ───────────────────────────────────────────────────────────────
 
-function Header({ time, onReset, onExit, onImport }: {
-  time: string; onReset: () => void; onExit: () => void; onImport: () => void;
+function Header({ time, onReset, onExit, onImport, onSignOut }: {
+  time: string; onReset: () => void; onExit: () => void; onImport: () => void; onSignOut: () => void;
 }) {
   return (
     <header style={{
@@ -348,6 +349,9 @@ function Header({ time, onReset, onExit, onImport }: {
         </button>
         <button type="button" style={btnPrimary} onClick={onImport}>
           <Upload size={14} /> Importer
+        </button>
+        <button type="button" style={btnSecondary} onClick={onSignOut}>
+          <LogOut size={14} /> Déconnexion
         </button>
       </div>
     </header>
@@ -954,6 +958,7 @@ export default function ChefExploitationDashboard() {
         onReset={() => setShowReset(true)}
         onExit={() => setShowExit(true)}
         onImport={() => { imp.reset(); setShowImport(true); }}
+        onSignOut={() => { void signOutAction(); }}
       />
 
       <div style={{ maxWidth: "1440px", margin: "0 auto", padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
