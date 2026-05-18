@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
+import Link from "next/link";
 import {
   AtSign, Lock, Eye, EyeOff, LogIn,
   MessageSquare, ShieldCheck, Server,
 } from "lucide-react";
 
-// ── Design tokens ──────────────────────────────────────────────────────────
 const CYAN        = "#00d1ff";
 const CYAN_20     = "rgba(0,209,255,0.20)";
 const CYAN_60     = "rgba(0,209,255,0.60)";
@@ -19,13 +20,13 @@ const TEXT_MUTED  = "rgba(100,120,150,0.45)";
 export default function EspaceSocietePage() {
   const router = useRouter();
 
-  // ── State ──────────────────────────────────────────────────────────────
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
   const [showPwd,  setShowPwd]  = useState(false);
   const [focused,  setFocused]  = useState<"email" | "password" | null>(null);
+  const [error,    setError]    = useState("");
+  const [loading,  setLoading]  = useState(false);
 
-  // ── Styles dynamiques ─────────────────────────────────────────────────
   const borderColor = (f: "email" | "password") =>
     focused === f ? CYAN_60 : CYAN_20;
   const boxShadow = (f: "email" | "password") =>
@@ -33,10 +34,15 @@ export default function EspaceSocietePage() {
       ? `0 0 0 3px ${CYAN_GLOW}, 0 0 24px rgba(0,209,255,0.10)`
       : "none";
 
-  // ── Submit ─────────────────────────────────────────────────────────────
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/espace-societe/dashboard");
+    setError(""); setLoading(true);
+    try {
+      const { error: authErr } = await supabase.auth.signInWithPassword({ email, password });
+      if (authErr) { setError(authErr.message); }
+      else { router.replace("/espace-societe/dashboard"); }
+    } catch { setError("Une erreur est survenue. Réessayez."); }
+    finally { setLoading(false); }
   };
 
   return (
@@ -198,7 +204,7 @@ export default function EspaceSocietePage() {
                 onChange={(e) => setEmail(e.target.value)}
                 onFocus={() => setFocused("email")}
                 onBlur={() => setFocused(null)}
-                placeholder="direction@entreprise.fr"
+                placeholder="contact@masociete.fr"
                 autoComplete="off"
                 spellCheck={false}
                 className="flex-1 bg-transparent px-3 py-3 text-[13px] font-semibold tracking-wide outline-none placeholder:text-[rgba(148,163,184,0.22)] placeholder:font-medium"
@@ -267,11 +273,20 @@ export default function EspaceSocietePage() {
           </div>
 
           {/* ── Bouton ÉTABLIR LA CONNEXION ── */}
+          {error && (
+            <div className="px-4 py-2.5 rounded-xl text-[12px] font-semibold" style={{
+              background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444",
+            }}>
+              {error}
+            </div>
+          )}
+
           <button
             type="submit"
+            disabled={loading}
             className="group relative overflow-hidden mt-1 w-full flex items-center justify-center gap-2.5 rounded-[14px] py-4 text-[11px] font-black uppercase tracking-[0.26em] text-white transition-all duration-300 active:scale-[0.985]"
             style={{
-              background: "linear-gradient(135deg, #004e9a 0%, #0077cc 55%, #00a8e8 100%)",
+              background: loading ? "#1a3060" : "linear-gradient(135deg, #004e9a 0%, #0077cc 55%, #00a8e8 100%)",
               border: "1px solid rgba(0,209,255,0.45)",
               boxShadow: "0 0 30px rgba(0,119,204,0.5), 0 0 70px rgba(0,209,255,0.16)",
               cursor: "pointer",
@@ -290,16 +305,18 @@ export default function EspaceSocietePage() {
               aria-hidden
             />
             <LogIn size={14} />
-            ÉTABLIR LA CONNEXION
+            {loading ? "Connexion…" : "ÉTABLIR LA CONNEXION"}
           </button>
         </form>
 
-        {/* Note sécurité */}
-        <p
-          className="mt-5 text-center text-[9px] font-bold uppercase tracking-[0.28em]"
-          style={{ color: "rgba(0,209,255,0.16)" }}
-        >
+        <p className="mt-5 text-center text-[9px] font-bold uppercase tracking-[0.28em]" style={{ color: "rgba(0,209,255,0.16)" }}>
           Connexion chiffrée · SecuPRO Command System v2
+        </p>
+        <p className="mt-3 text-center text-[11px]" style={{ color: TEXT_MUTED }}>
+          Vous êtes un agent ?{" "}
+          <Link href="/agent/login" style={{ color: "rgba(0,209,255,0.5)", fontWeight: 600, textDecoration: "none" }}>
+            → Espace Agent gratuit
+          </Link>
         </p>
       </div>
 
