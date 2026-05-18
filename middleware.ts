@@ -39,6 +39,12 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // Chemins publics dans des namespaces protégés — ne pas rediriger.
+  const PUBLIC_PATHS = ["/agent/login", "/agent/register", "/agent/activate"];
+  if (!user && PUBLIC_PATHS.includes(pathname)) {
+    return response;
+  }
+
   // Utilisateur non authentifié → redirection vers /login avec ?next= pour
   // revenir automatiquement à la page demandée après connexion.
   if (!user) {

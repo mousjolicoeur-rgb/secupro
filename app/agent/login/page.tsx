@@ -19,12 +19,14 @@ function AgentLoginContent() {
   const searchParams = useSearchParams();
   const nextPath     = searchParams.get("next") ?? "/agent/hub";
 
-  const [email,   setEmail]   = useState("");
-  const [password,setPassword]= useState("");
-  const [showPwd, setShowPwd] = useState(false);
-  const [focused, setFocused] = useState<"email"|"password"|null>(null);
-  const [error,   setError]   = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email,     setEmail]     = useState("");
+  const [password,  setPassword]  = useState("");
+  const [showPwd,   setShowPwd]   = useState(false);
+  const [focused,   setFocused]   = useState<"email"|"password"|null>(null);
+  const [error,     setError]     = useState("");
+  const [loading,   setLoading]   = useState(false);
+  const [showReset, setShowReset] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const border = (f: "email"|"password") => focused === f ? CYAN_60 : CYAN_20;
   const shadow = (f: "email"|"password") =>
@@ -39,6 +41,18 @@ function AgentLoginContent() {
       else { router.replace(nextPath.startsWith("/") ? nextPath : "/agent/hub"); }
     } catch { setError("Une erreur est survenue. Réessayez."); }
     finally { setLoading(false); }
+  };
+
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) { setError("Entrez votre email pour réinitialiser."); return; }
+    setLoading(true);
+    const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    });
+    setLoading(false);
+    if (resetErr) { setError(resetErr.message); }
+    else { setResetSent(true); }
   };
 
   return (
@@ -92,9 +106,11 @@ function AgentLoginContent() {
                 Espace Agent
               </p>
             </div>
-            <h1 className="text-[1.5rem] font-black leading-tight">Mon Espace Agent</h1>
+            <h1 className="text-[1.5rem] font-black leading-tight">
+              {showReset ? "Mot de passe oublié" : "Mon Espace Agent"}
+            </h1>
             <p className="text-[11px] font-medium mt-1" style={{ color: "rgba(0,209,255,0.45)" }}>
-              100% gratuit · Aucune carte bancaire
+              {showReset ? "Entrez votre email pour recevoir un lien." : "Accès gratuit · Sécurité privée"}
             </p>
           </div>
         </div>
@@ -104,96 +120,138 @@ function AgentLoginContent() {
           background: "linear-gradient(90deg, transparent, rgba(0,209,255,0.18), transparent)",
         }} />
 
-        {/* Erreur */}
-        {error && (
-          <div className="mb-4 px-4 py-2.5 rounded-xl text-[12px] font-semibold" style={{
-            background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444",
-          }}>
-            {error}
+        {resetSent ? (
+          <div style={{ textAlign: "center", padding: "16px 0" }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>📧</div>
+            <h2 style={{ color: "#eef4ff", fontSize: 18, fontWeight: 900, marginBottom: 8 }}>Email envoyé</h2>
+            <p style={{ color: LABEL_CLR, fontSize: 13, lineHeight: 1.6, marginBottom: 20 }}>
+              Un lien de réinitialisation a été envoyé à{" "}
+              <strong style={{ color: CYAN }}>{email}</strong>.
+            </p>
+            <button
+              onClick={() => { setResetSent(false); setShowReset(false); }}
+              style={{ color: CYAN, background: "none", border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13 }}
+            >
+              ← Retour à la connexion
+            </button>
           </div>
-        )}
+        ) : (
+          <>
+            {/* Erreur */}
+            {error && (
+              <div className="mb-4 px-4 py-2.5 rounded-xl text-[12px] font-semibold" style={{
+                background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444",
+              }}>
+                {error}
+              </div>
+            )}
 
-        {/* Formulaire */}
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
+            {/* Formulaire */}
+            <form className="flex flex-col gap-4" onSubmit={showReset ? handleReset : handleSubmit} noValidate>
 
-          {/* Email */}
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="email"
-              className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.4em]"
-              style={{ color: LABEL_CLR }}>
-              <AtSign size={10} style={{ color: CYAN }} /> Votre email
-            </label>
-            <div className="flex items-center rounded-xl transition-all duration-200" style={{
-              background: INPUT_BG, border: `1px solid ${border("email")}`, boxShadow: shadow("email"),
-            }}>
-              <AtSign size={15} className="ml-3.5 shrink-0" style={{ color: focused === "email" ? CYAN : "rgba(0,209,255,0.3)" }} />
-              <input
-                id="email" type="email" value={email} required disabled={loading}
-                onChange={e => setEmail(e.target.value)}
-                onFocus={() => setFocused("email")} onBlur={() => setFocused(null)}
-                placeholder="prenom.nom@email.com"
-                autoComplete="email"
-                className="flex-1 bg-transparent px-3 py-3 text-[13px] font-semibold tracking-wide outline-none placeholder:text-[rgba(148,163,184,0.22)] placeholder:font-medium"
-                style={{ color: "#f1f5f9" }}
-              />
-            </div>
-          </div>
+              {/* Email */}
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="email"
+                  className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.4em]"
+                  style={{ color: LABEL_CLR }}>
+                  <AtSign size={10} style={{ color: CYAN }} /> Votre email
+                </label>
+                <div className="flex items-center rounded-xl transition-all duration-200" style={{
+                  background: INPUT_BG, border: `1px solid ${border("email")}`, boxShadow: shadow("email"),
+                }}>
+                  <AtSign size={15} className="ml-3.5 shrink-0" style={{ color: focused === "email" ? CYAN : "rgba(0,209,255,0.3)" }} />
+                  <input
+                    id="email" type="email" value={email} required disabled={loading}
+                    onChange={e => setEmail(e.target.value)}
+                    onFocus={() => setFocused("email")} onBlur={() => setFocused(null)}
+                    placeholder="prenom.nom@email.com"
+                    autoComplete="email"
+                    className="flex-1 bg-transparent px-3 py-3 text-[13px] font-semibold tracking-wide outline-none placeholder:text-[rgba(148,163,184,0.22)] placeholder:font-medium"
+                    style={{ color: "#f1f5f9" }}
+                  />
+                </div>
+              </div>
 
-          {/* Mot de passe */}
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="password"
-              className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.4em]"
-              style={{ color: LABEL_CLR }}>
-              <Lock size={10} style={{ color: CYAN }} /> Mot de passe
-            </label>
-            <div className="flex items-center rounded-xl transition-all duration-200" style={{
-              background: INPUT_BG, border: `1px solid ${border("password")}`, boxShadow: shadow("password"),
-            }}>
-              <Lock size={15} className="ml-3.5 shrink-0" style={{ color: focused === "password" ? CYAN : "rgba(0,209,255,0.3)" }} />
-              <input
-                id="password" type={showPwd ? "text" : "password"} value={password} required disabled={loading}
-                onChange={e => setPassword(e.target.value)}
-                onFocus={() => setFocused("password")} onBlur={() => setFocused(null)}
-                placeholder="••••••••••••"
-                autoComplete="current-password"
-                className="flex-1 bg-transparent px-3 py-3 text-[13px] font-semibold outline-none placeholder:text-[rgba(148,163,184,0.22)] placeholder:font-medium"
-                style={{ color: "#f1f5f9", fontFamily: "var(--font-geist-mono),'Courier New',monospace", letterSpacing: showPwd ? "0.12em" : "0.22em" }}
-              />
-              <button type="button" onClick={() => setShowPwd(v => !v)} aria-label={showPwd ? "Masquer" : "Afficher"}
-                className="mr-3 p-1 rounded-md"
-                style={{ color: showPwd ? CYAN : "rgba(0,209,255,0.3)", background: "none", border: "none", cursor: "pointer" }}>
-                {showPwd ? <Eye size={15} /> : <EyeOff size={15} />}
+              {/* Mot de passe (masqué en mode reset) */}
+              {!showReset && (
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="password"
+                      className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.4em]"
+                      style={{ color: LABEL_CLR }}>
+                      <Lock size={10} style={{ color: CYAN }} /> Mot de passe
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => { setShowReset(true); setError(""); }}
+                      style={{ fontSize: 11, color: CYAN, background: "none", border: "none", cursor: "pointer", fontWeight: 700 }}
+                    >
+                      Oublié ?
+                    </button>
+                  </div>
+                  <div className="flex items-center rounded-xl transition-all duration-200" style={{
+                    background: INPUT_BG, border: `1px solid ${border("password")}`, boxShadow: shadow("password"),
+                  }}>
+                    <Lock size={15} className="ml-3.5 shrink-0" style={{ color: focused === "password" ? CYAN : "rgba(0,209,255,0.3)" }} />
+                    <input
+                      id="password" type={showPwd ? "text" : "password"} value={password} required disabled={loading}
+                      onChange={e => setPassword(e.target.value)}
+                      onFocus={() => setFocused("password")} onBlur={() => setFocused(null)}
+                      placeholder="••••••••••••"
+                      autoComplete="current-password"
+                      className="flex-1 bg-transparent px-3 py-3 text-[13px] font-semibold outline-none placeholder:text-[rgba(148,163,184,0.22)] placeholder:font-medium"
+                      style={{ color: "#f1f5f9", fontFamily: "var(--font-geist-mono),'Courier New',monospace", letterSpacing: showPwd ? "0.12em" : "0.22em" }}
+                    />
+                    <button type="button" onClick={() => setShowPwd(v => !v)} aria-label={showPwd ? "Masquer" : "Afficher"}
+                      className="mr-3 p-1 rounded-md"
+                      style={{ color: showPwd ? CYAN : "rgba(0,209,255,0.3)", background: "none", border: "none", cursor: "pointer" }}>
+                      {showPwd ? <Eye size={15} /> : <EyeOff size={15} />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Bouton principal */}
+              <button type="submit" disabled={loading}
+                className="group relative overflow-hidden mt-1 w-full flex items-center justify-center gap-2.5 rounded-[14px] py-4 text-[12px] font-black tracking-[0.15em] text-white transition-all duration-300 active:scale-[0.985]"
+                style={{
+                  background: loading ? "#1a3060" : "linear-gradient(135deg, #004e9a 0%, #0077cc 55%, #00a8e8 100%)",
+                  border: "1px solid rgba(0,209,255,0.45)",
+                  boxShadow: "0 0 30px rgba(0,119,204,0.5), 0 0 70px rgba(0,209,255,0.16)",
+                  cursor: loading ? "not-allowed" : "pointer",
+                }}>
+                <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-20deg] bg-white/8 transition-transform duration-500 group-hover:translate-x-full" aria-hidden />
+                {loading ? "Connexion en cours…" : showReset ? "📧 Envoyer le lien" : "Accéder à mon espace →"}
               </button>
-            </div>
-          </div>
 
-          {/* Bouton */}
-          <button type="submit" disabled={loading}
-            className="group relative overflow-hidden mt-1 w-full flex items-center justify-center gap-2.5 rounded-[14px] py-4 text-[12px] font-black tracking-[0.15em] text-white transition-all duration-300 active:scale-[0.985]"
-            style={{
-              background: loading ? "#1a3060" : "linear-gradient(135deg, #004e9a 0%, #0077cc 55%, #00a8e8 100%)",
-              border: "1px solid rgba(0,209,255,0.45)",
-              boxShadow: "0 0 30px rgba(0,119,204,0.5), 0 0 70px rgba(0,209,255,0.16)",
-              cursor: loading ? "not-allowed" : "pointer",
-            }}>
-            <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-20deg] bg-white/8 transition-transform duration-500 group-hover:translate-x-full" aria-hidden />
-            {loading ? "Connexion en cours…" : "Accéder à mon espace →"}
-          </button>
-        </form>
+              {showReset && (
+                <button
+                  type="button"
+                  onClick={() => { setShowReset(false); setError(""); }}
+                  style={{ width: "100%", padding: "11px", borderRadius: 12, border: `1px solid ${CYAN_20}`, background: "transparent", color: CYAN, fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+                >
+                  ← Retour à la connexion
+                </button>
+              )}
+            </form>
 
-        {/* Liens */}
-        <p className="mt-5 text-center text-[12px]" style={{ color: "rgba(148,163,184,0.5)" }}>
-          Pas encore de compte ?{" "}
-          <Link href="/register" style={{ color: CYAN, fontWeight: 700, textDecoration: "none" }}>
-            S&apos;inscrire gratuitement →
-          </Link>
-        </p>
-        <p className="mt-3 text-center text-[11px]" style={{ color: TEXT_MUT }}>
-          Vous représentez une société ?{" "}
-          <Link href="/entreprises/login" style={{ color: "rgba(0,209,255,0.5)", fontWeight: 600, textDecoration: "none" }}>
-            Espace Société →
-          </Link>
-        </p>
+            {/* Liens */}
+            {!showReset && (
+              <p className="mt-5 text-center text-[12px]" style={{ color: "rgba(148,163,184,0.5)" }}>
+                Pas encore de compte ?{" "}
+                <Link href="/agent/register" style={{ color: CYAN, fontWeight: 700, textDecoration: "none" }}>
+                  S&apos;inscrire gratuitement →
+                </Link>
+              </p>
+            )}
+            <p className="mt-3 text-center text-[11px]" style={{ color: TEXT_MUT }}>
+              Vous représentez une société ?{" "}
+              <Link href="/login" style={{ color: "rgba(0,209,255,0.5)", fontWeight: 600, textDecoration: "none" }}>
+                Espace Société →
+              </Link>
+            </p>
+          </>
+        )}
       </div>
 
       <p className="mt-6 text-[9px] font-bold uppercase tracking-widest" style={{ color: "rgba(0,209,255,0.1)" }}>
