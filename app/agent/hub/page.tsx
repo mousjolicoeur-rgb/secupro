@@ -294,11 +294,16 @@ export default function AgentHubPage() {
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
+      const meta = user.user_metadata;
+      if (meta?.first_name) {
+        setFirstName(String(meta.first_name));
+        return;
+      }
       const { data } = await supabase
         .from("profiles")
         .select("full_name")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
       if (data?.full_name) {
         setFirstName(data.full_name.split(" ")[0]);
       } else if (user.email) {
