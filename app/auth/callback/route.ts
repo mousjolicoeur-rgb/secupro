@@ -26,10 +26,13 @@ export async function GET(request: NextRequest) {
   );
 
   // Flux token_hash (liens email OTP / magic link ancienne génération)
-  if (token_hash && type) {
+  // EmailOtpType: signup | invite | magiclink | recovery | email_change | email
+  type EmailOtpType = 'signup' | 'invite' | 'magiclink' | 'recovery' | 'email_change' | 'email';
+  const validEmailTypes: EmailOtpType[] = ['signup', 'invite', 'magiclink', 'recovery', 'email_change', 'email'];
+  if (token_hash && type && validEmailTypes.includes(type as EmailOtpType)) {
     const { error } = await supabase.auth.verifyOtp({
       token_hash,
-      type: type as Parameters<typeof supabase.auth.verifyOtp>[0]['type'],
+      type: type as EmailOtpType,
     });
     if (!error) {
       if (type === 'recovery') {
