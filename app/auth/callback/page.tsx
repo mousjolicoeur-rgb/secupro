@@ -1,69 +1,86 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
 function CallbackInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [error, setError] = useState('');
 
   useEffect(() => {
-    const handle = async () => {
-      const code = searchParams?.get('code');
-      const errorParam = searchParams?.get('error');
+    const errorParam = searchParams?.get('error');
+    if (errorParam) {
+      router.replace('/login?error=confirmation_failed');
+      return;
+    }
 
-      if (errorParam) {
-        router.replace('/login?error=confirmation_failed');
+    // Listener AVANT l'échange de code pour capturer le type d'événement Supabase.
+    // PASSWORD_RECOVERY → page de saisie du nouveau mot de passe.
+    // SIGNED_IN          → redirection vers le dashboard selon le rôle.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      subscription.unsubscribe();
+
+      if (event === 'PASSWORD_RECOVERY') {
+        router.replace('/auth/update-password');
         return;
       }
-
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error) {
-          router.replace('/login?error=confirmation_failed');
-          return;
-        }
-      }
-
-      const { data: { session } } = await supabase.auth.getSession();
 
       if (session) {
-        router.replace('/agent/hub');
+        // Détermine la destination selon le rôle enregistré en base
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile?.role === 'societe') {
+          router.replace('/espace-societe/dashboard');
+        } else {
+          router.replace('/agent/hub');
+        }
         return;
       }
 
-      // Attend la session si detectSessionInUrl la résout en async
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-        if (s) {
+      router.replace('/login');
+    });
+
+    const code = searchParams?.get('code');
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) {
           subscription.unsubscribe();
-          router.replace('/agent/hub');
+          router.replace('/login?error=confirmation_failed');
         }
       });
-
-      // Timeout de sécurité
-      setTimeout(() => {
+    } else {
+      // Pas de code — timeout de sécurité si onAuthStateChange ne se déclenche pas
+      const t = setTimeout(() => {
         subscription.unsubscribe();
         router.replace('/login');
       }, 5000);
-    };
+      return () => clearTimeout(t);
+    }
 
-    handle();
+    return () => subscription.unsubscribe();
   }, [router, searchParams]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-slate-900 to-black">
-      <div className="text-center">
-        {error ? (
-          <p className="text-red-400">{error}</p>
-        ) : (
-          <>
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4" />
-            <p className="text-slate-400">Confirmation en cours...</p>
-          </>
-        )}
-      </div>
+    <div style={{
+      minHeight: '100vh', background: '#0B1426',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexDirection: 'column', gap: 16,
+    }}>
+      <div style={{
+        width: 40, height: 40, borderRadius: '50%',
+        border: '2px solid transparent',
+        borderTopColor: '#00d1ff', borderRightColor: 'rgba(0,209,255,0.3)',
+        animation: 'spin 0.8s linear infinite',
+      }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <p style={{ color: 'rgba(0,209,255,0.5)', fontSize: 13, letterSpacing: '0.05em' }}>
+        Vérification en cours…
+      </p>
     </div>
   );
 }
@@ -71,8 +88,9 @@ function CallbackInner() {
 export default function AuthCallbackPage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-slate-900 to-black">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500" />
+      <div style={{ minHeight: '100vh', background: '#0B1426', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 40, height: 40, borderRadius: '50%', border: '2px solid rgba(0,209,255,0.3)', borderTopColor: '#00d1ff', animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     }>
       <CallbackInner />
