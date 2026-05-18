@@ -1,23 +1,24 @@
 "use client";
 
-import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
-import { AtSign, Lock, Eye, EyeOff, UserRound } from "lucide-react";
+import {
+  AtSign, Lock, Eye, EyeOff, LogIn,
+  MessageSquare, ShieldCheck, Server,
+} from "lucide-react";
 
-const CYAN      = "#00d1ff";
-const CYAN_20   = "rgba(0,209,255,0.20)";
-const CYAN_60   = "rgba(0,209,255,0.60)";
-const CYAN_GLOW = "rgba(0,209,255,0.14)";
-const INPUT_BG  = "rgba(5,12,30,0.75)";
-const LABEL_CLR = "rgba(0,209,255,0.50)";
-const TEXT_MUT  = "rgba(100,120,150,0.45)";
+const CYAN        = "#00d1ff";
+const CYAN_20     = "rgba(0,209,255,0.20)";
+const CYAN_60     = "rgba(0,209,255,0.60)";
+const CYAN_GLOW   = "rgba(0,209,255,0.14)";
+const INPUT_BG    = "rgba(5,12,30,0.75)";
+const LABEL_COLOR = "rgba(0,209,255,0.50)";
+const TEXT_MUTED  = "rgba(100,120,150,0.45)";
 
-function AgentLoginContent() {
-  const router       = useRouter();
-  const searchParams = useSearchParams();
-  const nextPath     = searchParams.get("next") ?? "/agent/hub";
+export default function EntreprisesLoginPage() {
+  const router = useRouter();
 
   const [email,   setEmail]   = useState("");
   const [password,setPassword]= useState("");
@@ -26,8 +27,8 @@ function AgentLoginContent() {
   const [error,   setError]   = useState("");
   const [loading, setLoading] = useState(false);
 
-  const border = (f: "email"|"password") => focused === f ? CYAN_60 : CYAN_20;
-  const shadow = (f: "email"|"password") =>
+  const borderColor = (f: "email"|"password") => focused === f ? CYAN_60 : CYAN_20;
+  const boxShadow   = (f: "email"|"password") =>
     focused === f ? `0 0 0 3px ${CYAN_GLOW}, 0 0 24px rgba(0,209,255,0.10)` : "none";
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,7 +37,7 @@ function AgentLoginContent() {
     try {
       const { error: authErr } = await supabase.auth.signInWithPassword({ email, password });
       if (authErr) { setError(authErr.message); }
-      else { router.replace(nextPath.startsWith("/") ? nextPath : "/agent/hub"); }
+      else { router.replace("/espace-societe/dashboard"); }
     } catch { setError("Une erreur est survenue. Réessayez."); }
     finally { setLoading(false); }
   };
@@ -50,7 +51,7 @@ function AgentLoginContent() {
         color: "#f1f5f9",
       }}
     >
-      {/* Grille */}
+      {/* Grille tactique */}
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10" style={{
         backgroundImage:
           "linear-gradient(rgba(0,209,255,0.027) 1px, transparent 1px)," +
@@ -64,7 +65,7 @@ function AgentLoginContent() {
       }} />
 
       {/* Carte */}
-      <div className="relative w-full max-w-[420px] rounded-2xl px-8 py-9" style={{
+      <div className="relative w-full max-w-[440px] rounded-2xl px-8 py-9" style={{
         background: "rgba(10,20,46,0.72)",
         backdropFilter: "blur(22px)", WebkitBackdropFilter: "blur(22px)",
         border: `1px solid ${CYAN_20}`,
@@ -76,7 +77,7 @@ function AgentLoginContent() {
         }} />
 
         {/* Logo + titre */}
-        <div className="flex flex-col items-center gap-3 mb-7">
+        <div className="flex flex-col items-center gap-4 mb-7">
           <div className="relative">
             <div aria-hidden className="absolute -inset-5 rounded-full pointer-events-none" style={{
               background: "radial-gradient(circle, rgba(0,209,255,0.18) 0%, transparent 68%)",
@@ -86,53 +87,63 @@ function AgentLoginContent() {
             </span>
           </div>
           <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <UserRound size={15} style={{ color: CYAN }} />
-              <p className="text-[9px] font-black uppercase tracking-[0.45em]" style={{ color: LABEL_CLR }}>
-                Espace Agent
-              </p>
-            </div>
-            <h1 className="text-[1.5rem] font-black leading-tight">Mon Espace Agent</h1>
-            <p className="text-[11px] font-medium mt-1" style={{ color: "rgba(0,209,255,0.45)" }}>
-              100% gratuit · Aucune carte bancaire
+            <p className="text-[9px] font-black uppercase tracking-[0.48em] mb-1.5" style={{ color: LABEL_COLOR }}>
+              SecuPRO · Espace Société
+            </p>
+            <h1 className="text-[1.45rem] font-black leading-tight tracking-tight">
+              AUTHENTIFICATION SÉCURISÉE
+              <br />
+              <span style={{
+                color: CYAN,
+                textShadow: "0 0 20px rgba(0,209,255,0.75), 0 0 48px rgba(0,209,255,0.3)",
+                fontSize: "1.1rem", letterSpacing: "0.04em",
+              }}>
+                ACCÈS COMMAND CENTER
+              </span>
+            </h1>
+            <p className="text-[9px] font-semibold mt-2 uppercase tracking-[0.25em]" style={{ color: "rgba(0,209,255,0.35)" }}>
+              Données chiffrées AES-256 · Accès restreint
             </p>
           </div>
         </div>
 
         {/* Séparateur */}
-        <div className="w-full h-px mb-5" style={{
+        <div className="w-full h-px mb-6" style={{
           background: "linear-gradient(90deg, transparent, rgba(0,209,255,0.18), transparent)",
         }} />
 
-        {/* Erreur */}
-        {error && (
-          <div className="mb-4 px-4 py-2.5 rounded-xl text-[12px] font-semibold" style={{
-            background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444",
-          }}>
-            {error}
+        {/* Bannière sécurité */}
+        <div className="flex items-center gap-3 rounded-xl px-4 py-3 mb-5" style={{
+          background: "rgba(0,209,255,0.04)", border: "1px solid rgba(0,209,255,0.12)",
+        }}>
+          <ShieldCheck size={14} className="shrink-0" style={{ color: CYAN }} />
+          <div>
+            <p className="text-[8px] font-black uppercase tracking-[0.35em]" style={{ color: "rgba(0,209,255,0.5)" }}>Accès restreint</p>
+            <p className="text-[10px] font-semibold" style={{ color: "rgba(148,163,184,0.6)" }}>Réservé aux entreprises clientes SecuPRO</p>
           </div>
-        )}
+          <Server size={11} className="ml-auto shrink-0" style={{ color: "rgba(0,209,255,0.2)" }} />
+        </div>
 
         {/* Formulaire */}
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
+        <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
 
           {/* Email */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <label htmlFor="email"
               className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.4em]"
-              style={{ color: LABEL_CLR }}>
-              <AtSign size={10} style={{ color: CYAN }} /> Votre email
+              style={{ color: LABEL_COLOR }}>
+              <AtSign size={10} style={{ color: CYAN }} /> Email Professionnel
             </label>
             <div className="flex items-center rounded-xl transition-all duration-200" style={{
-              background: INPUT_BG, border: `1px solid ${border("email")}`, boxShadow: shadow("email"),
+              background: INPUT_BG, border: `1px solid ${borderColor("email")}`, boxShadow: boxShadow("email"),
             }}>
               <AtSign size={15} className="ml-3.5 shrink-0" style={{ color: focused === "email" ? CYAN : "rgba(0,209,255,0.3)" }} />
               <input
                 id="email" type="email" value={email} required disabled={loading}
                 onChange={e => setEmail(e.target.value)}
                 onFocus={() => setFocused("email")} onBlur={() => setFocused(null)}
-                placeholder="prenom.nom@email.com"
-                autoComplete="email"
+                placeholder="contact@masociete.fr"
+                autoComplete="email" spellCheck={false}
                 className="flex-1 bg-transparent px-3 py-3 text-[13px] font-semibold tracking-wide outline-none placeholder:text-[rgba(148,163,184,0.22)] placeholder:font-medium"
                 style={{ color: "#f1f5f9" }}
               />
@@ -140,14 +151,14 @@ function AgentLoginContent() {
           </div>
 
           {/* Mot de passe */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <label htmlFor="password"
               className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.4em]"
-              style={{ color: LABEL_CLR }}>
-              <Lock size={10} style={{ color: CYAN }} /> Mot de passe
+              style={{ color: LABEL_COLOR }}>
+              <Lock size={10} style={{ color: CYAN }} /> Code d&apos;accès sécurisé
             </label>
             <div className="flex items-center rounded-xl transition-all duration-200" style={{
-              background: INPUT_BG, border: `1px solid ${border("password")}`, boxShadow: shadow("password"),
+              background: INPUT_BG, border: `1px solid ${borderColor("password")}`, boxShadow: boxShadow("password"),
             }}>
               <Lock size={15} className="ml-3.5 shrink-0" style={{ color: focused === "password" ? CYAN : "rgba(0,209,255,0.3)" }} />
               <input
@@ -160,16 +171,24 @@ function AgentLoginContent() {
                 style={{ color: "#f1f5f9", fontFamily: "var(--font-geist-mono),'Courier New',monospace", letterSpacing: showPwd ? "0.12em" : "0.22em" }}
               />
               <button type="button" onClick={() => setShowPwd(v => !v)} aria-label={showPwd ? "Masquer" : "Afficher"}
-                className="mr-3 p-1 rounded-md"
-                style={{ color: showPwd ? CYAN : "rgba(0,209,255,0.3)", background: "none", border: "none", cursor: "pointer" }}>
-                {showPwd ? <Eye size={15} /> : <EyeOff size={15} />}
+                className="mr-3 p-1 rounded-md" style={{ color: showPwd ? CYAN : "rgba(0,209,255,0.3)", background: "none", border: "none", cursor: "pointer" }}>
+                {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
           </div>
 
+          {/* Erreur */}
+          {error && (
+            <div className="px-4 py-2.5 rounded-xl text-[12px] font-semibold" style={{
+              background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444",
+            }}>
+              {error}
+            </div>
+          )}
+
           {/* Bouton */}
           <button type="submit" disabled={loading}
-            className="group relative overflow-hidden mt-1 w-full flex items-center justify-center gap-2.5 rounded-[14px] py-4 text-[12px] font-black tracking-[0.15em] text-white transition-all duration-300 active:scale-[0.985]"
+            className="group relative overflow-hidden mt-1 w-full flex items-center justify-center gap-2.5 rounded-[14px] py-4 text-[11px] font-black uppercase tracking-[0.26em] text-white transition-all duration-300 active:scale-[0.985]"
             style={{
               background: loading ? "#1a3060" : "linear-gradient(135deg, #004e9a 0%, #0077cc 55%, #00a8e8 100%)",
               border: "1px solid rgba(0,209,255,0.45)",
@@ -177,40 +196,34 @@ function AgentLoginContent() {
               cursor: loading ? "not-allowed" : "pointer",
             }}>
             <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-20deg] bg-white/8 transition-transform duration-500 group-hover:translate-x-full" aria-hidden />
-            {loading ? "Connexion en cours…" : "Accéder à mon espace →"}
+            <LogIn size={14} />
+            {loading ? "Connexion…" : "ÉTABLIR LA CONNEXION"}
           </button>
         </form>
 
-        {/* Liens */}
-        <p className="mt-5 text-center text-[12px]" style={{ color: "rgba(148,163,184,0.5)" }}>
-          Pas encore de compte ?{" "}
-          <Link href="/register" style={{ color: CYAN, fontWeight: 700, textDecoration: "none" }}>
-            S&apos;inscrire gratuitement →
-          </Link>
+        <p className="mt-5 text-center text-[9px] font-bold uppercase tracking-[0.28em]" style={{ color: "rgba(0,209,255,0.16)" }}>
+          Connexion chiffrée · SecuPRO Command System v2
         </p>
-        <p className="mt-3 text-center text-[11px]" style={{ color: TEXT_MUT }}>
-          Vous représentez une société ?{" "}
-          <Link href="/entreprises/login" style={{ color: "rgba(0,209,255,0.5)", fontWeight: 600, textDecoration: "none" }}>
-            Espace Société →
+        <p className="mt-3 text-center text-[11px]" style={{ color: TEXT_MUTED }}>
+          Vous êtes un agent ?{" "}
+          <Link href="/agent/login" style={{ color: "rgba(0,209,255,0.5)", fontWeight: 600, textDecoration: "none" }}>
+            Espace Agent gratuit →
           </Link>
         </p>
       </div>
 
-      <p className="mt-6 text-[9px] font-bold uppercase tracking-widest" style={{ color: "rgba(0,209,255,0.1)" }}>
-        🔒 Données sécurisées · Hébergement UE · RGPD
-      </p>
+      {/* Footer */}
+      <div className="flex flex-col items-center gap-2.5 mt-6">
+        <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: "rgba(0,209,255,0.1)" }}>
+          © 2026 SECUPRO COMMAND SYSTEM
+        </p>
+        <a href="mailto:contact@secupro.app?subject=Support Command Center"
+          className="inline-flex items-center gap-1.5 transition-colors duration-200"
+          style={{ color: TEXT_MUTED, textDecoration: "none" }}>
+          <MessageSquare size={9} />
+          <span className="text-[9px] font-bold uppercase tracking-[0.3em]">Contacter le support</span>
+        </a>
+      </div>
     </div>
-  );
-}
-
-export default function AgentLoginPage() {
-  return (
-    <Suspense fallback={
-      <div style={{ minHeight: "100vh", background: "#0B1426", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ color: "rgba(0,209,255,0.4)", fontSize: 13 }}>Chargement…</span>
-      </div>
-    }>
-      <AgentLoginContent />
-    </Suspense>
   );
 }

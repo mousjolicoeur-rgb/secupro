@@ -325,7 +325,7 @@ export default function HomePage() {
                 <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, marginBottom: '1.5rem' }}>Planning, fiches de paie, documents, alertes CNAPS. Tout ce dont l&apos;agent a besoin — gratuitement, pour toujours.</div>
                 <div style={{ display: 'inline-block', fontSize: '0.72rem', letterSpacing: '2px', textTransform: 'uppercase', padding: '0.55rem 1.4rem', borderRadius: '6px', fontWeight: 600, border: '1px solid rgba(0,232,160,0.4)', color: '#00e8a0' }}>Accéder →</div>
               </Link>
-              <Link href="/espace-societe" className="sp-access-card societe" style={{ flex: 1, minWidth: '240px', maxWidth: '300px', textDecoration: 'none', display: 'block' }}>
+              <Link href="/entreprises/login" className="sp-access-card societe" style={{ flex: 1, minWidth: '240px', maxWidth: '300px', textDecoration: 'none', display: 'block' }}>
                 <span style={{ fontSize: '2.8rem', marginBottom: '1rem', display: 'block' }}>🏢</span>
                 <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.6rem', fontWeight: 700, letterSpacing: '1px', marginBottom: '0.2rem' }}>Espace Société</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem', flexWrap: 'wrap' }}>
