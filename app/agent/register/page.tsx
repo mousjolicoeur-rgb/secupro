@@ -161,15 +161,10 @@ export default function AgentRegisterPage() {
                     Espace Agent
                   </p>
                 </div>
-                <h1 className="text-[1.4rem] font-black leading-tight">Créer mon compte</h1>
-                <div className="inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full" style={{
-                  background: "rgba(0,209,255,0.07)", border: `1px solid ${CYAN_20}`,
-                }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: CYAN, display: "inline-block" }} />
-                  <span className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: CYAN }}>
-                    100% Gratuit · Aucune carte bancaire
-                  </span>
-                </div>
+                <h1 className="text-[1.4rem] font-black leading-tight">Rejoindre SecuPRO</h1>
+                <p className="text-[11px] font-medium mt-1" style={{ color: "rgba(0,209,255,0.45)" }}>
+                  Votre espace agent · 100% gratuit
+                </p>
               </div>
             </div>
 
@@ -249,7 +244,7 @@ export default function AgentRegisterPage() {
                     id="email" type="email" value={email} required disabled={loading}
                     onChange={e => setEmail(e.target.value)}
                     onFocus={() => setFocused("email")} onBlur={() => setFocused(null)}
-                    placeholder="prenom.nom@email.com"
+                    placeholder="prenom.nom@gmail.com"
                     autoComplete="email"
                     className="flex-1 bg-transparent px-3 py-3 text-[13px] font-semibold tracking-wide outline-none placeholder:text-[rgba(148,163,184,0.22)] placeholder:font-medium"
                     style={{ color: "#f1f5f9" }}
@@ -367,9 +362,9 @@ export default function AgentRegisterPage() {
               </Link>
             </p>
             <p className="mt-3 text-center text-[11px]" style={{ color: TEXT_MUT }}>
-              Vous représentez une société ?{" "}
-              <Link href="/login" style={{ color: "rgba(0,209,255,0.5)", fontWeight: 600, textDecoration: "none" }}>
-                Espace Société →
+              Vous êtes une société ?{" "}
+              <Link href="/register" style={{ color: "rgba(0,209,255,0.5)", fontWeight: 600, textDecoration: "none" }}>
+                Créer un compte société →
               </Link>
             </p>
           </>
