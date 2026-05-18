@@ -85,12 +85,18 @@ export async function POST(req: NextRequest) {
               Votre profil a bien été enregistré sur la plateforme <strong style="color:#fff">SECUPRO</strong>.
               Votre dossier est actif et en cours de traitement par notre équipe.
             </p>
+            <div style="margin:28px 0;text-align:center">
+              <a href="https://secupro.app/agent/hub"
+                 style="display:inline-block;background:#2563EB;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:700">
+                Accéder à mon espace agent →
+              </a>
+            </div>
             <div style="margin:28px 0;padding:16px;background:#0a1520;border:1px solid rgba(0,209,255,0.15);border-radius:8px">
               <p style="color:#00d1ff;font-size:12px;text-transform:uppercase;letter-spacing:0.2em;margin:0 0 8px;font-weight:700">Prochaines étapes</p>
               <ul style="color:#94a3b8;font-size:14px;line-height:2;margin:0;padding-left:16px">
-                <li>Accédez à votre Hub Agent</li>
-                <li>Complétez vos documents (Carte CNAPS, diplômes)</li>
-                <li>Consultez vos plannings et fiches de paie</li>
+                <li><a href="https://secupro.app/agent/hub" style="color:#94a3b8;text-decoration:underline">Accédez à votre Hub Agent</a></li>
+                <li><a href="https://secupro.app/agent/documents" style="color:#94a3b8;text-decoration:underline">Complétez vos documents (Carte CNAPS, diplômes)</a></li>
+                <li><a href="https://secupro.app/agent/planning" style="color:#94a3b8;text-decoration:underline">Consultez vos plannings et fiches de paie</a></li>
               </ul>
             </div>
             <p style="color:#475569;font-size:11px;margin:24px 0 0">
