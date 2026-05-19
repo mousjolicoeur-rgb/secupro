@@ -112,7 +112,6 @@ const L = {
   red:       "#DC2626",
   amber:     "#D97706",
   green:     "#16A34A",
-  // Tinted pill backgrounds + text
   blueBg:    "#EFF6FF",   blueText:  "#1D4ED8",
   redBg:     "#FEE2E2",   redText:   "#991B1B",
   amberBg:   "#FEF3C7",   amberText: "#92400E",
@@ -406,42 +405,48 @@ function Plannings({ agents }: { agents: Agent[] }) {
       }
     >
       <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ background: L.bgMuted, borderBottom: `2px solid ${L.border}` }}>
-              {["Agent", "Site", "Horaires", "Statut"].map((h, i) => (
-                <th key={h} style={{
-                  ...sectionLabel,
-                  padding: "10px 16px",
-                  textAlign: i === 3 ? "center" : "left",
-                  fontWeight: 600,
-                }}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {agents.map((a, i) => {
-              const cfg = STATUT_CFG[a.statut];
-              return (
-                <tr
-                  key={a.id}
-                  style={{ borderBottom: i < agents.length - 1 ? `1px solid ${L.borderSub}` : "none" }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = L.bgMuted; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = "transparent"; }}
-                >
-                  <td style={{ padding: "12px 16px", fontSize: "13px", fontWeight: 600, color: L.text }}>{a.nom}</td>
-                  <td style={{ padding: "12px 16px", fontSize: "13px", color: L.textSec }}>{a.site}</td>
-                  <td style={{ padding: "12px 16px", fontSize: "13px", color: L.textSec }}>{a.horaires}</td>
-                  <td style={{ padding: "12px 16px", textAlign: "center" }}>
-                    <span style={pill(cfg.bg, cfg.text)}>{cfg.label}</span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        {agents.length === 0 ? (
+          <div style={{ padding: "24px 16px", textAlign: "center", fontSize: "13px", color: L.textMuted }}>
+            Aucun planning — tableau réinitialisé
+          </div>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ background: L.bgMuted, borderBottom: `2px solid ${L.border}` }}>
+                {["Agent", "Site", "Horaires", "Statut"].map((h, i) => (
+                  <th key={h} style={{
+                    ...sectionLabel,
+                    padding: "10px 16px",
+                    textAlign: i === 3 ? "center" : "left",
+                    fontWeight: 600,
+                  }}>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {agents.map((a, i) => {
+                const cfg = STATUT_CFG[a.statut];
+                return (
+                  <tr
+                    key={a.id}
+                    style={{ borderBottom: i < agents.length - 1 ? `1px solid ${L.borderSub}` : "none" }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = L.bgMuted; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = "transparent"; }}
+                  >
+                    <td style={{ padding: "12px 16px", fontSize: "13px", fontWeight: 600, color: L.text }}>{a.nom}</td>
+                    <td style={{ padding: "12px 16px", fontSize: "13px", color: L.textSec }}>{a.site}</td>
+                    <td style={{ padding: "12px 16px", fontSize: "13px", color: L.textSec }}>{a.horaires}</td>
+                    <td style={{ padding: "12px 16px", textAlign: "center" }}>
+                      <span style={pill(cfg.bg, cfg.text)}>{cfg.label}</span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
     </Panel>
   );
@@ -452,7 +457,11 @@ function Plannings({ agents }: { agents: Agent[] }) {
 function SitesActifs({ sites }: { sites: Site[] }) {
   return (
     <Panel title="Sites actifs" icon={MapPin} badge={<span style={pill(L.blueBg, L.blueText)}>{sites.length} sites</span>}>
-      {sites.map((s, i) => {
+      {sites.length === 0 ? (
+        <div style={{ padding: "24px 16px", textAlign: "center", fontSize: "13px", color: L.textMuted }}>
+          Aucun site actif
+        </div>
+      ) : sites.map((s, i) => {
         const cfg = SITE_CFG[s.statut];
         return (
           <div key={i} style={{
@@ -514,24 +523,30 @@ function AlertesIncidents({ alertes }: { alertes: Alerte[] }) {
       icon={Bell}
       badge={<span style={pill(L.redBg, L.redText)}>{critiques} critique{critiques > 1 ? "s" : ""}</span>}
     >
-      <div style={{ maxHeight: "240px", overflowY: "auto" }}>
-        {alertes.map((a, i) => (
-          <div key={i} style={{
-            display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-            gap: "10px", padding: "10px 16px",
-            borderBottom: i < alertes.length - 1 ? `1px solid ${L.borderSub}` : "none",
-          }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", flex: 1 }}>
-              <span style={{
-                width: 7, height: 7, borderRadius: "50%", flexShrink: 0, marginTop: "5px",
-                background: ALERTE_DOT[a.type],
-              }} />
-              <span style={{ fontSize: "12px", color: L.textSec, lineHeight: 1.5 }}>{a.msg}</span>
+      {alertes.length === 0 ? (
+        <div style={{ padding: "24px 16px", textAlign: "center", fontSize: "13px", color: L.textMuted }}>
+          Aucune alerte
+        </div>
+      ) : (
+        <div style={{ maxHeight: "240px", overflowY: "auto" }}>
+          {alertes.map((a, i) => (
+            <div key={i} style={{
+              display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+              gap: "10px", padding: "10px 16px",
+              borderBottom: i < alertes.length - 1 ? `1px solid ${L.borderSub}` : "none",
+            }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", flex: 1 }}>
+                <span style={{
+                  width: 7, height: 7, borderRadius: "50%", flexShrink: 0, marginTop: "5px",
+                  background: ALERTE_DOT[a.type],
+                }} />
+                <span style={{ fontSize: "12px", color: L.textSec, lineHeight: 1.5 }}>{a.msg}</span>
+              </div>
+              <span style={{ fontSize: "11px", color: L.textMuted, whiteSpace: "nowrap", flexShrink: 0 }}>{a.h}</span>
             </div>
-            <span style={{ fontSize: "11px", color: L.textMuted, whiteSpace: "nowrap", flexShrink: 0 }}>{a.h}</span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </Panel>
   );
 }
@@ -542,30 +557,38 @@ function IABusiness({ remplacements }: { remplacements: Remplacement[] }) {
   return (
     <Panel title="IA Business" icon={Bot} badge={<span style={pill(L.greenBg, L.greenText)}>Actif</span>}>
       <div style={{ padding: "12px 16px" }}>
-        <div style={{
-          padding: "10px 12px", background: "#EFF6FF",
-          border: "1px solid #BFDBFE", borderRadius: "6px",
-          fontSize: "12px", color: "#1E40AF", lineHeight: 1.5, marginBottom: "14px",
-        }}>
-          Analyse en cours · {remplacements.length} absences · {remplacements.length} solutions identifiées.
-        </div>
-        {remplacements.map((r, i) => (
-          <div key={i} style={{ marginBottom: i < remplacements.length - 1 ? "14px" : 0 }}>
-            <div style={{ ...sectionLabel, marginBottom: "6px" }}>{r.site}</div>
-            <div style={{ borderLeft: `3px solid ${L.red}`, background: "#FFF8F8", borderRadius: "0 6px 6px 0", padding: "8px 12px", marginBottom: "4px" }}>
-              <div style={{ fontSize: "12px", fontWeight: 600, color: L.red }}>{r.absent} — absent</div>
-            </div>
-            <div style={{ borderLeft: `3px solid ${L.green}`, background: "#F0FDF4", borderRadius: "0 6px 6px 0", padding: "8px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <div style={{ fontSize: "12px", fontWeight: 600, color: L.green }}>{r.remplace.nom}</div>
-                <div style={{ fontSize: "11px", color: L.textMuted, marginTop: "2px" }}>{r.remplace.info}</div>
-              </div>
-              <button type="button" style={{ ...btnSecondary, height: "28px", padding: "0 10px", fontSize: "12px" }}>
-                <Phone size={12} /> Appeler
-              </button>
-            </div>
+        {remplacements.length === 0 ? (
+          <div style={{ fontSize: "13px", color: L.textMuted, textAlign: "center", padding: "12px 0" }}>
+            Aucune absence détectée
           </div>
-        ))}
+        ) : (
+          <>
+            <div style={{
+              padding: "10px 12px", background: "#EFF6FF",
+              border: "1px solid #BFDBFE", borderRadius: "6px",
+              fontSize: "12px", color: "#1E40AF", lineHeight: 1.5, marginBottom: "14px",
+            }}>
+              Analyse en cours · {remplacements.length} absences · {remplacements.length} solutions identifiées.
+            </div>
+            {remplacements.map((r, i) => (
+              <div key={i} style={{ marginBottom: i < remplacements.length - 1 ? "14px" : 0 }}>
+                <div style={{ ...sectionLabel, marginBottom: "6px" }}>{r.site}</div>
+                <div style={{ borderLeft: `3px solid ${L.red}`, background: "#FFF8F8", borderRadius: "0 6px 6px 0", padding: "8px 12px", marginBottom: "4px" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 600, color: L.red }}>{r.absent} — absent</div>
+                </div>
+                <div style={{ borderLeft: `3px solid ${L.green}`, background: "#F0FDF4", borderRadius: "0 6px 6px 0", padding: "8px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: 600, color: L.green }}>{r.remplace.nom}</div>
+                    <div style={{ fontSize: "11px", color: L.textMuted, marginTop: "2px" }}>{r.remplace.info}</div>
+                  </div>
+                  <button type="button" style={{ ...btnSecondary, height: "28px", padding: "0 10px", fontSize: "12px" }}>
+                    <Phone size={12} /> Appeler
+                  </button>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
       </div>
     </Panel>
   );
@@ -693,7 +716,6 @@ function CnapsChecklist() {
           onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = L.bgMuted; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
         >
-          {/* Numéro */}
           <span style={{
             width: "22px", height: "20px", borderRadius: "4px", flexShrink: 0,
             background: checked[i] ? L.greenBg : L.bgMuted,
@@ -705,7 +727,6 @@ function CnapsChecklist() {
             {inf.num}
           </span>
 
-          {/* Checkbox */}
           <span style={{
             width: "16px", height: "16px", borderRadius: "4px", flexShrink: 0,
             border: `1.5px solid ${checked[i] ? L.blue : "#CBD5E1"}`,
@@ -720,7 +741,6 @@ function CnapsChecklist() {
             )}
           </span>
 
-          {/* Label */}
           <span style={{
             flex: 1, fontSize: "13px",
             color: checked[i] ? L.textMuted : L.text,
@@ -731,14 +751,12 @@ function CnapsChecklist() {
             {inf.label}
           </span>
 
-          {/* Badge #01 */}
           {inf.badge && (
             <span style={{ ...pill(L.redBg, L.redText), fontSize: "10px", flexShrink: 0 }}>
               {inf.badge}
             </span>
           )}
 
-          {/* Statut pill */}
           <span style={{
             ...pill(checked[i] ? L.greenBg : L.amberBg, checked[i] ? L.greenText : L.amberText),
             flexShrink: 0, transition: "all 0.15s",
@@ -909,9 +927,11 @@ function ModalConfirm({ icon, accentColor, title, message, labelConfirm, onConfi
 
 export default function ChefExploitationDashboard() {
   const [agents,     setAgents]     = useState<Agent[]>(AGENTS_INIT);
-  const [sites]                     = useState<Site[]>(SITES_INIT);
-  const [alertes]                   = useState<Alerte[]>(ALERTES_INIT);
-  const [anomalies]                 = useState<Anomalie[]>(ANOMALIES_INIT);
+  // ✅ FIX: setters ajoutés pour sites, alertes, anomalies
+  const [sites,      setSites]      = useState<Site[]>(SITES_INIT);
+  const [alertes,    setAlertes]    = useState<Alerte[]>(ALERTES_INIT);
+  const [anomalies,  setAnomalies]  = useState<Anomalie[]>(ANOMALIES_INIT);
+  const [iaRemplacements, setIaRemplacements] = useState<Remplacement[]>(IA_REMPLACEMENTS);
   const [showImport, setShowImport] = useState(false);
   const [showReset,  setShowReset]  = useState(false);
   const [showExit,   setShowExit]   = useState(false);
@@ -943,10 +963,15 @@ export default function ChefExploitationDashboard() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  // ✅ FIX: reset remet tout à zéro
   const handleReset = () => {
-    setAgents([...AGENTS_INIT]);
+    setAgents([]);
+    setSites([]);
+    setAlertes([]);
+    setAnomalies([]);
+    setIaRemplacements([]);
     setShowReset(false);
-    showToast("Tableau de bord réinitialisé");
+    showToast("Tableau de bord réinitialisé — tout à zéro");
   };
 
   const handleExit = () => { setShowExit(false); window.history.back(); };
@@ -976,7 +1001,7 @@ export default function ChefExploitationDashboard() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <AlertesIncidents alertes={alertes} />
-            <IABusiness remplacements={IA_REMPLACEMENTS} />
+            <IABusiness remplacements={iaRemplacements} />
             <GestionAgents />
           </div>
         </div>
@@ -1007,7 +1032,7 @@ export default function ChefExploitationDashboard() {
         <ModalConfirm
           icon="↺" accentColor={L.amber}
           title="Réinitialiser le tableau de bord"
-          message="Toutes les modifications seront perdues. Les données initiales seront restaurées."
+          message="Toutes les données seront effacées. Les compteurs passeront à zéro."
           labelConfirm="Confirmer le reset"
           onConfirm={handleReset} onCancel={() => setShowReset(false)}
         />
